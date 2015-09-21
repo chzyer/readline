@@ -21,7 +21,6 @@ const (
 	KeyInterrupt = 0x3
 	KeyNextChar  = 0x6
 	KeyDelete    = 0x4
-	KeyEnter     = 0xd
 	KeyEsc       = 0x1b
 )
 
@@ -89,9 +88,9 @@ func (t *Terminal) ioloop() {
 			goto exit
 		case KeyEsc:
 			prefix = true
-		case KeyEnter, KeyPrevChar, KeyNextChar, KeyDelete:
+		case CharEnter, CharEnter2, KeyPrevChar, KeyNextChar, KeyDelete:
 			fallthrough
-		case CharLineEnd, CharLineStart:
+		case CharLineEnd, CharLineStart, CharNext, CharPrev:
 			t.outchan <- r
 		default:
 			println("np:", r)

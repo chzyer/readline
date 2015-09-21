@@ -1,6 +1,7 @@
 package readline
 
 import (
+	"container/list"
 	"io"
 	"os"
 )
@@ -10,15 +11,21 @@ type Readline struct {
 	t       *Terminal
 	buf     *RuneBuffer
 	outchan chan []rune
+
+	history *list.List
+	current *list.Element
 }
 
 const (
 	CharLineStart = 0x1
 	CharLineEnd   = 0x5
-	CharPrev      = 0x2
-	CharNext      = 0x6
+	CharNext      = 0xe
+	CharPrev      = 0x10
+	CharBackward  = 0x2
+	CharForward   = 0x6
 	CharEscape    = 0x7f
 	CharEnter     = 0xd
+	CharEnter2    = 0xa
 )
 
 type wrapWriter struct {
@@ -40,6 +47,7 @@ func newReadline(r *os.File, t *Terminal, prompt string) *Readline {
 		t:       t,
 		buf:     NewRuneBuffer(t, prompt),
 		outchan: make(chan []rune),
+		history: list.New(),
 	}
 	go rl.ioloop()
 	return rl
@@ -63,21 +71,33 @@ func (l *Readline) ioloop() {
 			l.buf.Delete()
 		case CharEscape:
 			l.buf.BackEscape()
-		case CharEnter:
+		case CharEnter, CharEnter2:
 			l.buf.WriteRune('\n')
 			data := l.buf.Reset()
-			l.outchan <- data[:len(data)-1]
+			data = data[:len(data)-1] // trim \n
+			l.outchan <- data
+			l.NewHistory(data)
+		case CharBackward:
+			l.buf.MoveBackward()
+		case CharForward:
+			l.buf.MoveForward()
 		case CharPrev:
-			l.buf.MovePrev()
+			buf := l.PrevHistory()
+			if buf != nil {
+				l.buf.Set(buf)
+			}
 		case CharNext:
-			l.buf.MoveNext()
+			buf := l.NextHistory()
+			if buf != nil {
+				l.buf.Set(buf)
+			}
 		case KeyInterrupt:
 			l.buf.WriteString("^C\n")
 			l.outchan <- nil
-			break
 		default:
 			l.buf.WriteRune(r)
 		}
+		l.UpdateHistory(l.buf.Runes())
 	}
 }
 

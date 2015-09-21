@@ -33,6 +33,8 @@ func prefixKey(r rune) rune {
 		r = MetaNext
 	case 'd':
 		r = MetaDelete
+	case KeyEsc:
+
 	}
 	return r
 }

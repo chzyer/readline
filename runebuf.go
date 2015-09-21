@@ -42,7 +42,7 @@ func (r *RuneBuffer) MoveToLineStart() {
 	r.Refresh(-1, r.SetIdx(0))
 }
 
-func (r *RuneBuffer) MovePrev() {
+func (r *RuneBuffer) MoveBackward() {
 	if r.idx == 0 {
 		return
 	}
@@ -65,7 +65,7 @@ func (rb *RuneBuffer) WriteRunes(r []rune) {
 	rb.Refresh(1, 1)
 }
 
-func (r *RuneBuffer) MoveNext() {
+func (r *RuneBuffer) MoveForward() {
 	if r.idx == len(r.buf) {
 		return
 	}
@@ -186,4 +186,11 @@ func (r *RuneBuffer) Reset() []rune {
 	r.printPrompt = true
 	r.Refresh(-len(ret), r.SetIdx(0))
 	return ret
+}
+
+func (r *RuneBuffer) Set(buf []rune) {
+	length, idx := len(r.buf), r.idx
+	r.buf = buf
+	r.idx = len(r.buf)
+	r.RefreshSet(length, idx)
 }
