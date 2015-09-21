@@ -9,8 +9,15 @@ import (
 	"github.com/chzyer/readline"
 )
 
+func usage(w io.Writer) {
+	io.WriteString(w, `
+sayhello: start to display oneline log per second
+bye: quit
+`[1:])
+}
+
 func main() {
-	l, err := readline.New("> ")
+	l, err := readline.New("home -> ")
 	if err != nil {
 		panic(err)
 	}
@@ -24,7 +31,7 @@ func main() {
 		}
 		switch line {
 		case "help":
-			io.WriteString(l.Stderr(), "sayhello: start to display oneline log per second\nbye: quit\n")
+			usage(l.Stderr())
 		case "sayhello":
 			go func() {
 				for _ = range time.Tick(time.Second) {
@@ -33,6 +40,7 @@ func main() {
 			}()
 		case "bye":
 			goto exit
+		case "":
 		default:
 			log.Println("you said:", strconv.Quote(line))
 		}

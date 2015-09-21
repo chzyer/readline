@@ -81,7 +81,6 @@ func (l *Operation) ioloop() {
 			data = data[:len(data)-1] // trim \n
 			l.outchan <- data
 			l.NewHistory(data)
-			debugList(l.history)
 		case CharBackward:
 			l.buf.MoveBackward()
 		case CharForward:

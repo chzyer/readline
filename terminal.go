@@ -72,7 +72,6 @@ func (t *Terminal) ioloop() {
 	isEscapeEx := false
 	for {
 		r, _, err := buf.ReadRune()
-		Debug(r, isEscape, isEscapeEx)
 		if err != nil {
 			break
 		}
@@ -87,7 +86,6 @@ func (t *Terminal) ioloop() {
 		} else if isEscapeEx {
 			isEscapeEx = false
 			r = escapeExKey(r)
-			Debug("r:", r)
 		}
 
 		if IsPrintable(r) || r < 0 {

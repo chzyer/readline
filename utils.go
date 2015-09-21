@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -102,4 +103,9 @@ func equalRunes(a, b []rune) bool {
 		}
 	}
 	return true
+}
+
+func sleep(n int) {
+	Debug(n)
+	time.Sleep(2000 * time.Millisecond)
 }

@@ -10,15 +10,14 @@ type RuneBuffer struct {
 	idx         int
 	prompt      []byte
 	w           io.Writer
+	hasPrompt   bool
 	lastWritten int
-	printPrompt bool
 }
 
 func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
 	rb := &RuneBuffer{
-		prompt:      []byte(prompt),
-		w:           w,
-		printPrompt: true,
+		prompt: []byte(prompt),
+		w:      w,
 	}
 	return rb
 }
@@ -161,18 +160,24 @@ func (r *RuneBuffer) MoveToLineEnd() {
 }
 
 func (r *RuneBuffer) Refresh(chlen, chidx int) {
-	s := r.Output(len(r.buf)-chlen, r.idx-chidx)
+	s := r.Output(len(r.buf)-chlen, r.idx-chidx, true)
 	r.w.Write(s)
 }
 
 func (r *RuneBuffer) RefreshSet(originLength, originIdx int) {
-	r.w.Write(r.Output(originLength, originIdx))
+	r.w.Write(r.Output(originLength, originIdx, true))
 }
 
-func (r *RuneBuffer) Output(originLength, originIdx int) []byte {
+func (r *RuneBuffer) Output(originLength, originIdx int, prompt bool) []byte {
 	buf := bytes.NewBuffer(nil)
-	buf.Write(bytes.Repeat([]byte{'\b'}, originIdx+len(r.prompt)))
-	buf.Write(r.prompt)
+	buf.Write(bytes.Repeat([]byte{'\b'}, originIdx))
+	if prompt {
+		if r.hasPrompt {
+			buf.Write(bytes.Repeat([]byte{'\b'}, len(r.prompt)))
+		}
+		buf.Write(r.prompt)
+	}
+	r.hasPrompt = prompt
 	buf.Write([]byte(string(r.buf)))
 	if originLength > len(r.buf) {
 		buf.Write(bytes.Repeat([]byte{' '}, originLength-len(r.buf)))
@@ -184,21 +189,29 @@ func (r *RuneBuffer) Output(originLength, originIdx int) []byte {
 
 func (r *RuneBuffer) Clean() {
 	moveToFirst := r.idx
-	moveToFirst += len(r.prompt)
+	if r.hasPrompt {
+		moveToFirst += len(r.prompt)
+	}
 	r.w.Write(bytes.Repeat([]byte{'\b'}, moveToFirst))
-	length := len(r.buf) + len(r.prompt)
-
+	length := len(r.buf)
+	if r.hasPrompt {
+		length += len(r.prompt)
+	}
 	r.w.Write(bytes.Repeat([]byte{' '}, length))
+
 	r.w.Write(bytes.Repeat([]byte{'\b'}, length))
-	r.printPrompt = true
+	r.hasPrompt = false
+}
+
+func (r *RuneBuffer) ResetScreen() {
+	r.w.Write(r.Output(0, 0, false))
 }
 
 func (r *RuneBuffer) Reset() []rune {
 	ret := r.buf
 	r.buf = r.buf[:0]
 	r.idx = 0
-	r.printPrompt = true
-	r.Refresh(-len(ret), r.SetIdx(0))
+	r.hasPrompt = false
 	return ret
 }
 

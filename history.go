@@ -47,10 +47,21 @@ func (o *Operation) NextHistory() ([]rune, bool) {
 func (o *Operation) NewHistory(current []rune) {
 	// if just use last command without modify
 	// just clean lastest history
-	if o.current == o.history.Back().Prev() {
-		use := o.current.Value.(*HisItem)
-		if equalRunes(use.Tmp, use.Source) {
-			o.current = o.history.Back()
+	if back := o.history.Back(); back != nil {
+		prev := back.Prev()
+		if prev != nil {
+			use := o.current.Value.(*HisItem)
+			if equalRunes(use.Tmp, prev.Value.(*HisItem).Source) {
+				o.current = o.history.Back()
+				o.current.Value.(*HisItem).Clean()
+				o.historyVer++
+				return
+			}
+		}
+	}
+	if len(current) == 0 {
+		o.current = o.history.Back()
+		if o.current != nil {
 			o.current.Value.(*HisItem).Clean()
 			o.historyVer++
 			return
