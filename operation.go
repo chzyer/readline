@@ -75,6 +75,7 @@ func (l *Operation) ioloop() {
 		case MetaBackspace:
 			l.buf.BackEscapeWord()
 		case CharEnter, CharEnter2:
+			l.buf.MoveToLineEnd()
 			l.buf.WriteRune('\n')
 			data := l.buf.Reset()
 			data = data[:len(data)-1] // trim \n

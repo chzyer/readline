@@ -28,7 +28,21 @@ func IsPrintable(key rune) bool {
 	return key >= 32 && !isInSurrogateArea
 }
 
-func prefixKey(r rune) rune {
+func escapeExKey(r rune) rune {
+	switch r {
+	case 'D':
+		r = CharBackward
+	case 'C':
+		r = CharForward
+	case 'A':
+		r = CharPrev
+	case 'B':
+		r = CharNext
+	}
+	return r
+}
+
+func escapeKey(r rune) rune {
 	switch r {
 	case 'b':
 		r = MetaPrev
@@ -64,7 +78,6 @@ func getWidth() int {
 		uintptr(syscall.TIOCGWINSZ),
 		uintptr(unsafe.Pointer(ws)))
 
-	Debug(ws)
 	if int(retCode) == -1 {
 		panic(errno)
 	}

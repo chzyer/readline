@@ -18,11 +18,12 @@ const (
 )
 
 const (
-	KeyPrevChar  = 0x2
-	KeyInterrupt = 0x3
-	KeyNextChar  = 0x6
-	KeyDelete    = 0x4
-	KeyEsc       = 0x1b
+	KeyPrevChar  = 2
+	KeyInterrupt = 3
+	KeyNextChar  = 6
+	KeyDelete    = 4
+	KeyEsc       = 27
+	KeyEscapeEx  = 91
 )
 
 type Terminal struct {
@@ -67,16 +68,26 @@ func (t *Terminal) ReadRune() rune {
 
 func (t *Terminal) ioloop() {
 	buf := bufio.NewReader(os.Stdin)
-	prefix := false
+	isEscape := false
+	isEscapeEx := false
 	for {
 		r, _, err := buf.ReadRune()
+		Debug(r, isEscape, isEscapeEx)
 		if err != nil {
 			break
 		}
 
-		if prefix {
-			prefix = false
-			r = prefixKey(r)
+		if isEscape {
+			isEscape = false
+			if r == KeyEscapeEx {
+				isEscapeEx = true
+				continue
+			}
+			r = escapeKey(r)
+		} else if isEscapeEx {
+			isEscapeEx = false
+			r = escapeExKey(r)
+			Debug("r:", r)
 		}
 
 		if IsPrintable(r) || r < 0 {
@@ -88,7 +99,7 @@ func (t *Terminal) ioloop() {
 			t.outchan <- r
 			goto exit
 		case KeyEsc:
-			prefix = true
+			isEscape = true
 		case CharEnter, CharEnter2, KeyPrevChar, KeyNextChar, KeyDelete:
 			fallthrough
 		case CharLineEnd, CharLineStart, CharNext, CharPrev:
