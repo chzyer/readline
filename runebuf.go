@@ -126,7 +126,25 @@ func (r *RuneBuffer) MoveToNextWord() {
 	r.Refresh(0, r.SetIdx(len(r.buf)))
 }
 
-func (r *RuneBuffer) BackEscape() {
+func (r *RuneBuffer) BackEscapeWord() {
+	if r.idx == 0 {
+		return
+	}
+	for i := r.idx - 1; i > 0; i-- {
+		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
+			change := i - r.idx
+			r.buf = append(r.buf[:i], r.buf[r.idx:]...)
+			r.Refresh(change, r.SetIdx(i))
+			return
+		}
+	}
+
+	length := len(r.buf)
+	r.buf = r.buf[:0]
+	r.Refresh(-length, r.SetIdx(0))
+}
+
+func (r *RuneBuffer) Backspace() {
 	if r.idx == 0 {
 		return
 	}
@@ -153,12 +171,8 @@ func (r *RuneBuffer) RefreshSet(originLength, originIdx int) {
 
 func (r *RuneBuffer) Output(originLength, originIdx int) []byte {
 	buf := bytes.NewBuffer(nil)
-	if r.printPrompt {
-		r.printPrompt = false
-		buf.Write(r.prompt)
-	}
-
-	buf.Write(bytes.Repeat([]byte{'\b'}, originIdx))
+	buf.Write(bytes.Repeat([]byte{'\b'}, originIdx+len(r.prompt)))
+	buf.Write(r.prompt)
 	buf.Write([]byte(string(r.buf)))
 	if originLength > len(r.buf) {
 		buf.Write(bytes.Repeat([]byte{' '}, originLength-len(r.buf)))

@@ -14,6 +14,7 @@ const (
 	MetaPrev = -iota - 1
 	MetaNext
 	MetaDelete
+	MetaBackspace
 )
 
 const (

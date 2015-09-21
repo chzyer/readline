@@ -12,8 +12,9 @@ type Operation struct {
 	buf     *RuneBuffer
 	outchan chan []rune
 
-	history *list.List
-	current *list.Element
+	history    *list.List
+	historyVer int64
+	current    *list.Element
 }
 
 const (
@@ -23,7 +24,7 @@ const (
 	CharPrev      = 0x10
 	CharBackward  = 0x2
 	CharForward   = 0x6
-	CharEscape    = 0x7f
+	CharBackspace = 0x7f
 	CharEnter     = 0xd
 	CharEnter2    = 0xa
 )
@@ -69,14 +70,17 @@ func (l *Operation) ioloop() {
 			l.buf.MoveToLineEnd()
 		case KeyDelete:
 			l.buf.Delete()
-		case CharEscape:
-			l.buf.BackEscape()
+		case CharBackspace:
+			l.buf.Backspace()
+		case MetaBackspace:
+			l.buf.BackEscapeWord()
 		case CharEnter, CharEnter2:
 			l.buf.WriteRune('\n')
 			data := l.buf.Reset()
 			data = data[:len(data)-1] // trim \n
 			l.outchan <- data
 			l.NewHistory(data)
+			debugList(l.history)
 		case CharBackward:
 			l.buf.MoveBackward()
 		case CharForward:
@@ -87,8 +91,8 @@ func (l *Operation) ioloop() {
 				l.buf.Set(buf)
 			}
 		case CharNext:
-			buf := l.NextHistory()
-			if buf != nil {
+			buf, ok := l.NextHistory()
+			if ok {
 				l.buf.Set(buf)
 			}
 		case KeyInterrupt:
@@ -97,7 +101,7 @@ func (l *Operation) ioloop() {
 		default:
 			l.buf.WriteRune(r)
 		}
-		l.UpdateHistory(l.buf.Runes())
+		l.UpdateHistory(l.buf.Runes(), false)
 	}
 }
 
