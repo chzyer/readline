@@ -100,7 +100,7 @@ func (t *Terminal) ioloop() {
 			isEscape = true
 		case CharEnter, CharEnter2, KeyPrevChar, KeyNextChar, KeyDelete:
 			fallthrough
-		case CharLineEnd, CharLineStart, CharNext, CharPrev:
+		case CharLineEnd, CharLineStart, CharNext, CharPrev, CharKill:
 			t.outchan <- r
 		default:
 			println("np:", r)

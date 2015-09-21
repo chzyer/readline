@@ -20,6 +20,7 @@ type Operation struct {
 const (
 	CharLineStart = 0x1
 	CharLineEnd   = 0x5
+	CharKill      = 11
 	CharNext      = 0xe
 	CharPrev      = 0x10
 	CharBackward  = 0x2
@@ -58,6 +59,8 @@ func (l *Operation) ioloop() {
 	for {
 		r := l.t.ReadRune()
 		switch r {
+		case CharKill:
+			l.buf.Kill()
 		case MetaNext:
 			l.buf.MoveToNextWord()
 		case MetaPrev:

@@ -84,16 +84,18 @@ func (r *RuneBuffer) DeleteWord() {
 	if r.idx == len(r.buf) {
 		return
 	}
-	for i := r.idx + 1; i < len(r.buf); i++ {
+	init := r.idx
+	for init < len(r.buf) && r.buf[init] == ' ' {
+		init++
+	}
+	for i := init + 1; i < len(r.buf); i++ {
 		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
 			r.buf = append(r.buf[:r.idx], r.buf[i-1:]...)
 			r.Refresh(r.idx-i+1, 0)
 			return
 		}
 	}
-	length := len(r.buf)
-	r.buf = r.buf[:r.idx]
-	r.Refresh(length-r.idx, 0)
+	r.Kill()
 }
 
 func (r *RuneBuffer) MoveToPrevWord() {
@@ -113,6 +115,12 @@ func (r *RuneBuffer) SetIdx(idx int) (change int) {
 	i := r.idx
 	r.idx = idx
 	return r.idx - i
+}
+
+func (r *RuneBuffer) Kill() {
+	length := len(r.buf)
+	r.buf = r.buf[:r.idx]
+	r.Refresh(r.idx-length, 0)
 }
 
 func (r *RuneBuffer) MoveToNextWord() {
