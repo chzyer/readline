@@ -56,8 +56,8 @@ func (t *Terminal) PrintRune(r rune) {
 	fmt.Fprintf(os.Stdout, "%c", r)
 }
 
-func (t *Terminal) NewReadline(prompt string) *Readline {
-	return newReadline(os.Stdin, t, prompt)
+func (t *Terminal) Readline(prompt string) *Operation {
+	return NewOperation(os.Stdin, t, prompt)
 }
 
 func (t *Terminal) ReadRune() rune {

@@ -1,123 +1,36 @@
 package readline
 
-import (
-	"container/list"
-	"io"
-	"os"
-)
+import "io"
 
-type Readline struct {
-	r       *os.File
-	t       *Terminal
-	buf     *RuneBuffer
-	outchan chan []rune
-
-	history *list.List
-	current *list.Element
+type Instance struct {
+	t *Terminal
+	o *Operation
 }
 
-const (
-	CharLineStart = 0x1
-	CharLineEnd   = 0x5
-	CharNext      = 0xe
-	CharPrev      = 0x10
-	CharBackward  = 0x2
-	CharForward   = 0x6
-	CharEscape    = 0x7f
-	CharEnter     = 0xd
-	CharEnter2    = 0xa
-)
-
-type wrapWriter struct {
-	r      *Readline
-	target io.Writer
-}
-
-func (w *wrapWriter) Write(b []byte) (int, error) {
-	buf := w.r.buf
-	buf.Clean()
-	n, err := w.target.Write(b)
-	w.r.buf.RefreshSet(0, 0)
-	return n, err
-}
-
-func newReadline(r *os.File, t *Terminal, prompt string) *Readline {
-	rl := &Readline{
-		r:       r,
-		t:       t,
-		buf:     NewRuneBuffer(t, prompt),
-		outchan: make(chan []rune),
-		history: list.New(),
-	}
-	go rl.ioloop()
-	return rl
-}
-
-func (l *Readline) ioloop() {
-	for {
-		r := l.t.ReadRune()
-		switch r {
-		case MetaNext:
-			l.buf.MoveToNextWord()
-		case MetaPrev:
-			l.buf.MoveToPrevWord()
-		case MetaDelete:
-			l.buf.DeleteWord()
-		case CharLineStart:
-			l.buf.MoveToLineStart()
-		case CharLineEnd:
-			l.buf.MoveToLineEnd()
-		case KeyDelete:
-			l.buf.Delete()
-		case CharEscape:
-			l.buf.BackEscape()
-		case CharEnter, CharEnter2:
-			l.buf.WriteRune('\n')
-			data := l.buf.Reset()
-			data = data[:len(data)-1] // trim \n
-			l.outchan <- data
-			l.NewHistory(data)
-		case CharBackward:
-			l.buf.MoveBackward()
-		case CharForward:
-			l.buf.MoveForward()
-		case CharPrev:
-			buf := l.PrevHistory()
-			if buf != nil {
-				l.buf.Set(buf)
-			}
-		case CharNext:
-			buf := l.NextHistory()
-			if buf != nil {
-				l.buf.Set(buf)
-			}
-		case KeyInterrupt:
-			l.buf.WriteString("^C\n")
-			l.outchan <- nil
-		default:
-			l.buf.WriteRune(r)
-		}
-		l.UpdateHistory(l.buf.Runes())
-	}
-}
-
-func (l *Readline) Stderr() io.Writer {
-	return &wrapWriter{target: os.Stderr, r: l}
-}
-
-func (l *Readline) Readline() (string, error) {
-	r, err := l.ReadlineSlice()
+func New(prompt string) (*Instance, error) {
+	t, err := NewTerminal()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(r), nil
+	rl := t.Readline(prompt)
+	return &Instance{
+		t: t,
+		o: rl,
+	}, nil
 }
 
-func (l *Readline) ReadlineSlice() ([]byte, error) {
-	l.buf.Refresh(0, 0)
-	r := <-l.outchan
-	if r == nil {
-		return nil, io.EOF
-	}
-	return []byte(string(r)), nil
+func (i *Instance) Stderr() io.Writer {
+	return i.o.Stderr()
+}
+
+func (i *Instance) Readline() (string, error) {
+	return i.o.String()
+}
+
+func (i *Instance) ReadSlice() ([]byte, error) {
+	return i.o.Slice()
+}
+
+func (i *Instance) Close() error {
+	return i.t.Close()
 }

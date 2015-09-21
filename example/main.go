@@ -10,13 +10,12 @@ import (
 )
 
 func main() {
-	t, err := readline.NewTerminal()
+	l, err := readline.New("> ")
 	if err != nil {
 		panic(err)
 	}
-	defer t.Close()
+	defer l.Close()
 
-	l := t.NewReadline("> ")
 	log.SetOutput(l.Stderr())
 	for {
 		line, err := l.Readline()

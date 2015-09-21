@@ -1,56 +1,56 @@
 package readline
 
-func (l *Readline) PrevHistory() []rune {
-	if l.current == nil {
+func (o *Operation) PrevHistory() []rune {
+	if o.current == nil {
 		return nil
 	}
-	current := l.current.Prev()
+	current := o.current.Prev()
 	if current == nil {
 		return nil
 	}
-	l.current = current
+	o.current = current
 	return current.Value.([]rune)
 }
 
-func (l *Readline) NextHistory() []rune {
-	if l.current == nil {
+func (o *Operation) NextHistory() []rune {
+	if o.current == nil {
 		return nil
 	}
-	current := l.current.Next()
+	current := o.current.Next()
 	if current == nil {
 		return nil
 	}
-	l.current = current
+	o.current = current
 	return current.Value.([]rune)
 }
 
-func (l *Readline) NewHistory(current []rune) {
-	l.UpdateHistory(current)
-	if l.current != l.history.Back() {
+func (o *Operation) NewHistory(current []rune) {
+	o.UpdateHistory(current)
+	if o.current != o.history.Back() {
 		// move history item to current command
-		l.history.Remove(l.current)
-		use := l.current.Value.([]rune)
-		l.current = l.history.Back()
-		l.UpdateHistory(use)
+		o.history.Remove(o.current)
+		use := o.current.Value.([]rune)
+		o.current = o.history.Back()
+		o.UpdateHistory(use)
 	}
 
 	// push a new one to commit current command
-	l.PushHistory(nil)
+	o.PushHistory(nil)
 }
 
-func (l *Readline) UpdateHistory(s []rune) {
-	if l.current == nil {
-		l.PushHistory(s)
+func (o *Operation) UpdateHistory(s []rune) {
+	if o.current == nil {
+		o.PushHistory(s)
 		return
 	}
-	r := l.current.Value.([]rune)
-	l.current.Value = append(r[:0], s...)
+	r := o.current.Value.([]rune)
+	o.current.Value = append(r[:0], s...)
 }
 
-func (l *Readline) PushHistory(s []rune) {
+func (o *Operation) PushHistory(s []rune) {
 	// copy
 	newCopy := make([]rune, len(s))
 	copy(newCopy, s)
-	elem := l.history.PushBack(newCopy)
-	l.current = elem
+	elem := o.history.PushBack(newCopy)
+	o.current = elem
 }
