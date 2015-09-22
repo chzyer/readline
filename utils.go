@@ -6,6 +6,7 @@ import (
 	"os"
 	"syscall"
 	"time"
+	"unicode/utf8"
 	"unsafe"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -108,4 +109,43 @@ func equalRunes(a, b []rune) bool {
 func sleep(n int) {
 	Debug(n)
 	time.Sleep(2000 * time.Millisecond)
+}
+
+func LineCount(w int) int {
+	screenWidth := getWidth()
+	r := w / screenWidth
+	if w%screenWidth != 0 {
+		r++
+	}
+	return r
+}
+
+func RunesWidth(r []rune) (length int) {
+	for i := 0; i < len(r); i++ {
+		if utf8.RuneLen(r[i]) > 1 {
+			length += 2
+		} else {
+			length += 1
+		}
+	}
+	return
+}
+
+func RunesIndex(r, sub []rune) int {
+	for i := 0; i < len(r); i++ {
+		found := true
+		if len(r[i:]) < len(sub) {
+			return -1
+		}
+		for j := 0; j < len(sub); j++ {
+			if r[i+j] != sub[j] {
+				found = false
+				break
+			}
+		}
+		if found {
+			return i
+		}
+	}
+	return -1
 }

@@ -102,6 +102,8 @@ func (t *Terminal) ioloop() {
 			isEscape = true
 		case CharEnter, CharEnter2, KeyPrevChar, KeyNextChar, KeyDelete:
 			fallthrough
+		case CharFwdSearch, CharBckSearch, CharCannel:
+			fallthrough
 		case CharLineEnd, CharLineStart, CharNext, CharPrev, CharKill:
 			t.outchan <- r
 		default:

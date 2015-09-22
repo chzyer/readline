@@ -58,6 +58,28 @@ func (o *opHistory) Close() {
 	}
 }
 
+func (o *opHistory) FindHistoryBck(rs []rune) (int, *list.Element) {
+	for elem := o.current; elem != nil; elem = elem.Prev() {
+		idx := RunesIndex(o.showItem(elem.Value), rs)
+		if idx < 0 {
+			continue
+		}
+		return idx, elem
+	}
+	return -1, nil
+}
+
+func (o *opHistory) FindHistoryFwd(rs []rune) (int, *list.Element) {
+	for elem := o.current; elem != nil; elem = elem.Next() {
+		idx := RunesIndex(o.showItem(elem.Value), rs)
+		if idx < 0 {
+			continue
+		}
+		return idx, elem
+	}
+	return -1, nil
+}
+
 func (o *opHistory) showItem(obj interface{}) []rune {
 	item := obj.(*HisItem)
 	if item.Version == o.historyVer {

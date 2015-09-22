@@ -11,19 +11,23 @@ type Operation struct {
 	buf     *RuneBuffer
 	outchan chan []rune
 	*opHistory
+	*opSearch
 }
 
 const (
-	CharLineStart = 0x1
-	CharLineEnd   = 0x5
+	CharLineStart = 1
+	CharLineEnd   = 5
 	CharKill      = 11
-	CharNext      = 0xe
-	CharPrev      = 0x10
-	CharBackward  = 0x2
-	CharForward   = 0x6
+	CharNext      = 14
+	CharPrev      = 16
+	CharBackward  = 2
+	CharForward   = 6
 	CharBackspace = 0x7f
 	CharEnter     = 0xd
 	CharEnter2    = 0xa
+	CharBckSearch = 18
+	CharFwdSearch = 19
+	CharCannel    = 7
 )
 
 type wrapWriter struct {
@@ -47,14 +51,27 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 		outchan:   make(chan []rune),
 		opHistory: newOpHistory(cfg.HistoryFile),
 	}
+	op.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
 	go op.ioloop()
 	return op
 }
 
 func (l *Operation) ioloop() {
 	for {
+		keepInSearchMode := false
 		r := l.t.ReadRune()
 		switch r {
+		case CharCannel:
+			if l.IsSearchMode() {
+				l.ExitSearchMode(true)
+				l.buf.Refresh()
+			}
+		case CharBckSearch:
+			l.SearchMode(S_DIR_BCK)
+			keepInSearchMode = true
+		case CharFwdSearch:
+			l.SearchMode(S_DIR_FWD)
+			keepInSearchMode = true
 		case CharKill:
 			l.buf.Kill()
 		case MetaNext:
@@ -70,7 +87,12 @@ func (l *Operation) ioloop() {
 		case KeyDelete:
 			l.buf.Delete()
 		case CharBackspace:
-			l.buf.Backspace()
+			if l.IsSearchMode() {
+				l.SearchBackspace()
+				keepInSearchMode = true
+			} else {
+				l.buf.Backspace()
+			}
 		case MetaBackspace:
 			l.buf.BackEscapeWord()
 		case CharEnter, CharEnter2:
@@ -95,10 +117,24 @@ func (l *Operation) ioloop() {
 				l.buf.Set(buf)
 			}
 		case KeyInterrupt:
+			if l.IsSearchMode() {
+				l.ExitSearchMode(false)
+			}
+			l.buf.MoveToLineEnd()
+			l.buf.Refresh()
 			l.buf.WriteString("^C\n")
 			l.outchan <- nil
 		default:
-			l.buf.WriteRune(r)
+			if l.IsSearchMode() {
+				l.SearchChar(r)
+				keepInSearchMode = true
+			} else {
+				l.buf.WriteRune(r)
+			}
+		}
+		if !keepInSearchMode && l.IsSearchMode() {
+			l.ExitSearchMode(false)
+			l.buf.Refresh()
 		}
 		l.UpdateHistory(l.buf.Runes(), false)
 	}

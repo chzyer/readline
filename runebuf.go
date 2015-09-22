@@ -170,6 +170,25 @@ func (r *RuneBuffer) MoveToLineEnd() {
 	r.Refresh()
 }
 
+func (r *RuneBuffer) LineCount() int {
+	return LineCount(RunesWidth(r.buf) + len(r.prompt))
+}
+
+func (r *RuneBuffer) IdxLine() int {
+	totalWidth := RunesWidth(r.buf[:r.idx]) + len(r.prompt)
+	w := getWidth()
+	line := 0
+	for totalWidth >= w {
+		totalWidth -= w
+		line++
+	}
+	return line
+}
+
+func (r *RuneBuffer) CursorLineCount() int {
+	return r.LineCount() - r.IdxLine()
+}
+
 func (r *RuneBuffer) Refresh() {
 	r.w.Write(r.Output())
 }
@@ -205,8 +224,12 @@ func (r *RuneBuffer) Reset() []rune {
 	return ret
 }
 
-func (r *RuneBuffer) Set(buf []rune) {
+func (r *RuneBuffer) SetWithIdx(idx int, buf []rune) {
 	r.buf = buf
-	r.idx = len(r.buf)
+	r.idx = idx
 	r.Refresh()
+}
+
+func (r *RuneBuffer) Set(buf []rune) {
+	r.SetWithIdx(len(buf), buf)
 }

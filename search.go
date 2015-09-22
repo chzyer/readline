@@ -1,0 +1,123 @@
+package readline
+
+import (
+	"bytes"
+	"container/list"
+	"fmt"
+	"io"
+)
+
+const (
+	S_STATE_FOUND = iota
+	S_STATE_FAILING
+)
+
+const (
+	S_DIR_BCK = iota
+	S_DIR_FWD
+)
+
+type opSearch struct {
+	inMode  bool
+	state   int
+	dir     int
+	source  *list.Element
+	w       io.Writer
+	buf     *RuneBuffer
+	data    []rune
+	history *opHistory
+}
+
+func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory) *opSearch {
+	return &opSearch{
+		w:       w,
+		buf:     buf,
+		history: history,
+	}
+}
+
+func (o *opSearch) IsSearchMode() bool {
+	return o.inMode
+}
+
+func (o *opSearch) SearchBackspace() {
+	if len(o.data) > 0 {
+		o.data = o.data[:len(o.data)-1]
+		o.search()
+	}
+}
+
+func (o *opSearch) findHistoryBy() (int, *list.Element) {
+	if o.dir == S_DIR_BCK {
+		return o.history.FindHistoryBck(o.data)
+	}
+	return o.history.FindHistoryFwd(o.data)
+}
+
+func (o *opSearch) search() bool {
+	idx, elem := o.findHistoryBy()
+	if elem == nil {
+		o.SearchRefresh(-2)
+		return false
+	}
+	o.history.current = elem
+	o.buf.SetWithIdx(idx, o.history.showItem(o.history.current.Value))
+	o.SearchRefresh(idx)
+	return true
+}
+
+func (o *opSearch) SearchChar(r rune) {
+	o.data = append(o.data, r)
+	o.search()
+}
+
+func (o *opSearch) SearchMode(dir int) {
+	o.inMode = true
+	o.dir = dir
+	o.source = o.history.current
+	o.SearchRefresh(-1)
+}
+
+func (o *opSearch) ExitSearchMode(revert bool) {
+	if revert {
+		o.history.current = o.source
+		o.buf.Set(o.history.showItem(o.history.current.Value))
+	}
+	o.inMode = false
+	o.source = nil
+	o.data = nil
+}
+
+func (o *opSearch) SearchRefresh(x int) {
+	if x == -2 {
+		o.state = S_STATE_FAILING
+	} else if x >= 0 {
+		o.state = S_STATE_FOUND
+	}
+	if x < 0 {
+		x = o.buf.idx
+	}
+	x += len(o.buf.prompt)
+	x = x % getWidth()
+
+	lineCnt := o.buf.CursorLineCount()
+	buf := bytes.NewBuffer(nil)
+	buf.Write(bytes.Repeat([]byte("\n"), lineCnt))
+	buf.WriteString("\033[J")
+	if o.state == S_STATE_FAILING {
+		buf.WriteString("failing ")
+	}
+	if o.dir == S_DIR_BCK {
+		buf.WriteString("bck")
+	} else if o.dir == S_DIR_FWD {
+		buf.WriteString("fwd")
+	}
+	buf.WriteString("-i-search: ")
+	buf.WriteString(string(o.data))         // keyword
+	buf.WriteString("\033[4m \033[0m")      // _
+	fmt.Fprintf(buf, "\r\033[%dA", lineCnt) // move prev
+	if x > 0 {
+		fmt.Fprintf(buf, "\033[%dC", x) // move forward
+	}
+	o.w.Write(buf.Bytes())
+}
