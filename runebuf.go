@@ -38,7 +38,8 @@ func (r *RuneBuffer) MoveToLineStart() {
 	if r.idx == 0 {
 		return
 	}
-	r.Refresh(-1, r.SetIdx(0))
+	r.idx = 0
+	r.Refresh()
 }
 
 func (r *RuneBuffer) MoveBackward() {
@@ -46,7 +47,7 @@ func (r *RuneBuffer) MoveBackward() {
 		return
 	}
 	r.idx--
-	r.Refresh(0, -1)
+	r.Refresh()
 }
 
 func (rb *RuneBuffer) WriteString(s string) {
@@ -61,7 +62,7 @@ func (rb *RuneBuffer) WriteRunes(r []rune) {
 	tail := append(r, rb.buf[rb.idx:]...)
 	rb.buf = append(rb.buf[:rb.idx], tail...)
 	rb.idx++
-	rb.Refresh(1, 1)
+	rb.Refresh()
 }
 
 func (r *RuneBuffer) MoveForward() {
@@ -69,7 +70,7 @@ func (r *RuneBuffer) MoveForward() {
 		return
 	}
 	r.idx++
-	r.Refresh(0, 1)
+	r.Refresh()
 }
 
 func (r *RuneBuffer) Delete() {
@@ -77,7 +78,7 @@ func (r *RuneBuffer) Delete() {
 		return
 	}
 	r.buf = append(r.buf[:r.idx], r.buf[r.idx+1:]...)
-	r.Refresh(-1, 0)
+	r.Refresh()
 }
 
 func (r *RuneBuffer) DeleteWord() {
@@ -91,7 +92,7 @@ func (r *RuneBuffer) DeleteWord() {
 	for i := init + 1; i < len(r.buf); i++ {
 		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
 			r.buf = append(r.buf[:r.idx], r.buf[i-1:]...)
-			r.Refresh(r.idx-i+1, 0)
+			r.Refresh()
 			return
 		}
 	}
@@ -104,11 +105,13 @@ func (r *RuneBuffer) MoveToPrevWord() {
 	}
 	for i := r.idx - 1; i > 0; i-- {
 		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
-			r.Refresh(0, r.SetIdx(i))
+			r.idx = i
+			r.Refresh()
 			return
 		}
 	}
-	r.Refresh(0, r.SetIdx(0))
+	r.idx = 0
+	r.Refresh()
 }
 
 func (r *RuneBuffer) SetIdx(idx int) (change int) {
@@ -118,19 +121,20 @@ func (r *RuneBuffer) SetIdx(idx int) (change int) {
 }
 
 func (r *RuneBuffer) Kill() {
-	length := len(r.buf)
 	r.buf = r.buf[:r.idx]
-	r.Refresh(r.idx-length, 0)
+	r.Refresh()
 }
 
 func (r *RuneBuffer) MoveToNextWord() {
 	for i := r.idx + 1; i < len(r.buf); i++ {
 		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
-			r.Refresh(0, r.SetIdx(i))
+			r.idx = i
+			r.Refresh()
 			return
 		}
 	}
-	r.Refresh(0, r.SetIdx(len(r.buf)))
+	r.idx = len(r.buf)
+	r.Refresh()
 }
 
 func (r *RuneBuffer) BackEscapeWord() {
@@ -139,16 +143,16 @@ func (r *RuneBuffer) BackEscapeWord() {
 	}
 	for i := r.idx - 1; i > 0; i-- {
 		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
-			change := i - r.idx
 			r.buf = append(r.buf[:i], r.buf[r.idx:]...)
-			r.Refresh(change, r.SetIdx(i))
+			r.idx = i
+			r.Refresh()
 			return
 		}
 	}
 
-	length := len(r.buf)
 	r.buf = r.buf[:0]
-	r.Refresh(-length, r.SetIdx(0))
+	r.idx = 0
+	r.Refresh()
 }
 
 func (r *RuneBuffer) Backspace() {
@@ -157,30 +161,25 @@ func (r *RuneBuffer) Backspace() {
 	}
 	r.idx--
 	r.buf = append(r.buf[:r.idx], r.buf[r.idx+1:]...)
-	r.Refresh(-1, -1)
+	r.Refresh()
 }
 
 func (r *RuneBuffer) MoveToLineEnd() {
 	if r.idx == len(r.buf) {
 		return
 	}
-	r.Refresh(0, r.SetIdx(len(r.buf)))
+	r.idx = len(r.buf)
+	r.Refresh()
 }
 
-func (r *RuneBuffer) Refresh(chlen, chidx int) {
-	s := r.Output(len(r.buf)-chlen, r.idx-chidx, true)
-	r.w.Write(s)
+func (r *RuneBuffer) Refresh() {
+	r.w.Write(r.Output())
 }
 
-func (r *RuneBuffer) RefreshSet(originLength, originIdx int) {
-	r.w.Write(r.Output(originLength, originIdx, true))
-}
-
-func (r *RuneBuffer) Output(originLength, originIdx int, prompt bool) []byte {
+func (r *RuneBuffer) Output() []byte {
 	buf := bytes.NewBuffer(nil)
 	buf.Write(r.CleanOutput())
 	buf.Write(r.prompt)
-	r.hasPrompt = prompt
 	buf.Write([]byte(string(r.buf)))
 	buf.Write(bytes.Repeat([]byte{'\b'}, len(r.buf)-r.idx))
 	return buf.Bytes()
@@ -199,10 +198,6 @@ func (r *RuneBuffer) Clean() {
 	r.w.Write(r.CleanOutput())
 }
 
-func (r *RuneBuffer) ResetScreen() {
-	r.w.Write(r.Output(0, 0, false))
-}
-
 func (r *RuneBuffer) Reset() []rune {
 	ret := r.buf
 	r.buf = r.buf[:0]
@@ -212,8 +207,7 @@ func (r *RuneBuffer) Reset() []rune {
 }
 
 func (r *RuneBuffer) Set(buf []rune) {
-	length, idx := len(r.buf), r.idx
 	r.buf = buf
 	r.idx = len(r.buf)
-	r.RefreshSet(length, idx)
+	r.Refresh()
 }

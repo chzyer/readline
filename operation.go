@@ -39,7 +39,7 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 	buf := w.r.buf
 	buf.Clean()
 	n, err := w.target.Write(b)
-	w.r.buf.RefreshSet(0, 0)
+	w.r.buf.Refresh()
 	return n, err
 }
 
@@ -121,7 +121,7 @@ func (l *Operation) String() (string, error) {
 }
 
 func (l *Operation) Runes() ([]rune, error) {
-	l.buf.Refresh(0, 0) // print prompt
+	l.buf.Refresh() // print prompt
 	r := <-l.outchan
 	if r == nil {
 		return nil, io.EOF
