@@ -1,5 +1,12 @@
 package readline
 
+import (
+	"bufio"
+	"container/list"
+	"os"
+	"strings"
+)
+
 type HisItem struct {
 	Source  []rune
 	Version int64
@@ -11,7 +18,47 @@ func (h *HisItem) Clean() {
 	h.Tmp = nil
 }
 
-func (o *Operation) showItem(obj interface{}) []rune {
+type opHistory struct {
+	path       string
+	history    *list.List
+	historyVer int64
+	current    *list.Element
+	fd         *os.File
+}
+
+func newOpHistory(path string) (o *opHistory) {
+	o = &opHistory{
+		path:    path,
+		history: list.New(),
+	}
+	if o.path == "" {
+		return
+	}
+	f, err := os.OpenFile(o.path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	if err != nil {
+		return
+	}
+	o.fd = f
+	r := bufio.NewReader(o.fd)
+	for {
+		line, err := r.ReadSlice('\n')
+		if err != nil {
+			break
+		}
+		o.PushHistory([]rune(strings.TrimSpace(string(line))))
+	}
+	o.historyVer++
+	o.PushHistory(nil)
+	return
+}
+
+func (o *opHistory) Close() {
+	if o.fd != nil {
+		o.fd.Close()
+	}
+}
+
+func (o *opHistory) showItem(obj interface{}) []rune {
 	item := obj.(*HisItem)
 	if item.Version == o.historyVer {
 		return item.Tmp
@@ -19,7 +66,7 @@ func (o *Operation) showItem(obj interface{}) []rune {
 	return item.Source
 }
 
-func (o *Operation) PrevHistory() []rune {
+func (o *opHistory) PrevHistory() []rune {
 	if o.current == nil {
 		return nil
 	}
@@ -31,7 +78,7 @@ func (o *Operation) PrevHistory() []rune {
 	return o.showItem(current.Value)
 }
 
-func (o *Operation) NextHistory() ([]rune, bool) {
+func (o *opHistory) NextHistory() ([]rune, bool) {
 	if o.current == nil {
 		return nil, false
 	}
@@ -44,7 +91,7 @@ func (o *Operation) NextHistory() ([]rune, bool) {
 	return o.showItem(current.Value), true
 }
 
-func (o *Operation) NewHistory(current []rune) {
+func (o *opHistory) NewHistory(current []rune) {
 	// if just use last command without modify
 	// just clean lastest history
 	if back := o.history.Back(); back != nil {
@@ -82,7 +129,7 @@ func (o *Operation) NewHistory(current []rune) {
 	o.PushHistory(nil)
 }
 
-func (o *Operation) UpdateHistory(s []rune, commit bool) {
+func (o *opHistory) UpdateHistory(s []rune, commit bool) {
 	if o.current == nil {
 		o.PushHistory(s)
 		return
@@ -92,13 +139,16 @@ func (o *Operation) UpdateHistory(s []rune, commit bool) {
 	if commit {
 		r.Source = make([]rune, len(s))
 		copy(r.Source, s)
+		if o.fd != nil {
+			o.fd.Write([]byte(string(r.Source) + "\n"))
+		}
 	} else {
 		r.Tmp = append(r.Tmp[:0], s...)
 	}
 	o.current.Value = r
 }
 
-func (o *Operation) PushHistory(s []rune) {
+func (o *opHistory) PushHistory(s []rune) {
 	// copy
 	newCopy := make([]rune, len(s))
 	copy(newCopy, s)

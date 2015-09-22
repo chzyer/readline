@@ -27,17 +27,19 @@ const (
 )
 
 type Terminal struct {
+	cfg     *Config
 	state   *terminal.State
 	outchan chan rune
 	closed  int64
 }
 
-func NewTerminal() (*Terminal, error) {
+func NewTerminal(cfg *Config) (*Terminal, error) {
 	state, err := MakeRaw(syscall.Stdin)
 	if err != nil {
 		return nil, err
 	}
 	t := &Terminal{
+		cfg:     cfg,
 		state:   state,
 		outchan: make(chan rune),
 	}
@@ -58,8 +60,8 @@ func (t *Terminal) PrintRune(r rune) {
 	fmt.Fprintf(os.Stdout, "%c", r)
 }
 
-func (t *Terminal) Readline(prompt string) *Operation {
-	return NewOperation(os.Stdin, t, prompt)
+func (t *Terminal) Readline() *Operation {
+	return NewOperation(t, t.cfg)
 }
 
 func (t *Terminal) ReadRune() rune {

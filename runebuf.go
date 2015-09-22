@@ -6,12 +6,10 @@ import (
 )
 
 type RuneBuffer struct {
-	buf         []rune
-	idx         int
-	prompt      []byte
-	w           io.Writer
-	hasPrompt   bool
-	lastWritten int
+	buf    []rune
+	idx    int
+	prompt []byte
+	w      io.Writer
 }
 
 func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
@@ -187,7 +185,9 @@ func (r *RuneBuffer) Output() []byte {
 
 func (r *RuneBuffer) CleanOutput() []byte {
 	buf := bytes.NewBuffer(nil)
-	buf.Write([]byte("\033[J"))
+	buf.Write([]byte("\033[J")) // just like ^k :)
+
+	// TODO: calculate how many line before cursor.
 	for i := 0; i <= 100; i++ {
 		buf.WriteString("\033[2K\r\b")
 	}
@@ -202,7 +202,6 @@ func (r *RuneBuffer) Reset() []rune {
 	ret := r.buf
 	r.buf = r.buf[:0]
 	r.idx = 0
-	r.hasPrompt = false
 	return ret
 }
 

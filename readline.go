@@ -7,16 +7,25 @@ type Instance struct {
 	o *Operation
 }
 
-func New(prompt string) (*Instance, error) {
-	t, err := NewTerminal()
+type Config struct {
+	Prompt      string
+	HistoryFile string
+}
+
+func NewEx(cfg *Config) (*Instance, error) {
+	t, err := NewTerminal(cfg)
 	if err != nil {
 		return nil, err
 	}
-	rl := t.Readline(prompt)
+	rl := t.Readline()
 	return &Instance{
 		t: t,
 		o: rl,
 	}, nil
+}
+
+func New(prompt string) (*Instance, error) {
+	return NewEx(&Config{Prompt: prompt})
 }
 
 func (i *Instance) Stderr() io.Writer {
@@ -32,5 +41,6 @@ func (i *Instance) ReadSlice() ([]byte, error) {
 }
 
 func (i *Instance) Close() error {
+	i.o.Close()
 	return i.t.Close()
 }

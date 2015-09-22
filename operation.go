@@ -1,20 +1,16 @@
 package readline
 
 import (
-	"container/list"
 	"io"
 	"os"
 )
 
 type Operation struct {
-	r       *os.File
+	cfg     *Config
 	t       *Terminal
 	buf     *RuneBuffer
 	outchan chan []rune
-
-	history    *list.List
-	historyVer int64
-	current    *list.Element
+	*opHistory
 }
 
 const (
@@ -43,13 +39,13 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 	return n, err
 }
 
-func NewOperation(r *os.File, t *Terminal, prompt string) *Operation {
+func NewOperation(t *Terminal, cfg *Config) *Operation {
 	op := &Operation{
-		r:       r,
-		t:       t,
-		buf:     NewRuneBuffer(t, prompt),
-		outchan: make(chan []rune),
-		history: list.New(),
+		cfg:       cfg,
+		t:         t,
+		buf:       NewRuneBuffer(t, cfg.Prompt),
+		outchan:   make(chan []rune),
+		opHistory: newOpHistory(cfg.HistoryFile),
 	}
 	go op.ioloop()
 	return op
@@ -135,4 +131,8 @@ func (l *Operation) Slice() ([]byte, error) {
 		return nil, err
 	}
 	return []byte(string(r)), nil
+}
+
+func (l *Operation) Close() {
+	l.opHistory.Close()
 }

@@ -17,7 +17,10 @@ bye: quit
 }
 
 func main() {
-	l, err := readline.New("home -> ")
+	l, err := readline.NewEx(&readline.Config{
+		Prompt:      "home -> ",
+		HistoryFile: "/tmp/readline.tmp",
+	})
 	if err != nil {
 		panic(err)
 	}
