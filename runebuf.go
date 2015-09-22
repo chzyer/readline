@@ -178,37 +178,25 @@ func (r *RuneBuffer) RefreshSet(originLength, originIdx int) {
 
 func (r *RuneBuffer) Output(originLength, originIdx int, prompt bool) []byte {
 	buf := bytes.NewBuffer(nil)
-	buf.Write(bytes.Repeat([]byte{'\b'}, originIdx))
-	if prompt {
-		if r.hasPrompt {
-			buf.Write(bytes.Repeat([]byte{'\b'}, len(r.prompt)))
-		}
-		buf.Write(r.prompt)
-	}
+	buf.Write(r.CleanOutput())
+	buf.Write(r.prompt)
 	r.hasPrompt = prompt
 	buf.Write([]byte(string(r.buf)))
-	if originLength > len(r.buf) {
-		buf.Write(bytes.Repeat([]byte{' '}, originLength-len(r.buf)))
-		buf.Write(bytes.Repeat([]byte{'\b'}, originLength-len(r.buf)))
-	}
 	buf.Write(bytes.Repeat([]byte{'\b'}, len(r.buf)-r.idx))
 	return buf.Bytes()
 }
 
-func (r *RuneBuffer) Clean() {
-	moveToFirst := r.idx
-	if r.hasPrompt {
-		moveToFirst += len(r.prompt)
+func (r *RuneBuffer) CleanOutput() []byte {
+	buf := bytes.NewBuffer(nil)
+	buf.Write([]byte("\033[J"))
+	for i := 0; i <= 100; i++ {
+		buf.WriteString("\033[2K\r\b")
 	}
-	r.w.Write(bytes.Repeat([]byte{'\b'}, moveToFirst))
-	length := len(r.buf)
-	if r.hasPrompt {
-		length += len(r.prompt)
-	}
-	r.w.Write(bytes.Repeat([]byte{' '}, length))
+	return buf.Bytes()
+}
 
-	r.w.Write(bytes.Repeat([]byte{'\b'}, length))
-	r.hasPrompt = false
+func (r *RuneBuffer) Clean() {
+	r.w.Write(r.CleanOutput())
 }
 
 func (r *RuneBuffer) ResetScreen() {
