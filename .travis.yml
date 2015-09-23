@@ -1,0 +1,8 @@
+language: go
+go:
+  - 1.4
+  - 1.5
+before_install:
+  - go get golang.org/x/crypto/ssh/terminal
+script:
+  - go install github.com/chzyer/readline/example
