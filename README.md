@@ -12,7 +12,10 @@ A pure go implementation for gnu readline.
 
 # Usage
 
+You can read example code in [example/main.go](https://github.com/chzyer/readline/blob/master/example/main.go).
+
 * Simplest example
+
 ```go
 import "github.com/chzyer/readline"
 
@@ -32,6 +35,7 @@ for {
 ```
 
 * Example with durable history
+
 ```go
 rl, err := readline.NewEx(&readline.Config{
 	Prompt: "> ",
@@ -52,6 +56,7 @@ for {
 ```
 
 * Example with auto refresh
+
 ```go
 import (
 	"log"
