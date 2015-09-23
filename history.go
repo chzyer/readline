@@ -90,6 +90,8 @@ func (o *opHistory) FindHistoryFwd(isNewSearch bool, rs []rune, start int) (int,
 		if elem == o.current {
 			if len(item)-1 >= start {
 				item = item[start:]
+			} else {
+				continue
 			}
 		}
 		idx := RunesIndex(item, rs)
