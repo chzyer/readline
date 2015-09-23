@@ -1,7 +1,6 @@
 # readline
-A pure go implementation for gnu readline.
 
-![demo](https://raw.githubusercontent.com/chzyer/readline/master/example/demo.gif)
+A pure go implementation for gnu readline.
 
 # usage
 
@@ -37,5 +36,6 @@ A pure go implementation for gnu readline.
 | `Meta`+`Backspace` | Cut previous word                 | Yes     |
 | `Enter`            | Line feed                         | Yes     |
 
+# demo
 
-
+![demo](https://raw.githubusercontent.com/chzyer/readline/master/example/demo.gif)
