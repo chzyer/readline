@@ -52,6 +52,8 @@ func escapeKey(r rune) rune {
 		r = MetaNext
 	case 'd':
 		r = MetaDelete
+	case CharTransform:
+		r = MetaTransform
 	case CharBackspace:
 		r = MetaBackspace
 	case CharEsc:
@@ -164,4 +166,14 @@ func RunesIndex(r, sub []rune) int {
 		}
 	}
 	return -1
+}
+
+func IsWordBreak(i rune) bool {
+	if i >= 'a' && i <= 'z' {
+		return false
+	}
+	if i >= 'A' && i <= 'Z' {
+		return false
+	}
+	return true
 }

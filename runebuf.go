@@ -84,11 +84,11 @@ func (r *RuneBuffer) DeleteWord() {
 		return
 	}
 	init := r.idx
-	for init < len(r.buf) && r.buf[init] == ' ' {
+	for init < len(r.buf) && IsWordBreak(r.buf[init]) {
 		init++
 	}
 	for i := init + 1; i < len(r.buf); i++ {
-		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
+		if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
 			r.buf = append(r.buf[:r.idx], r.buf[i-1:]...)
 			r.Refresh()
 			return
@@ -102,7 +102,7 @@ func (r *RuneBuffer) MoveToPrevWord() {
 		return
 	}
 	for i := r.idx - 1; i > 0; i-- {
-		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
+		if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
 			r.idx = i
 			r.Refresh()
 			return
@@ -124,12 +124,24 @@ func (r *RuneBuffer) Kill() {
 }
 
 func (r *RuneBuffer) Transform() {
-
+	if len(r.buf) < 2 {
+		if len(r.buf) == 1 {
+			r.idx++
+			r.Refresh()
+		}
+		return
+	}
+	if r.idx == 0 {
+		r.idx = 1
+	}
+	r.buf[r.idx], r.buf[r.idx-1] = r.buf[r.idx-1], r.buf[r.idx]
+	r.idx++
+	r.Refresh()
 }
 
 func (r *RuneBuffer) MoveToNextWord() {
 	for i := r.idx + 1; i < len(r.buf); i++ {
-		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
+		if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
 			r.idx = i
 			r.Refresh()
 			return
@@ -144,7 +156,7 @@ func (r *RuneBuffer) BackEscapeWord() {
 		return
 	}
 	for i := r.idx - 1; i > 0; i-- {
-		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {
+		if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
 			r.buf = append(r.buf[:i], r.buf[r.idx:]...)
 			r.idx = i
 			r.Refresh()
