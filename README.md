@@ -107,18 +107,18 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | `Meta`+`F`         | Forward one word                  | Yes     |
 | `Ctrl`+`G`         | Cancel                            | Yes     |
 | `Ctrl`+`H`         | Delete previous character         | Yes     |
-| `Ctrl`+`I` / `Tab` | Command line completion           | No      |
+| `Ctrl`+`I` / `Tab` | Command line completion           | NoYet   |
 | `Ctrl`+`J`         | Line feed                         | Yes     |
 | `Ctrl`+`K`         | Cut text to the end of line       | Yes     |
-| `Ctrl`+`L`         | Clean screen                      | No      |
+| `Ctrl`+`L`         | Clean screen                      | NoYet   |
 | `Ctrl`+`M`         | Same as Enter key                 | Yes     |
 | `Ctrl`+`N` / `↓`   | Next line (in history)            | Yes     |
 | `Ctrl`+`P` / `↑`   | Prev line (in history)            | Yes     |
 | `Ctrl`+`R`         | Search backwards in history       | Yes     |
 | `Ctrl`+`S`         | Search forwards in history        | Yes     |
 | `Ctrl`+`T`         | Transpose characters              | Yes     |
-| `Meta`+`T`         | Transpose words                   | No      |
-| `Ctrl`+`U`         | Cut text to the beginning of line | No      |
+| `Meta`+`T`         | Transpose words                   | NoYet   |
+| `Ctrl`+`U`         | Cut text to the beginning of line | NoYet   |
 | `Ctrl`+`W`         | Cut previous word                 | Yes     |
 | `Backspace`        | Delete previous character         | Yes     |
 | `Meta`+`Backspace` | Cut previous word                 | Yes     |
