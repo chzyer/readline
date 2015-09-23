@@ -34,10 +34,10 @@ A pure go implementation for gnu readline.
 | `Ctrl`+`M`         | Same as Enter key                 | Yes     |
 | `Ctrl`+`N` / `↓`   | Next line (in history)            | Yes     |
 | `Ctrl`+`P` / `↑`   | Prev line (in history)            | Yes     |
-| `Ctrl`+`Q`         | Resume transmission               | No      |
 | `Ctrl`+`R`         | Search backwards in history       | Yes     |
 | `Ctrl`+`S`         | Search forwards in history        | Yes     |
 | `Ctrl`+`T`         | Transpose characters              | Yes     |
+| `Meta`+`T`         | Transpose words                   | No      |
 | `Ctrl`+`U`         | Cut text to the beginning of line | No      |
 | `Ctrl`+`W`         | Cut previous word                 | Yes     |
 | `Backspace`        | Delete previous character         | Yes     |
