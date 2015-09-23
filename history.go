@@ -65,10 +65,9 @@ func (o *opHistory) FindHistoryBck(isNewSearch bool, rs []rune, start int) (int,
 			start += len(rs)
 		}
 		if elem == o.current {
-			if len(item) < start {
-				continue
+			if len(item) >= start {
+				item = item[:start]
 			}
-			item = item[:start]
 		}
 		idx := RunesIndexBck(item, rs)
 		if idx < 0 {
@@ -84,12 +83,14 @@ func (o *opHistory) FindHistoryFwd(isNewSearch bool, rs []rune, start int) (int,
 		item := o.showItem(elem.Value)
 		if isNewSearch {
 			start -= len(rs)
+			if start < 0 {
+				start = 0
+			}
 		}
 		if elem == o.current {
-			if len(item)-1 < start {
-				continue
+			if len(item)-1 >= start {
+				item = item[start:]
 			}
-			item = item[start:]
 		}
 		idx := RunesIndex(item, rs)
 		if idx < 0 {
