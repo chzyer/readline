@@ -18,14 +18,16 @@ const (
 )
 
 type opSearch struct {
-	inMode  bool
-	state   int
-	dir     int
-	source  *list.Element
-	w       io.Writer
-	buf     *RuneBuffer
-	data    []rune
-	history *opHistory
+	inMode    bool
+	state     int
+	dir       int
+	source    *list.Element
+	w         io.Writer
+	buf       *RuneBuffer
+	data      []rune
+	history   *opHistory
+	markStart int
+	markEnd   int
 }
 
 func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory) *opSearch {
@@ -76,7 +78,7 @@ func (o *opSearch) search(isChange bool) bool {
 		idx += len(o.data)
 	}
 	o.buf.SetWithIdx(idx, item)
-	o.buf.SetStyle(start, end, "4m")
+	o.markStart, o.markEnd = start, end
 	o.SearchRefresh(idx)
 	return true
 }
@@ -103,6 +105,7 @@ func (o *opSearch) ExitSearchMode(revert bool) {
 		o.history.current = o.source
 		o.buf.Set(o.history.showItem(o.history.current.Value))
 	}
+	o.markStart, o.markEnd = 0, 0
 	o.state = S_STATE_FOUND
 	o.inMode = false
 	o.source = nil
@@ -120,6 +123,10 @@ func (o *opSearch) SearchRefresh(x int) {
 	}
 	x += len(o.buf.prompt)
 	x = x % getWidth()
+
+	if o.markStart > 0 {
+		o.buf.SetStyle(o.markStart, o.markEnd, "4m")
+	}
 
 	lineCnt := o.buf.CursorLineCount()
 	buf := bytes.NewBuffer(nil)
