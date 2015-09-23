@@ -60,8 +60,8 @@ func (l *Operation) ioloop() {
 			l.buf.Kill()
 		case MetaNext:
 			l.buf.MoveToNextWord()
-		case CharTransform:
-			l.buf.Transform()
+		case CharTranspose:
+			l.buf.Transpose()
 		case MetaPrev:
 			l.buf.MoveToPrevWord()
 		case MetaDelete:

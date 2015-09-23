@@ -16,7 +16,7 @@ const (
 	CharPrev      = 16
 	CharBckSearch = 18
 	CharFwdSearch = 19
-	CharTransform = 20
+	CharTranspose = 20
 	CharCtrlW     = 23
 	CharEsc       = 27
 	CharEscapeEx  = 91
@@ -28,5 +28,5 @@ const (
 	MetaNext
 	MetaDelete
 	MetaBackspace
-	MetaTransform
+	MetaTranspose
 )

@@ -123,7 +123,7 @@ func (r *RuneBuffer) Kill() {
 	r.Refresh()
 }
 
-func (r *RuneBuffer) Transform() {
+func (r *RuneBuffer) Transpose() {
 	if len(r.buf) < 2 {
 		if len(r.buf) == 1 {
 			r.idx++
@@ -133,6 +133,8 @@ func (r *RuneBuffer) Transform() {
 	}
 	if r.idx == 0 {
 		r.idx = 1
+	} else if r.idx >= len(r.buf) {
+		r.idx = len(r.buf) - 1
 	}
 	r.buf[r.idx], r.buf[r.idx-1] = r.buf[r.idx-1], r.buf[r.idx]
 	r.idx++
