@@ -40,126 +40,126 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 	return op
 }
 
-func (l *Operation) ioloop() {
+func (o *Operation) ioloop() {
 	for {
 		keepInSearchMode := false
-		r := l.t.ReadRune()
+		r := o.t.ReadRune()
 		switch r {
 		case CharCannel:
-			if l.IsSearchMode() {
-				l.ExitSearchMode(true)
-				l.buf.Refresh()
+			if o.IsSearchMode() {
+				o.ExitSearchMode(true)
+				o.buf.Refresh()
 			}
 		case CharBckSearch:
-			l.SearchMode(S_DIR_BCK)
+			o.SearchMode(S_DIR_BCK)
 			keepInSearchMode = true
 		case CharFwdSearch:
-			l.SearchMode(S_DIR_FWD)
+			o.SearchMode(S_DIR_FWD)
 			keepInSearchMode = true
 		case CharKill:
-			l.buf.Kill()
+			o.buf.Kill()
 		case MetaNext:
-			l.buf.MoveToNextWord()
+			o.buf.MoveToNextWord()
 		case CharTranspose:
-			l.buf.Transpose()
+			o.buf.Transpose()
 		case MetaPrev:
-			l.buf.MoveToPrevWord()
+			o.buf.MoveToPrevWord()
 		case MetaDelete:
-			l.buf.DeleteWord()
+			o.buf.DeleteWord()
 		case CharLineStart:
-			l.buf.MoveToLineStart()
+			o.buf.MoveToLineStart()
 		case CharLineEnd:
-			l.buf.MoveToLineEnd()
+			o.buf.MoveToLineEnd()
 		case CharDelete:
-			l.buf.Delete()
+			o.buf.Delete()
 		case CharBackspace, CharCtrlH:
-			if l.IsSearchMode() {
-				l.SearchBackspace()
+			if o.IsSearchMode() {
+				o.SearchBackspace()
 				keepInSearchMode = true
 			} else {
-				l.buf.Backspace()
+				o.buf.Backspace()
 			}
 		case MetaBackspace, CharCtrlW:
-			l.buf.BackEscapeWord()
+			o.buf.BackEscapeWord()
 		case CharEnter, CharCtrlJ:
-			if l.IsSearchMode() {
-				l.ExitSearchMode(false)
+			if o.IsSearchMode() {
+				o.ExitSearchMode(false)
 			}
-			l.buf.MoveToLineEnd()
-			l.buf.WriteRune('\n')
-			data := l.buf.Reset()
+			o.buf.MoveToLineEnd()
+			o.buf.WriteRune('\n')
+			data := o.buf.Reset()
 			data = data[:len(data)-1] // trim \n
-			l.outchan <- data
-			l.NewHistory(data)
+			o.outchan <- data
+			o.NewHistory(data)
 		case CharBackward:
-			l.buf.MoveBackward()
+			o.buf.MoveBackward()
 		case CharForward:
-			l.buf.MoveForward()
+			o.buf.MoveForward()
 		case CharPrev:
-			buf := l.PrevHistory()
+			buf := o.PrevHistory()
 			if buf != nil {
-				l.buf.Set(buf)
+				o.buf.Set(buf)
 			}
 		case CharNext:
-			buf, ok := l.NextHistory()
+			buf, ok := o.NextHistory()
 			if ok {
-				l.buf.Set(buf)
+				o.buf.Set(buf)
 			}
 		case CharInterrupt:
-			if l.IsSearchMode() {
-				l.ExitSearchMode(false)
+			if o.IsSearchMode() {
+				o.ExitSearchMode(false)
 			}
-			l.buf.MoveToLineEnd()
-			l.buf.Refresh()
-			l.buf.WriteString("^C\n")
-			l.outchan <- nil
+			o.buf.MoveToLineEnd()
+			o.buf.Refresh()
+			o.buf.WriteString("^C\n")
+			o.outchan <- nil
 		default:
-			if l.IsSearchMode() {
-				l.SearchChar(r)
+			if o.IsSearchMode() {
+				o.SearchChar(r)
 				keepInSearchMode = true
 			} else {
-				l.buf.WriteRune(r)
+				o.buf.WriteRune(r)
 			}
 		}
-		if !keepInSearchMode && l.IsSearchMode() {
-			l.ExitSearchMode(false)
-			l.buf.Refresh()
+		if !keepInSearchMode && o.IsSearchMode() {
+			o.ExitSearchMode(false)
+			o.buf.Refresh()
 		}
-		if !l.IsSearchMode() {
-			l.UpdateHistory(l.buf.Runes(), false)
+		if !o.IsSearchMode() {
+			o.UpdateHistory(o.buf.Runes(), false)
 		}
 	}
 }
 
-func (l *Operation) Stderr() io.Writer {
-	return &wrapWriter{target: os.Stderr, r: l}
+func (o *Operation) Stderr() io.Writer {
+	return &wrapWriter{target: os.Stderr, r: o}
 }
 
-func (l *Operation) String() (string, error) {
-	r, err := l.Runes()
+func (o *Operation) String() (string, error) {
+	r, err := o.Runes()
 	if err != nil {
 		return "", err
 	}
 	return string(r), nil
 }
 
-func (l *Operation) Runes() ([]rune, error) {
-	l.buf.Refresh() // print prompt
-	r := <-l.outchan
+func (o *Operation) Runes() ([]rune, error) {
+	o.buf.Refresh() // print prompt
+	r := <-o.outchan
 	if r == nil {
 		return nil, io.EOF
 	}
 	return r, nil
 }
 
-func (l *Operation) Slice() ([]byte, error) {
-	r, err := l.Runes()
+func (o *Operation) Slice() ([]byte, error) {
+	r, err := o.Runes()
 	if err != nil {
 		return nil, err
 	}
 	return []byte(string(r)), nil
 }
 
-func (l *Operation) Close() {
-	l.opHistory.Close()
+func (o *Operation) Close() {
+	o.opHistory.Close()
 }

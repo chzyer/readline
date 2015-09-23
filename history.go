@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-type HisItem struct {
+type hisItem struct {
 	Source  []rune
 	Version int64
 	Tmp     []rune
 }
 
-func (h *HisItem) Clean() {
+func (h *hisItem) Clean() {
 	h.Source = nil
 	h.Tmp = nil
 }
@@ -105,7 +105,7 @@ func (o *opHistory) FindHistoryFwd(isNewSearch bool, rs []rune, start int) (int,
 }
 
 func (o *opHistory) showItem(obj interface{}) []rune {
-	item := obj.(*HisItem)
+	item := obj.(*hisItem)
 	if item.Version == o.historyVer {
 		return item.Tmp
 	}
@@ -143,10 +143,10 @@ func (o *opHistory) NewHistory(current []rune) {
 	if back := o.history.Back(); back != nil {
 		prev := back.Prev()
 		if prev != nil {
-			use := o.showItem(o.current.Value.(*HisItem))
-			if equalRunes(use, prev.Value.(*HisItem).Source) {
+			use := o.showItem(o.current.Value.(*hisItem))
+			if equalRunes(use, prev.Value.(*hisItem).Source) {
 				o.current = o.history.Back()
-				o.current.Value.(*HisItem).Clean()
+				o.current.Value.(*hisItem).Clean()
 				o.historyVer++
 				return
 			}
@@ -155,7 +155,7 @@ func (o *opHistory) NewHistory(current []rune) {
 	if len(current) == 0 {
 		o.current = o.history.Back()
 		if o.current != nil {
-			o.current.Value.(*HisItem).Clean()
+			o.current.Value.(*hisItem).Clean()
 			o.historyVer++
 			return
 		}
@@ -163,7 +163,7 @@ func (o *opHistory) NewHistory(current []rune) {
 
 	if o.current != o.history.Back() {
 		// move history item to current command
-		use := o.current.Value.(*HisItem)
+		use := o.current.Value.(*hisItem)
 		o.current = o.history.Back()
 		current = use.Tmp
 	}
@@ -180,7 +180,7 @@ func (o *opHistory) UpdateHistory(s []rune, commit bool) {
 		o.PushHistory(s)
 		return
 	}
-	r := o.current.Value.(*HisItem)
+	r := o.current.Value.(*hisItem)
 	r.Version = o.historyVer
 	if commit {
 		r.Source = make([]rune, len(s))
@@ -198,6 +198,6 @@ func (o *opHistory) PushHistory(s []rune) {
 	// copy
 	newCopy := make([]rune, len(s))
 	copy(newCopy, s)
-	elem := o.history.PushBack(&HisItem{Source: newCopy})
+	elem := o.history.PushBack(&hisItem{Source: newCopy})
 	o.current = elem
 }

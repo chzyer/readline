@@ -48,19 +48,19 @@ func (r *RuneBuffer) MoveBackward() {
 	r.Refresh()
 }
 
-func (rb *RuneBuffer) WriteString(s string) {
-	rb.WriteRunes([]rune(s))
+func (r *RuneBuffer) WriteString(s string) {
+	r.WriteRunes([]rune(s))
 }
 
-func (rb *RuneBuffer) WriteRune(r rune) {
-	rb.WriteRunes([]rune{r})
+func (r *RuneBuffer) WriteRune(s rune) {
+	r.WriteRunes([]rune{s})
 }
 
-func (rb *RuneBuffer) WriteRunes(r []rune) {
-	tail := append(r, rb.buf[rb.idx:]...)
-	rb.buf = append(rb.buf[:rb.idx], tail...)
-	rb.idx++
-	rb.Refresh()
+func (r *RuneBuffer) WriteRunes(s []rune) {
+	tail := append(s, r.buf[r.idx:]...)
+	r.buf = append(r.buf[:r.idx], tail...)
+	r.idx++
+	r.Refresh()
 }
 
 func (r *RuneBuffer) MoveForward() {
