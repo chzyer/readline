@@ -123,6 +123,10 @@ func (r *RuneBuffer) Kill() {
 	r.Refresh()
 }
 
+func (r *RuneBuffer) Transform() {
+
+}
+
 func (r *RuneBuffer) MoveToNextWord() {
 	for i := r.idx + 1; i < len(r.buf); i++ {
 		if r.buf[i] != ' ' && r.buf[i-1] == ' ' {

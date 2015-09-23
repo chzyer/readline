@@ -54,7 +54,7 @@ func escapeKey(r rune) rune {
 		r = MetaDelete
 	case CharBackspace:
 		r = MetaBackspace
-	case KeyEsc:
+	case CharEsc:
 
 	}
 	return r

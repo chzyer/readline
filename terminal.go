@@ -10,22 +10,6 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-const (
-	MetaPrev = -iota - 1
-	MetaNext
-	MetaDelete
-	MetaBackspace
-)
-
-const (
-	KeyPrevChar  = 2
-	KeyInterrupt = 3
-	KeyNextChar  = 6
-	KeyDelete    = 4
-	KeyEsc       = 27
-	KeyEscapeEx  = 91
-)
-
 type Terminal struct {
 	cfg     *Config
 	state   *terminal.State
@@ -80,7 +64,7 @@ func (t *Terminal) ioloop() {
 
 		if isEscape {
 			isEscape = false
-			if r == KeyEscapeEx {
+			if r == CharEscapeEx {
 				isEscapeEx = true
 				continue
 			}
@@ -90,24 +74,14 @@ func (t *Terminal) ioloop() {
 			r = escapeExKey(r)
 		}
 
-		if IsPrintable(r) || r < 0 {
-			t.outchan <- r
-			continue
-		}
 		switch r {
-		case KeyInterrupt:
+		case CharInterrupt:
 			t.outchan <- r
 			goto exit
-		case KeyEsc:
+		case CharEsc:
 			isEscape = true
-		case CharEnter, CharEnter2, KeyPrevChar, KeyNextChar, KeyDelete:
-			fallthrough
-		case CharFwdSearch, CharBckSearch, CharCannel:
-			fallthrough
-		case CharLineEnd, CharLineStart, CharNext, CharPrev, CharKill:
-			t.outchan <- r
 		default:
-			println("np:", r)
+			t.outchan <- r
 		}
 	}
 exit:

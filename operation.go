@@ -14,22 +14,6 @@ type Operation struct {
 	*opSearch
 }
 
-const (
-	CharLineStart = 1
-	CharLineEnd   = 5
-	CharKill      = 11
-	CharNext      = 14
-	CharPrev      = 16
-	CharBackward  = 2
-	CharForward   = 6
-	CharBackspace = 0x7f
-	CharEnter     = 0xd
-	CharEnter2    = 0xa
-	CharBckSearch = 18
-	CharFwdSearch = 19
-	CharCannel    = 7
-)
-
 type wrapWriter struct {
 	r      *Operation
 	target io.Writer
@@ -76,6 +60,8 @@ func (l *Operation) ioloop() {
 			l.buf.Kill()
 		case MetaNext:
 			l.buf.MoveToNextWord()
+		case CharTransform:
+			l.buf.Transform()
 		case MetaPrev:
 			l.buf.MoveToPrevWord()
 		case MetaDelete:
@@ -84,18 +70,18 @@ func (l *Operation) ioloop() {
 			l.buf.MoveToLineStart()
 		case CharLineEnd:
 			l.buf.MoveToLineEnd()
-		case KeyDelete:
+		case CharDelete:
 			l.buf.Delete()
-		case CharBackspace:
+		case CharBackspace, CharCtrlH:
 			if l.IsSearchMode() {
 				l.SearchBackspace()
 				keepInSearchMode = true
 			} else {
 				l.buf.Backspace()
 			}
-		case MetaBackspace:
+		case MetaBackspace, CharCtrlW:
 			l.buf.BackEscapeWord()
-		case CharEnter, CharEnter2:
+		case CharEnter, CharCtrlJ:
 			if l.IsSearchMode() {
 				l.ExitSearchMode(false)
 			}
@@ -119,7 +105,7 @@ func (l *Operation) ioloop() {
 			if ok {
 				l.buf.Set(buf)
 			}
-		case KeyInterrupt:
+		case CharInterrupt:
 			if l.IsSearchMode() {
 				l.ExitSearchMode(false)
 			}
