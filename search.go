@@ -121,7 +121,7 @@ func (o *opSearch) SearchRefresh(x int) {
 	if x < 0 {
 		x = o.buf.idx
 	}
-	x += len(o.buf.prompt)
+	x += o.buf.PromptLen()
 	x = x % getWidth()
 
 	if o.markStart > 0 {

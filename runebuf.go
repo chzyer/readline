@@ -8,16 +8,20 @@ import (
 type RuneBuffer struct {
 	buf    []rune
 	idx    int
-	prompt []byte
+	prompt []rune
 	w      io.Writer
 }
 
 func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
 	rb := &RuneBuffer{
-		prompt: []byte(prompt),
+		prompt: []rune(prompt),
 		w:      w,
 	}
 	return rb
+}
+
+func (r *RuneBuffer) PromptLen() int {
+	return RunesWidth(r.prompt)
 }
 
 func (r *RuneBuffer) Runes() []rune {
@@ -189,11 +193,11 @@ func (r *RuneBuffer) MoveToLineEnd() {
 }
 
 func (r *RuneBuffer) LineCount() int {
-	return LineCount(RunesWidth(r.buf) + len(r.prompt))
+	return LineCount(RunesWidth(r.buf) + r.PromptLen())
 }
 
 func (r *RuneBuffer) IdxLine() int {
-	totalWidth := RunesWidth(r.buf[:r.idx]) + len(r.prompt)
+	totalWidth := RunesWidth(r.buf[:r.idx]) + r.PromptLen()
 	w := getWidth()
 	line := 0
 	for totalWidth >= w {
@@ -214,7 +218,7 @@ func (r *RuneBuffer) Refresh() {
 func (r *RuneBuffer) Output() []byte {
 	buf := bytes.NewBuffer(nil)
 	buf.Write(r.CleanOutput())
-	buf.Write(r.prompt)
+	buf.WriteString(string(r.prompt))
 	buf.Write([]byte(string(r.buf)))
 	if len(r.buf) > r.idx {
 		buf.Write(bytes.Repeat([]byte{'\b'}, len(r.buf)-r.idx))

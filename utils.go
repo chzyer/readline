@@ -124,7 +124,7 @@ func LineCount(w int) int {
 
 func RunesWidth(r []rune) (length int) {
 	for i := 0; i < len(r); i++ {
-		if utf8.RuneLen(r[i]) > 1 {
+		if utf8.RuneLen(r[i]) > 3 {
 			length += 2
 		} else {
 			length += 1
