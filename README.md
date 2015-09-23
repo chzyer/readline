@@ -8,7 +8,7 @@ A pure go implementation for gnu readline.
 > `Meta + n` means press `Esc` and `n` separately
 
 | Shortcut           | Comment                           | Support |
-|--------------------+-----------------------------------+---------|
+|--------------------|-----------------------------------|---------|
 | `Ctrl`+`A`         | Beginning of line                 | Yes     |
 | `Ctrl`+`B` / `←`   | Backward one character            | Yes     |
 | `Meta`+`B`         | Backward one word                 | Yes     |
@@ -36,4 +36,6 @@ A pure go implementation for gnu readline.
 | `Backspace`        | Delete previous character         | Yes     |
 | `Meta`+`Backspace` | Cut previous word                 | Yes     |
 | `Enter`            | Line feed                         | Yes     |
+
+
 
