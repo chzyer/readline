@@ -24,6 +24,9 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 	buf.Clean()
 	n, err := w.target.Write(b)
 	w.r.buf.Refresh()
+	if w.r.IsSearchMode() {
+		w.r.SearchRefresh(-1)
+	}
 	return n, err
 }
 
