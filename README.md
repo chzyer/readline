@@ -12,6 +12,7 @@ A pure go implementation for gnu readline.
 
 # Usage
 
+* Simplest example
 ```go
 import "github.com/chzyer/readline"
 
@@ -29,6 +30,56 @@ for {
 	println(line)
 }
 ```
+
+* Example with durable history
+```go
+rl, err := readline.NewEx(&readline.Config{
+	Prompt: "> ",
+	HistoryFile: "/tmp/readline.tmp",
+})
+if err != nil {
+	panic(err)
+}
+defer rl.Close()
+
+for {
+	line, err := rl.Readline()
+	if err != nil { // io.EOF
+		break
+	}
+	println(line)
+}
+```
+
+* Example with auto refresh
+```go
+import (
+	"log"
+	"github.com/chzyer/readline"
+)
+
+rl, err := readline.New("> ")
+if err != nil {
+	panic(err)
+}
+defer rl.Close()
+log.SetOutput(l.Stderr()) // let "log" write to l.Stderr instead of os.Stderr
+
+go func() {
+	for _ = range time.Tick(time.Second) {
+		log.Println("hello")
+	}
+}()
+
+for {
+	line, err := rl.Readline()
+	if err != nil { // io.EOF
+		break
+	}
+	println(line)
+}
+```
+
 
 # Shortcut
 
