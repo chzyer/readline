@@ -10,6 +10,26 @@ A pure go implementation for gnu readline.
 
 ![demo](https://raw.githubusercontent.com/chzyer/readline/master/example/demo.gif)
 
+# Usage
+
+```go
+import "github.com/chzyer/readline"
+
+rl, err := readline.New("> ")
+if err != nil {
+	panic(err)
+}
+defer rl.Close()
+
+for {
+	line, err := rl.Readline()
+	if err != nil { // io.EOF
+		break
+	}
+	println(line)
+}
+```
+
 # Shortcut
 
 `Meta`+`B` means press `Esc` and `n` separately.  
