@@ -58,9 +58,19 @@ func (o *opHistory) Close() {
 	}
 }
 
-func (o *opHistory) FindHistoryBck(rs []rune) (int, *list.Element) {
+func (o *opHistory) FindHistoryBck(isNewSearch bool, rs []rune, start int) (int, *list.Element) {
 	for elem := o.current; elem != nil; elem = elem.Prev() {
-		idx := RunesIndex(o.showItem(elem.Value), rs)
+		item := o.showItem(elem.Value)
+		if isNewSearch {
+			start += len(rs)
+		}
+		if elem == o.current {
+			if len(item) < start {
+				continue
+			}
+			item = item[:start]
+		}
+		idx := RunesIndexBck(item, rs)
 		if idx < 0 {
 			continue
 		}
@@ -69,11 +79,24 @@ func (o *opHistory) FindHistoryBck(rs []rune) (int, *list.Element) {
 	return -1, nil
 }
 
-func (o *opHistory) FindHistoryFwd(rs []rune) (int, *list.Element) {
+func (o *opHistory) FindHistoryFwd(isNewSearch bool, rs []rune, start int) (int, *list.Element) {
 	for elem := o.current; elem != nil; elem = elem.Next() {
-		idx := RunesIndex(o.showItem(elem.Value), rs)
+		item := o.showItem(elem.Value)
+		if isNewSearch {
+			start -= len(rs)
+		}
+		if elem == o.current {
+			if len(item)-1 < start {
+				continue
+			}
+			item = item[start:]
+		}
+		idx := RunesIndex(item, rs)
 		if idx < 0 {
 			continue
+		}
+		if elem == o.current {
+			idx += start
 		}
 		return idx, elem
 	}
@@ -119,8 +142,8 @@ func (o *opHistory) NewHistory(current []rune) {
 	if back := o.history.Back(); back != nil {
 		prev := back.Prev()
 		if prev != nil {
-			use := o.current.Value.(*HisItem)
-			if equalRunes(use.Tmp, prev.Value.(*HisItem).Source) {
+			use := o.showItem(o.current.Value.(*HisItem))
+			if equalRunes(use, prev.Value.(*HisItem).Source) {
 				o.current = o.history.Back()
 				o.current.Value.(*HisItem).Clean()
 				o.historyVer++

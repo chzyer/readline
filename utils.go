@@ -131,6 +131,22 @@ func RunesWidth(r []rune) (length int) {
 	return
 }
 
+func RunesIndexBck(r, sub []rune) int {
+	for i := len(r) - len(sub); i >= 0; i-- {
+		found := true
+		for j := 0; j < len(sub); j++ {
+			if r[i+j] != sub[j] {
+				found = false
+				break
+			}
+		}
+		if found {
+			return i
+		}
+	}
+	return -1
+}
+
 func RunesIndex(r, sub []rune) int {
 	for i := 0; i < len(r); i++ {
 		found := true

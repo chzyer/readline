@@ -43,39 +43,59 @@ func (o *opSearch) IsSearchMode() bool {
 func (o *opSearch) SearchBackspace() {
 	if len(o.data) > 0 {
 		o.data = o.data[:len(o.data)-1]
-		o.search()
+		o.search(true)
 	}
 }
 
-func (o *opSearch) findHistoryBy() (int, *list.Element) {
+func (o *opSearch) findHistoryBy(isNewSearch bool) (int, *list.Element) {
 	if o.dir == S_DIR_BCK {
-		return o.history.FindHistoryBck(o.data)
+		return o.history.FindHistoryBck(isNewSearch, o.data, o.buf.idx)
 	}
-	return o.history.FindHistoryFwd(o.data)
+	return o.history.FindHistoryFwd(isNewSearch, o.data, o.buf.idx)
 }
 
-func (o *opSearch) search() bool {
-	idx, elem := o.findHistoryBy()
+func (o *opSearch) search(isChange bool) bool {
+	if len(o.data) == 0 {
+		o.state = S_STATE_FOUND
+		o.SearchRefresh(-1)
+		return true
+	}
+	idx, elem := o.findHistoryBy(isChange)
 	if elem == nil {
 		o.SearchRefresh(-2)
 		return false
 	}
 	o.history.current = elem
-	o.buf.SetWithIdx(idx, o.history.showItem(o.history.current.Value))
+
+	item := o.history.showItem(o.history.current.Value)
+	start, end := 0, 0
+	if o.dir == S_DIR_BCK {
+		start, end = idx, idx+len(o.data)
+	} else {
+		start, end = idx, idx+len(o.data)
+		idx += len(o.data)
+	}
+	o.buf.SetWithIdx(idx, item)
+	o.buf.SetStyle(start, end, "4m")
 	o.SearchRefresh(idx)
 	return true
 }
 
 func (o *opSearch) SearchChar(r rune) {
 	o.data = append(o.data, r)
-	o.search()
+	o.search(true)
 }
 
 func (o *opSearch) SearchMode(dir int) {
+	alreadyInMode := o.inMode
 	o.inMode = true
 	o.dir = dir
 	o.source = o.history.current
-	o.SearchRefresh(-1)
+	if alreadyInMode {
+		o.search(false)
+	} else {
+		o.SearchRefresh(-1)
+	}
 }
 
 func (o *opSearch) ExitSearchMode(revert bool) {

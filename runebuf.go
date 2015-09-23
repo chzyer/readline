@@ -198,7 +198,9 @@ func (r *RuneBuffer) Output() []byte {
 	buf.Write(r.CleanOutput())
 	buf.Write(r.prompt)
 	buf.Write([]byte(string(r.buf)))
-	buf.Write(bytes.Repeat([]byte{'\b'}, len(r.buf)-r.idx))
+	if len(r.buf) > r.idx {
+		buf.Write(bytes.Repeat([]byte{'\b'}, len(r.buf)-r.idx))
+	}
 	return buf.Bytes()
 }
 
@@ -222,6 +224,31 @@ func (r *RuneBuffer) Reset() []rune {
 	r.buf = r.buf[:0]
 	r.idx = 0
 	return ret
+}
+
+func (r *RuneBuffer) SetStyle(start, end int, style string) {
+	idx := r.idx
+	if end < start {
+		panic("end < start")
+	}
+
+	// goto start
+	move := start - idx
+	if move > 0 {
+		r.w.Write([]byte(string(r.buf[r.idx : r.idx+move])))
+	} else {
+		r.w.Write(bytes.Repeat([]byte("\b"), -move))
+	}
+	r.w.Write([]byte("\033[" + style))
+	r.w.Write([]byte(string(r.buf[start:end])))
+	r.w.Write([]byte("\033[0m"))
+	if move > 0 {
+		r.w.Write(bytes.Repeat([]byte("\b"), -move+(end-start)))
+	} else if -move < end-start {
+		r.w.Write(bytes.Repeat([]byte("\b"), -move))
+	} else {
+		r.w.Write([]byte(string(r.buf[end:r.idx])))
+	}
 }
 
 func (r *RuneBuffer) SetWithIdx(idx int, buf []rune) {

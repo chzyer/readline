@@ -96,6 +96,9 @@ func (l *Operation) ioloop() {
 		case MetaBackspace:
 			l.buf.BackEscapeWord()
 		case CharEnter, CharEnter2:
+			if l.IsSearchMode() {
+				l.ExitSearchMode(false)
+			}
 			l.buf.MoveToLineEnd()
 			l.buf.WriteRune('\n')
 			data := l.buf.Reset()
@@ -136,7 +139,9 @@ func (l *Operation) ioloop() {
 			l.ExitSearchMode(false)
 			l.buf.Refresh()
 		}
-		l.UpdateHistory(l.buf.Runes(), false)
+		if !l.IsSearchMode() {
+			l.UpdateHistory(l.buf.Runes(), false)
+		}
 	}
 }
 
