@@ -4,15 +4,18 @@
 [![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
 [![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)  
 
-A pure go implementation for gnu readline.
+Readline is a pure go implementation for GNU-Readline kind library.
+
+**WHY:**
+Readline will support most of features which GNU Readline is supported, and provide a pure go environment and a MIT license.
 
 # Demo
 
 ![demo](https://raw.githubusercontent.com/chzyer/readline/master/example/demo.gif)
 
-# Usage
+You can read the source code in [example/main.go](https://github.com/chzyer/readline/blob/master/example/main.go).
 
-You can read example code in [example/main.go](https://github.com/chzyer/readline/blob/master/example/main.go).
+# Usage
 
 * Simplest example
 
@@ -121,3 +124,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | `Meta`+`Backspace` | Cut previous word                 | Yes     |
 | `Enter`            | Line feed                         | Yes     |
 
+
+# Feedback
+
+If you have any question, please submit an GitHub Issues and any pull request is welcomed :)
