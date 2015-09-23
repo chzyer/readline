@@ -103,6 +103,7 @@ func (o *opSearch) ExitSearchMode(revert bool) {
 		o.history.current = o.source
 		o.buf.Set(o.history.showItem(o.history.current.Value))
 	}
+	o.state = S_STATE_FOUND
 	o.inMode = false
 	o.source = nil
 	o.data = nil
