@@ -1,8 +1,15 @@
 # readline
 
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
+[![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)  
+
 A pure go implementation for gnu readline.
 
-# usage
+# Demo
+
+![demo](https://raw.githubusercontent.com/chzyer/readline/master/example/demo.gif)
+
+# Shortcut
 
 > `Meta + n` means press `Esc` and `n` separately
 
@@ -36,6 +43,3 @@ A pure go implementation for gnu readline.
 | `Meta`+`Backspace` | Cut previous word                 | Yes     |
 | `Enter`            | Line feed                         | Yes     |
 
-# demo
-
-![demo](https://raw.githubusercontent.com/chzyer/readline/master/example/demo.gif)
