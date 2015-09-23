@@ -12,7 +12,8 @@ A pure go implementation for gnu readline.
 
 # Shortcut
 
-> `Meta + n` means press `Esc` and `n` separately
+`Meta`+`B` means press `Esc` and `n` separately.  
+Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 
 | Shortcut           | Comment                           | Support |
 |--------------------|-----------------------------------|---------|
