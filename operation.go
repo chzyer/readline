@@ -114,7 +114,9 @@ func (o *Operation) ioloop() {
 			}
 		case CharInterrupt:
 			if o.IsSearchMode() {
-				o.ExitSearchMode(false)
+				o.t.KickRead()
+				o.ExitSearchMode(true)
+				break
 			}
 			o.buf.MoveToLineEnd()
 			o.buf.Refresh()

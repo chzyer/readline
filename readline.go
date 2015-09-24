@@ -45,6 +45,9 @@ func (i *Instance) ReadSlice() ([]byte, error) {
 }
 
 func (i *Instance) Close() error {
+	if err := i.t.Close(); err != nil {
+		return err
+	}
 	i.o.Close()
-	return i.t.Close()
+	return nil
 }
