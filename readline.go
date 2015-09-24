@@ -44,3 +44,7 @@ func (i *Instance) Close() error {
 	i.o.Close()
 	return i.t.Close()
 }
+
+func (i *Instance) Write(b []byte) (int, error) {
+	return i.o.Stderr().Write(b)
+}

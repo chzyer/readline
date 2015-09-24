@@ -1,12 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"strconv"
 	"time"
 
-	"github.com/chzyer/readline"
+	"github.com/traetox/readline"
 )
 
 func usage(w io.Writer) {
@@ -43,6 +44,8 @@ func main() {
 			}()
 		case "bye":
 			goto exit
+		case "write":
+			fmt.Fprintf(l, "look, i am writer too\n")
 		case "":
 		default:
 			log.Println("you said:", strconv.Quote(line))
