@@ -22,7 +22,13 @@ func MakeRaw(fd int) (*terminal.State, error) {
 }
 
 func Restore(fd int, state *terminal.State) error {
-	return terminal.Restore(fd, state)
+	err := terminal.Restore(fd, state)
+	if err != nil {
+		if err.Error() == "errno 0" {
+			err = nil
+		}
+	}
+	return nil
 }
 
 func IsPrintable(key rune) bool {

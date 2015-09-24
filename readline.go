@@ -28,6 +28,10 @@ func New(prompt string) (*Instance, error) {
 	return NewEx(&Config{Prompt: prompt})
 }
 
+func (i *Instance) Stdout() io.Writer {
+	return i.o.Stdout()
+}
+
 func (i *Instance) Stderr() io.Writer {
 	return i.o.Stderr()
 }

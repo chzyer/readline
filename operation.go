@@ -10,12 +10,14 @@ type Operation struct {
 	t       *Terminal
 	buf     *RuneBuffer
 	outchan chan []rune
+
 	*opHistory
 	*opSearch
 }
 
 type wrapWriter struct {
 	r      *Operation
+	t      *Terminal
 	target io.Writer
 }
 
@@ -23,7 +25,9 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 	buf := w.r.buf
 	buf.Clean()
 	n, err := w.target.Write(b)
-	w.r.buf.Refresh()
+	if w.t.IsReading() {
+		w.r.buf.Refresh()
+	}
 	if w.r.IsSearchMode() {
 		w.r.SearchRefresh(-1)
 	}
@@ -135,7 +139,11 @@ func (o *Operation) ioloop() {
 }
 
 func (o *Operation) Stderr() io.Writer {
-	return &wrapWriter{target: os.Stderr, r: o}
+	return &wrapWriter{target: os.Stderr, r: o, t: o.t}
+}
+
+func (o *Operation) Stdout() io.Writer {
+	return &wrapWriter{target: os.Stdout, r: o, t: o.t}
 }
 
 func (o *Operation) String() (string, error) {
@@ -148,6 +156,7 @@ func (o *Operation) String() (string, error) {
 
 func (o *Operation) Runes() ([]rune, error) {
 	o.buf.Refresh() // print prompt
+	o.t.KickRead()
 	r := <-o.outchan
 	if r == nil {
 		return nil, io.EOF
