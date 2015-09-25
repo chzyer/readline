@@ -7,14 +7,6 @@ type Instance struct {
 	o *Operation
 }
 
-type AutoCompleter interface {
-	Do(line []rune, pos int) (newLine [][]rune, offset int)
-}
-
-type AutoCompleteHinter interface {
-	Hint(line []rune, pos int) ([]rune, bool)
-}
-
 type Config struct {
 	Prompt       string
 	HistoryFile  string

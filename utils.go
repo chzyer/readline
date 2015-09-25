@@ -270,3 +270,10 @@ func EqualRunes(r, r2 []rune) bool {
 	}
 	return true
 }
+
+func RunesHasPrefix(r, prefix []rune) bool {
+	if len(r) < len(prefix) {
+		return false
+	}
+	return EqualRunes(r[:len(prefix)], prefix)
+}

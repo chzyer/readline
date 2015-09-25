@@ -6,6 +6,10 @@ import (
 	"io"
 )
 
+type AutoCompleter interface {
+	Do(line []rune, pos int) (newLine [][]rune, offset int)
+}
+
 type opCompleter struct {
 	w  io.Writer
 	op *Operation

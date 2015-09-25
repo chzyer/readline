@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"strconv"
@@ -18,30 +17,25 @@ bye: quit
 `[1:])
 }
 
-type Completer struct {
-}
-
-func (c *Completer) Do(line []rune, pos int) (newLine [][]rune, off int) {
-	list := [][]rune{
-		[]rune("sayhello"), []rune("help"), []rune("bye"),
-	}
-	for i := 0; i <= 100; i++ {
-		list = append(list, []rune(fmt.Sprintf("com%d", i)))
-	}
-	line = line[:pos]
-	for _, r := range list {
-		if strings.HasPrefix(string(r), string(line)) {
-			newLine = append(newLine, r[len(line):])
-		}
-	}
-	return newLine, len(line)
-}
+var completer = readline.NewPrefixCompleter(
+	readline.PcItem("say",
+		readline.PcItem("hello"),
+		readline.PcItem("bye"),
+	),
+	readline.PcItem("bye"),
+	readline.PcItem("help"),
+	readline.PcItem("go",
+		readline.PcItem("build"),
+		readline.PcItem("install"),
+		readline.PcItem("test"),
+	),
+)
 
 func main() {
 	l, err := readline.NewEx(&readline.Config{
 		Prompt:       "\033[31m»\033[0m ",
 		HistoryFile:  "/tmp/readline.tmp",
-		AutoComplete: new(Completer),
+		AutoComplete: completer,
 	})
 	if err != nil {
 		panic(err)
@@ -54,18 +48,24 @@ func main() {
 		if err != nil {
 			break
 		}
-		switch line {
-		case "help":
+
+		switch {
+		case line == "help":
 			usage(l.Stderr())
-		case "sayhello":
+		case strings.HasPrefix(line, "say"):
+			line := strings.TrimSpace(line[3:])
+			if len(line) == 0 {
+				log.Println("say what?")
+				break
+			}
 			go func() {
 				for _ = range time.Tick(time.Second) {
-					log.Println("hello")
+					log.Println(line)
 				}
 			}()
-		case "bye":
+		case line == "bye":
 			goto exit
-		case "":
+		case line == "":
 		default:
 			log.Println("you said:", strconv.Quote(line))
 		}
