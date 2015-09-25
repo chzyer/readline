@@ -56,3 +56,7 @@ func (i *Instance) Close() error {
 	i.o.Close()
 	return nil
 }
+
+func (i *Instance) Write(b []byte) (int, error) {
+	return i.o.Stderr().Write(b)
+}
