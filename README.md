@@ -4,7 +4,9 @@
 [![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
 [![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)  
 
-Readline is a pure go implementation for GNU-Readline kind library.
+Readline is A Pure Go Implementation of a libreadline-style Library.  
+The goal is to be a powerful alternater for GNU-Readline.
+
 
 **WHY:**
 Readline will support most of features which GNU Readline is supported, and provide a pure go environment and a MIT license.
@@ -17,7 +19,7 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 
 # Todo
 
-* Auto Completeion
+* Auto Completion
 * Vim mode
 * Transpose words
 * More funny examples
