@@ -6,7 +6,7 @@ import (
 	"os"
 	"syscall"
 	"time"
-	"unicode/utf8"
+	"unicode"
 	"unsafe"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -128,17 +128,6 @@ func LineCount(w int) int {
 	return r
 }
 
-func RunesWidth(r []rune) (length int) {
-	for i := 0; i < len(r); i++ {
-		if utf8.RuneLen(r[i]) > 3 {
-			length += 2
-		} else {
-			length += 1
-		}
-	}
-	return
-}
-
 func RunesIndexBck(r, sub []rune) int {
 	for i := len(r) - len(sub); i >= 0; i-- {
 		found := true
@@ -182,4 +171,60 @@ func IsWordBreak(i rune) bool {
 		return false
 	}
 	return true
+}
+
+var zeroWidth = []*unicode.RangeTable{
+	unicode.Mn,
+	unicode.Me,
+	unicode.Cc,
+	unicode.Cf,
+}
+
+var doubleWidth = []*unicode.RangeTable{
+	unicode.Han,
+	unicode.Hangul,
+	unicode.Hiragana,
+	unicode.Katakana,
+}
+
+func RuneIndex(r rune, rs []rune) int {
+	for i := 0; i < len(rs); i++ {
+		if rs[i] == r {
+			return i
+		}
+	}
+	return -1
+}
+
+func RunesColorFilter(r []rune) []rune {
+	newr := make([]rune, 0, len(r))
+	for pos := 0; pos < len(r); pos++ {
+		if r[pos] == '\033' && r[pos+1] == '[' {
+			idx := RuneIndex('m', r[pos+2:])
+			if idx == -1 {
+				continue
+			}
+			pos += idx + 2
+			continue
+		}
+		newr = append(newr, r[pos])
+	}
+	return newr
+}
+
+func RuneWidth(r rune) int {
+	if unicode.IsOneOf(zeroWidth, r) {
+		return 0
+	}
+	if unicode.IsOneOf(doubleWidth, r) {
+		return 2
+	}
+	return 1
+}
+
+func RunesWidth(r []rune) (length int) {
+	for i := 0; i < len(r); i++ {
+		length += RuneWidth(r[i])
+	}
+	return
 }

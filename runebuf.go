@@ -20,8 +20,12 @@ func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
 	return rb
 }
 
+func (r *RuneBuffer) CurrentWidth(x int) int {
+	return RunesWidth(r.buf[:x])
+}
+
 func (r *RuneBuffer) PromptLen() int {
-	return RunesWidth(r.prompt)
+	return RunesWidth(RunesColorFilter(r.prompt))
 }
 
 func (r *RuneBuffer) Runes() []rune {
@@ -221,7 +225,7 @@ func (r *RuneBuffer) Output() []byte {
 	buf.WriteString(string(r.prompt))
 	buf.Write([]byte(string(r.buf)))
 	if len(r.buf) > r.idx {
-		buf.Write(bytes.Repeat([]byte{'\b'}, len(r.buf)-r.idx))
+		buf.Write(bytes.Repeat([]byte{'\b'}, RunesWidth(r.buf[r.idx:])))
 	}
 	return buf.Bytes()
 }
@@ -248,29 +252,29 @@ func (r *RuneBuffer) Reset() []rune {
 	return ret
 }
 
+func (r *RuneBuffer) calWidth(m int) int {
+	if m > 0 {
+		return RunesWidth(r.buf[r.idx : r.idx+m])
+	}
+	return RunesWidth(r.buf[r.idx+m : r.idx])
+}
+
 func (r *RuneBuffer) SetStyle(start, end int, style string) {
-	idx := r.idx
 	if end < start {
 		panic("end < start")
 	}
 
 	// goto start
-	move := start - idx
+	move := start - r.idx
 	if move > 0 {
 		r.w.Write([]byte(string(r.buf[r.idx : r.idx+move])))
 	} else {
-		r.w.Write(bytes.Repeat([]byte("\b"), -move))
+		r.w.Write(bytes.Repeat([]byte("\b"), r.calWidth(move)))
 	}
 	r.w.Write([]byte("\033[" + style))
 	r.w.Write([]byte(string(r.buf[start:end])))
 	r.w.Write([]byte("\033[0m"))
-	if move > 0 {
-		r.w.Write(bytes.Repeat([]byte("\b"), -move+(end-start)))
-	} else if -move < end-start {
-		r.w.Write(bytes.Repeat([]byte("\b"), -move))
-	} else {
-		r.w.Write([]byte(string(r.buf[end:r.idx])))
-	}
+	// TODO: move back
 }
 
 func (r *RuneBuffer) SetWithIdx(idx int, buf []rune) {

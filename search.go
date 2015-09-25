@@ -121,6 +121,7 @@ func (o *opSearch) SearchRefresh(x int) {
 	if x < 0 {
 		x = o.buf.idx
 	}
+	x = o.buf.CurrentWidth(x)
 	x += o.buf.PromptLen()
 	x = x % getWidth()
 
