@@ -13,6 +13,7 @@ type Operation struct {
 
 	*opHistory
 	*opSearch
+	*opCompleter
 }
 
 type wrapWriter struct {
@@ -31,6 +32,9 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 	if w.r.IsSearchMode() {
 		w.r.SearchRefresh(-1)
 	}
+	if w.r.IsInCompleteMode() {
+		w.r.CompleteRefresh()
+	}
 	return n, err
 }
 
@@ -43,6 +47,7 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 		opHistory: newOpHistory(cfg.HistoryFile),
 	}
 	op.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
+	op.opCompleter = newOpCompleter(op.buf.w, op)
 	go op.ioloop()
 	return op
 }
@@ -50,17 +55,41 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 func (o *Operation) ioloop() {
 	for {
 		keepInSearchMode := false
+		keepInCompleteMode := false
 		r := o.t.ReadRune()
+
+		if o.IsInCompleteSelectMode() {
+			keepInCompleteMode = o.HandleCompleteSelect(r)
+			if keepInCompleteMode {
+				continue
+			}
+
+			o.buf.Refresh()
+			switch r {
+			case CharInterrupt, CharEnter, CharCtrlJ:
+				o.t.KickRead()
+				fallthrough
+			case CharCancel:
+				continue
+			}
+		}
+
 		switch r {
-		case CharCannel:
+		case CharCancel:
 			if o.IsSearchMode() {
 				o.ExitSearchMode(true)
 				o.buf.Refresh()
 			}
+			if o.IsInCompleteMode() {
+				o.ExitCompleteMode(true)
+				o.buf.Refresh()
+			}
 		case CharTab:
-			if o.cfg.AutoComplete == nil {
+			if o.opCompleter == nil {
 				break
 			}
+			o.OnComplete()
+			keepInCompleteMode = true
 		case CharBckSearch:
 			o.SearchMode(S_DIR_BCK)
 			keepInSearchMode = true
@@ -69,6 +98,7 @@ func (o *Operation) ioloop() {
 			keepInSearchMode = true
 		case CharKill:
 			o.buf.Kill()
+			keepInCompleteMode = true
 		case MetaNext:
 			o.buf.MoveToNextWord()
 		case CharTranspose:
@@ -87,8 +117,12 @@ func (o *Operation) ioloop() {
 			if o.IsSearchMode() {
 				o.SearchBackspace()
 				keepInSearchMode = true
-			} else {
-				o.buf.Backspace()
+				break
+			}
+
+			o.buf.Backspace()
+			if o.IsInCompleteMode() {
+				o.OnComplete()
 			}
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
@@ -122,6 +156,12 @@ func (o *Operation) ioloop() {
 				o.ExitSearchMode(true)
 				break
 			}
+			if o.IsInCompleteMode() {
+				o.t.KickRead()
+				o.ExitCompleteMode(true)
+				o.buf.Refresh()
+				break
+			}
 			o.buf.MoveToLineEnd()
 			o.buf.Refresh()
 			o.buf.WriteString("^C\n")
@@ -130,13 +170,25 @@ func (o *Operation) ioloop() {
 			if o.IsSearchMode() {
 				o.SearchChar(r)
 				keepInSearchMode = true
-			} else {
-				o.buf.WriteRune(r)
+				break
+			}
+			o.buf.WriteRune(r)
+			if o.IsInCompleteMode() {
+				o.OnComplete()
+				keepInCompleteMode = true
 			}
 		}
 		if !keepInSearchMode && o.IsSearchMode() {
 			o.ExitSearchMode(false)
 			o.buf.Refresh()
+		} else if o.IsInCompleteMode() {
+			if !keepInCompleteMode {
+				o.ExitCompleteMode(false)
+				o.buf.Refresh()
+			} else {
+				o.buf.Refresh()
+				o.CompleteRefresh()
+			}
 		}
 		if !o.IsSearchMode() {
 			o.UpdateHistory(o.buf.Runes(), false)

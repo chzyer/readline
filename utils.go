@@ -228,3 +228,45 @@ func RunesWidth(r []rune) (length int) {
 	}
 	return
 }
+
+func AggRunes(candicate [][]rune) (same []rune, size int) {
+	for i := 0; i < len(candicate[0]); i++ {
+		for j := 0; j < len(candicate)-1; j++ {
+			if i >= len(candicate[j]) || i >= len(candicate[j+1]) {
+				goto aggregate
+			}
+			if candicate[j][i] != candicate[j+1][i] {
+				goto aggregate
+			}
+		}
+		size = i + 1
+	}
+aggregate:
+	if size > 0 {
+		same = CopyRunes(candicate[0][:size])
+		for i := 0; i < len(candicate); i++ {
+			n := CopyRunes(candicate[i])
+			copy(n, n[size:])
+			candicate[i] = n[:len(n)-size]
+		}
+	}
+	return
+}
+
+func CopyRunes(r []rune) []rune {
+	n := make([]rune, len(r))
+	copy(n, r)
+	return n
+}
+
+func EqualRunes(r, r2 []rune) bool {
+	if len(r) != len(r2) {
+		return false
+	}
+	for idx := range r {
+		if r[idx] != r2[idx] {
+			return false
+		}
+	}
+	return true
+}

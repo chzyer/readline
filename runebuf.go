@@ -28,8 +28,21 @@ func (r *RuneBuffer) PromptLen() int {
 	return RunesWidth(RunesColorFilter(r.prompt))
 }
 
+func (r *RuneBuffer) RuneSlice(i int) []rune {
+	if i > 0 {
+		rs := make([]rune, i)
+		copy(rs, r.buf[r.idx:r.idx+i])
+		return rs
+	}
+	rs := make([]rune, -i)
+	copy(rs, r.buf[r.idx+i:r.idx])
+	return rs
+}
+
 func (r *RuneBuffer) Runes() []rune {
-	return r.buf
+	newr := make([]rune, len(r.buf))
+	copy(newr, r.buf)
+	return newr
 }
 
 func (r *RuneBuffer) Pos() int {
@@ -67,7 +80,7 @@ func (r *RuneBuffer) WriteRune(s rune) {
 func (r *RuneBuffer) WriteRunes(s []rune) {
 	tail := append(s, r.buf[r.idx:]...)
 	r.buf = append(r.buf[:r.idx], tail...)
-	r.idx++
+	r.idx += len(s)
 	r.Refresh()
 }
 

@@ -7,7 +7,7 @@ const (
 	CharDelete    = 4
 	CharLineEnd   = 5
 	CharForward   = 6
-	CharCannel    = 7
+	CharCancel    = 7
 	CharCtrlH     = 8
 	CharTab       = 9
 	CharCtrlJ     = 10
