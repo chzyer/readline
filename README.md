@@ -19,7 +19,6 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 
 # Todo
 
-* Auto Completion
 * Vim mode
 * Transpose words
 * More funny examples
@@ -97,6 +96,40 @@ for {
 }
 ```
 
+* Example with auto completion
+
+```go
+import (
+	"log"
+	"github.com/chzyer/readline"
+)
+
+var completer = readline.NewPrefixCompleter(
+	readline.PcItem("say",
+		readline.PcItem("hello"),
+		readline.PcItem("bye"),
+	),
+	readline.PcItem("help"),
+)
+
+rl, err := readline.New(&readline.Config{
+	Prompt:       "> ",
+	AutoComplete: completer,
+})
+if err != nil {
+	panic(err)
+}
+defer rl.Close()
+
+for {
+	line, err := rl.Readline()
+	if err != nil { // io.EOF
+		break
+	}
+	println(line)
+}
+```
+
 
 # Shortcut
 
@@ -116,7 +149,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | `Meta`+`F`         | Forward one word                  | Yes     |
 | `Ctrl`+`G`         | Cancel                            | Yes     |
 | `Ctrl`+`H`         | Delete previous character         | Yes     |
-| `Ctrl`+`I` / `Tab` | Command line completion           | Not Yet |
+| `Ctrl`+`I` / `Tab` | Command line completion           | Yes     |
 | `Ctrl`+`J`         | Line feed                         | Yes     |
 | `Ctrl`+`K`         | Cut text to the end of line       | Yes     |
 | `Ctrl`+`L`         | Clean screen                      | NoYet   |
