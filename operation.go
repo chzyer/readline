@@ -66,7 +66,10 @@ func (o *Operation) ioloop() {
 
 			o.buf.Refresh()
 			switch r {
-			case CharInterrupt, CharEnter, CharCtrlJ:
+			case CharEnter, CharCtrlJ:
+				o.UpdateHistory(o.buf.Runes(), false)
+				fallthrough
+			case CharInterrupt:
 				o.t.KickRead()
 				fallthrough
 			case CharCancel:
@@ -120,6 +123,9 @@ func (o *Operation) ioloop() {
 				break
 			}
 
+			if o.buf.Len() == 0 {
+				break
+			}
 			o.buf.Backspace()
 			if o.IsInCompleteMode() {
 				o.OnComplete()
