@@ -9,6 +9,7 @@ const (
 	CharForward   = 6
 	CharCannel    = 7
 	CharCtrlH     = 8
+	CharTab       = 9
 	CharCtrlJ     = 10
 	CharKill      = 11
 	CharEnter     = 13

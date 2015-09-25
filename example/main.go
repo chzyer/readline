@@ -18,7 +18,7 @@ bye: quit
 
 func main() {
 	l, err := readline.NewEx(&readline.Config{
-		Prompt:      "home \033[31m»\033[0m ",
+		Prompt:      "\033[31m»\033[0m ",
 		HistoryFile: "/tmp/readline.tmp",
 	})
 	if err != nil {

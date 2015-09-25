@@ -15,6 +15,13 @@ Readline will support most of features which GNU Readline is supported, and prov
 
 You can read the source code in [example/main.go](https://github.com/chzyer/readline/blob/master/example/main.go).
 
+# Todo
+
+* Auto Completeion
+* Vim mode
+* Transpose words
+* More funny examples
+
 # Usage
 
 * Simplest example
@@ -107,7 +114,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | `Meta`+`F`         | Forward one word                  | Yes     |
 | `Ctrl`+`G`         | Cancel                            | Yes     |
 | `Ctrl`+`H`         | Delete previous character         | Yes     |
-| `Ctrl`+`I` / `Tab` | Command line completion           | NoYet   |
+| `Ctrl`+`I` / `Tab` | Command line completion           | Not Yet |
 | `Ctrl`+`J`         | Line feed                         | Yes     |
 | `Ctrl`+`K`         | Cut text to the end of line       | Yes     |
 | `Ctrl`+`L`         | Clean screen                      | NoYet   |
@@ -117,8 +124,8 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | `Ctrl`+`R`         | Search backwards in history       | Yes     |
 | `Ctrl`+`S`         | Search forwards in history        | Yes     |
 | `Ctrl`+`T`         | Transpose characters              | Yes     |
-| `Meta`+`T`         | Transpose words                   | NoYet   |
-| `Ctrl`+`U`         | Cut text to the beginning of line | NoYet   |
+| `Meta`+`T`         | Transpose words                   | Not Yet |
+| `Ctrl`+`U`         | Cut text to the beginning of line | Not Yet |
 | `Ctrl`+`W`         | Cut previous word                 | Yes     |
 | `Backspace`        | Delete previous character         | Yes     |
 | `Meta`+`Backspace` | Cut previous word                 | Yes     |

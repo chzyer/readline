@@ -57,6 +57,10 @@ func (o *Operation) ioloop() {
 				o.ExitSearchMode(true)
 				o.buf.Refresh()
 			}
+		case CharTab:
+			if o.cfg.AutoComplete == nil {
+				break
+			}
 		case CharBckSearch:
 			o.SearchMode(S_DIR_BCK)
 			keepInSearchMode = true

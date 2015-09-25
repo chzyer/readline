@@ -7,9 +7,14 @@ type Instance struct {
 	o *Operation
 }
 
+type AutoCompleter interface {
+	Do(line []rune, pos int) (newLine []rune, newPos int, ok bool)
+}
+
 type Config struct {
-	Prompt      string
-	HistoryFile string
+	Prompt       string
+	HistoryFile  string
+	AutoComplete AutoCompleter
 }
 
 func NewEx(cfg *Config) (*Instance, error) {
