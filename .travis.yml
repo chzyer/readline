@@ -6,3 +6,4 @@ before_install:
   - go get golang.org/x/crypto/ssh/terminal
 script:
   - go install github.com/chzyer/readline/example
+  - go test -v
