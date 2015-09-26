@@ -139,7 +139,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 * Shortcut in normal mode
 
 | Shortcut           | Comment                                  |
-|--------------------+------------------------------------------|
+|--------------------|------------------------------------------|
 | `Ctrl`+`A`         | Beginning of line                        |
 | `Ctrl`+`B` / `←`   | Backward one character                   |
 | `Meta`+`B`         | Backward one word                        |
@@ -172,7 +172,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 * Shortcut in Search Mode (`Ctrl`+`S` or `Ctrl`+`r` to enter this mode)
 
 | Shortcut                | Comment                                     |
-|-------------------------+---------------------------------------------|
+|-------------------------|---------------------------------------------|
 | `Ctrl`+`S`              | Search forwards in history                  |
 | `Ctrl`+`R`              | Search backwards in history                 |
 | `Ctrl`+`C` / `Ctrl`+`G` | Exit Search Mode and revert the history     |
@@ -182,7 +182,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 * Shortcut in Complete Select Mode (double `Tab` to enter this mode)
 
 | Shortcut                | Comment                                     |
-|-------------------------+---------------------------------------------|
+|-------------------------|---------------------------------------------|
 | `Ctrl`+`F`              | Move Forward                                |
 | `Ctrl`+`B`              | Move Backward                               |
 | `Ctrl`+`N`              | Move to next line                           |
