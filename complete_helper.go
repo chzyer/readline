@@ -46,7 +46,7 @@ func (p *PrefixCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int
 
 	tmpLine := make([]rune, 0, len(line))
 	for i := offset; i < len(line); i++ {
-		if line[offset] == ' ' {
+		if line[i] == ' ' {
 			continue
 		}
 
