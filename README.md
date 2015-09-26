@@ -20,7 +20,6 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 # Todo
 
 * Vim mode
-* Transpose words
 * More funny examples
 
 # Usage
@@ -176,7 +175,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | `Ctrl`+`S`              | Search forwards in history                  |
 | `Ctrl`+`R`              | Search backwards in history                 |
 | `Ctrl`+`C` / `Ctrl`+`G` | Exit Search Mode and revert the history     |
-| Character               | Move to next line                           |
+| `Backspace`             | Delete previous character                   |
 | Other                   | Exit Search Mode                            |
 
 * Shortcut in Complete Select Mode (double `Tab` to enter this mode)
