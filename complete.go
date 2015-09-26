@@ -134,9 +134,7 @@ func (o *opCompleter) HandleCompleteSelect(r rune) bool {
 		}
 		o.candicateChoise = tmpChoise
 	case CharBackward:
-		if o.op.buf.Len() > 0 {
-			o.nextCandicate(-1)
-		}
+		o.nextCandicate(-1)
 	case CharPrev:
 		tmpChoise := o.candicateChoise - o.candicateColNum
 		if tmpChoise < 0 {
