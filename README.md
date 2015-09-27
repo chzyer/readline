@@ -204,7 +204,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | Centos 7                      | linux  |
 
 ### Notice:
-* `Ctrl`+`A` is not working as a Control Command in screen
+* `Ctrl`+`A` is not working in screen because it used as a control command by default
 
 If you test it otherwhere, whether it works fine or not, please let me know!
 
