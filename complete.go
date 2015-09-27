@@ -7,7 +7,13 @@ import (
 )
 
 type AutoCompleter interface {
-	Do(line []rune, pos int) (newLine [][]rune, offset int)
+	// Readline will pass the whole line and current offset to it
+	// Completer need to pass all the candidates, and how long they shared the same characters in line
+	// Example:
+	//   Do("g", 1) => ["o", "it", "it-shell", "rep"], 1
+	//   Do("gi", 2) => ["t", "t-shell"], 1
+	//   Do("git", 3) => ["", "-shell"], 0
+	Do(line []rune, pos int) (newLine [][]rune, length int)
 }
 
 type opCompleter struct {
@@ -17,11 +23,11 @@ type opCompleter struct {
 
 	inCompleteMode  bool
 	inSelectMode    bool
-	candicate       [][]rune
-	candicateSource []rune
-	candicateOff    int
-	candicateChoise int
-	candicateColNum int
+	candidate       [][]rune
+	candidateSource []rune
+	candidateOff    int
+	candidateChoise int
+	candidateColNum int
 }
 
 func newOpCompleter(w io.Writer, op *Operation) *opCompleter {
@@ -33,20 +39,20 @@ func newOpCompleter(w io.Writer, op *Operation) *opCompleter {
 }
 
 func (o *opCompleter) doSelect() {
-	if len(o.candicate) == 1 {
-		o.op.buf.WriteRunes(o.candicate[0])
+	if len(o.candidate) == 1 {
+		o.op.buf.WriteRunes(o.candidate[0])
 		o.ExitCompleteMode(false)
 		return
 	}
-	o.nextCandicate(1)
+	o.nextCandidate(1)
 	o.CompleteRefresh()
 }
 
-func (o *opCompleter) nextCandicate(i int) {
-	o.candicateChoise += i
-	o.candicateChoise = o.candicateChoise % len(o.candicate)
-	if o.candicateChoise < 0 {
-		o.candicateChoise = len(o.candicate) + o.candicateChoise
+func (o *opCompleter) nextCandidate(i int) {
+	o.candidateChoise += i
+	o.candidateChoise = o.candidateChoise % len(o.candidate)
+	if o.candidateChoise < 0 {
+		o.candidateChoise = len(o.candidate) + o.candidateChoise
 	}
 }
 
@@ -59,21 +65,21 @@ func (o *opCompleter) OnComplete() {
 	buf := o.op.buf
 	rs := buf.Runes()
 
-	if o.IsInCompleteMode() && EqualRunes(rs, o.candicateSource) {
+	if o.IsInCompleteMode() && EqualRunes(rs, o.candidateSource) {
 		o.EnterCompleteSelectMode()
 		o.doSelect()
 		return
 	}
 
 	o.ExitCompleteSelectMode()
-	o.candicateSource = rs
+	o.candidateSource = rs
 	newLines, offset := o.ac.Do(rs, buf.idx)
 	if len(newLines) == 0 {
 		o.ExitCompleteMode(false)
 		return
 	}
 
-	// only Aggregate candicates in non-complete mode
+	// only Aggregate candidates in non-complete mode
 	if !o.IsInCompleteMode() {
 		if len(newLines) == 1 {
 			buf.WriteRunes(newLines[0])
@@ -105,16 +111,16 @@ func (o *opCompleter) HandleCompleteSelect(r rune) bool {
 	switch r {
 	case CharEnter, CharCtrlJ:
 		next = false
-		o.op.buf.WriteRunes(o.op.candicate[o.op.candicateChoise])
+		o.op.buf.WriteRunes(o.op.candidate[o.op.candidateChoise])
 		o.ExitCompleteMode(false)
 	case CharLineStart:
-		num := o.candicateChoise % o.candicateColNum
-		o.nextCandicate(-num)
+		num := o.candidateChoise % o.candidateColNum
+		o.nextCandidate(-num)
 	case CharLineEnd:
-		num := o.candicateColNum - o.candicateChoise%o.candicateColNum - 1
-		o.candicateChoise += num
-		if o.candicateChoise >= len(o.candicate) {
-			o.candicateChoise = len(o.candicate) - 1
+		num := o.candidateColNum - o.candidateChoise%o.candidateColNum - 1
+		o.candidateChoise += num
+		if o.candidateChoise >= len(o.candidate) {
+			o.candidateChoise = len(o.candidate) - 1
 		}
 	case CharBackspace:
 		o.ExitCompleteSelectMode()
@@ -125,25 +131,25 @@ func (o *opCompleter) HandleCompleteSelect(r rune) bool {
 		o.ExitCompleteMode(true)
 		next = false
 	case CharNext:
-		tmpChoise := o.candicateChoise + o.candicateColNum
+		tmpChoise := o.candidateChoise + o.candidateColNum
 		if tmpChoise >= o.getMatrixSize() {
 			tmpChoise -= o.getMatrixSize()
-		} else if tmpChoise >= len(o.candicate) {
-			tmpChoise += o.candicateColNum
+		} else if tmpChoise >= len(o.candidate) {
+			tmpChoise += o.candidateColNum
 			tmpChoise -= o.getMatrixSize()
 		}
-		o.candicateChoise = tmpChoise
+		o.candidateChoise = tmpChoise
 	case CharBackward:
-		o.nextCandicate(-1)
+		o.nextCandidate(-1)
 	case CharPrev:
-		tmpChoise := o.candicateChoise - o.candicateColNum
+		tmpChoise := o.candidateChoise - o.candidateColNum
 		if tmpChoise < 0 {
 			tmpChoise += o.getMatrixSize()
-			if tmpChoise >= len(o.candicate) {
-				tmpChoise -= o.candicateColNum
+			if tmpChoise >= len(o.candidate) {
+				tmpChoise -= o.candidateColNum
 			}
 		}
-		o.candicateChoise = tmpChoise
+		o.candidateChoise = tmpChoise
 	default:
 		next = false
 		o.ExitCompleteSelectMode()
@@ -156,11 +162,11 @@ func (o *opCompleter) HandleCompleteSelect(r rune) bool {
 }
 
 func (o *opCompleter) getMatrixSize() int {
-	line := len(o.candicate) / o.candicateColNum
-	if len(o.candicate)%o.candicateColNum != 0 {
+	line := len(o.candidate) / o.candidateColNum
+	if len(o.candidate)%o.candidateColNum != 0 {
 		line++
 	}
-	return line * o.candicateColNum
+	return line * o.candidateColNum
 }
 
 func (o *opCompleter) CompleteRefresh() {
@@ -169,22 +175,22 @@ func (o *opCompleter) CompleteRefresh() {
 	}
 	lineCnt := o.op.buf.CursorLineCount()
 	colWidth := 0
-	for _, c := range o.candicate {
+	for _, c := range o.candidate {
 		w := RunesWidth(c)
 		if w > colWidth {
 			colWidth = w
 		}
 	}
-	colNum := getWidth() / (colWidth + o.candicateOff + 2)
-	o.candicateColNum = colNum
+	colNum := getWidth() / (colWidth + o.candidateOff + 2)
+	o.candidateColNum = colNum
 	buf := bytes.NewBuffer(nil)
 	buf.Write(bytes.Repeat([]byte("\n"), lineCnt))
-	same := o.op.buf.RuneSlice(-o.candicateOff)
+	same := o.op.buf.RuneSlice(-o.candidateOff)
 	colIdx := 0
 	lines := 1
 	buf.WriteString("\033[J")
-	for idx, c := range o.candicate {
-		inSelect := idx == o.candicateChoise && o.IsInCompleteSelectMode()
+	for idx, c := range o.candidate {
+		inSelect := idx == o.candidateChoise && o.IsInCompleteSelectMode()
 		if inSelect {
 			buf.WriteString("\033[30;47m")
 		}
@@ -210,14 +216,14 @@ func (o *opCompleter) CompleteRefresh() {
 	o.w.Write(buf.Bytes())
 }
 
-func (o *opCompleter) aggCandicate(candicate [][]rune) int {
+func (o *opCompleter) aggCandidate(candidate [][]rune) int {
 	offset := 0
-	for i := 0; i < len(candicate[0]); i++ {
-		for j := 0; j < len(candicate)-1; j++ {
-			if i > len(candicate[j]) {
+	for i := 0; i < len(candidate[0]); i++ {
+		for j := 0; j < len(candidate)-1; j++ {
+			if i > len(candidate[j]) {
 				goto aggregate
 			}
-			if candicate[j][i] != candicate[j+1][i] {
+			if candidate[j][i] != candidate[j+1][i] {
 				goto aggregate
 			}
 		}
@@ -229,23 +235,23 @@ aggregate:
 
 func (o *opCompleter) EnterCompleteSelectMode() {
 	o.inSelectMode = true
-	o.candicateChoise = -1
+	o.candidateChoise = -1
 	o.CompleteRefresh()
 }
 
-func (o *opCompleter) EnterCompleteMode(offset int, candicate [][]rune) {
+func (o *opCompleter) EnterCompleteMode(offset int, candidate [][]rune) {
 	o.inCompleteMode = true
-	o.candicate = candicate
-	o.candicateOff = offset
+	o.candidate = candidate
+	o.candidateOff = offset
 	o.CompleteRefresh()
 }
 
 func (o *opCompleter) ExitCompleteSelectMode() {
 	o.inSelectMode = false
-	o.candicate = nil
-	o.candicateChoise = -1
-	o.candicateOff = -1
-	o.candicateSource = nil
+	o.candidate = nil
+	o.candidateChoise = -1
+	o.candidateOff = -1
+	o.candidateSource = nil
 }
 
 func (o *opCompleter) ExitCompleteMode(revent bool) {
