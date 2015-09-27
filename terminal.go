@@ -23,6 +23,9 @@ type Terminal struct {
 }
 
 func NewTerminal(cfg *Config) (*Terminal, error) {
+	if err := cfg.Init(); err != nil {
+		return nil, err
+	}
 	state, err := MakeRaw(syscall.Stdin)
 	if err != nil {
 		return nil, err
@@ -40,15 +43,15 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 }
 
 func (t *Terminal) Write(b []byte) (int, error) {
-	return os.Stdout.Write(b)
+	return t.cfg.Stdout.Write(b)
 }
 
 func (t *Terminal) Print(s string) {
-	fmt.Fprintf(os.Stdout, "%s", s)
+	fmt.Fprintf(t.cfg.Stdout, "%s", s)
 }
 
 func (t *Terminal) PrintRune(r rune) {
-	fmt.Fprintf(os.Stdout, "%c", r)
+	fmt.Fprintf(t.cfg.Stdout, "%c", r)
 }
 
 func (t *Terminal) Readline() *Operation {

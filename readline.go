@@ -1,6 +1,9 @@
 package readline
 
-import "io"
+import (
+	"io"
+	"os"
+)
 
 type Instance struct {
 	t *Terminal
@@ -11,6 +14,24 @@ type Config struct {
 	Prompt       string
 	HistoryFile  string
 	AutoComplete AutoCompleter
+	Stdout       io.Writer
+	Stderr       io.Writer
+
+	inited bool
+}
+
+func (c *Config) Init() error {
+	if c.inited {
+		return nil
+	}
+	c.inited = true
+	if c.Stdout == nil {
+		c.Stdout = os.Stdout
+	}
+	if c.Stderr == nil {
+		c.Stderr = os.Stderr
+	}
+	return nil
 }
 
 func NewEx(cfg *Config) (*Instance, error) {

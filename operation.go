@@ -1,9 +1,6 @@
 package readline
 
-import (
-	"io"
-	"os"
-)
+import "io"
 
 type Operation struct {
 	cfg     *Config
@@ -203,11 +200,11 @@ func (o *Operation) ioloop() {
 }
 
 func (o *Operation) Stderr() io.Writer {
-	return &wrapWriter{target: os.Stderr, r: o, t: o.t}
+	return &wrapWriter{target: o.cfg.Stderr, r: o, t: o.t}
 }
 
 func (o *Operation) Stdout() io.Writer {
-	return &wrapWriter{target: os.Stdout, r: o, t: o.t}
+	return &wrapWriter{target: o.cfg.Stdout, r: o, t: o.t}
 }
 
 func (o *Operation) String() (string, error) {
