@@ -192,6 +192,17 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | `Ctrl`+`C` / `Ctrl`+`G` | Exit Complete Select Mode                   |
 | Other                   | Exit Complete Select Mode                   |
 
+# Tested with
+
+| Environment                   | $TERM |
+|-------------------------------|-------|
+| Mac OS X iTerm2               | xterm |
+| Mac OS X default Terminal.app | xterm |
+| Ubuntu Server 14.04 LTS       | linux |
+| Centos 7                      | linux |
+
+If you test it otherwhere, whether it works fine or not, please let me know!
+
 # Feedback
 
 If you have any question, please submit an GitHub Issues and any pull request is welcomed :)
