@@ -24,7 +24,7 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 	buf.Clean()
 	n, err := w.target.Write(b)
 	if w.t.IsReading() {
-		w.r.buf.Refresh()
+		w.r.buf.Refresh(nil)
 	}
 	if w.r.IsSearchMode() {
 		w.r.SearchRefresh(-1)
@@ -61,7 +61,7 @@ func (o *Operation) ioloop() {
 				continue
 			}
 
-			o.buf.Refresh()
+			o.buf.Refresh(nil)
 			switch r {
 			case CharEnter, CharCtrlJ:
 				o.UpdateHistory(o.buf.Runes(), false)
@@ -75,14 +75,16 @@ func (o *Operation) ioloop() {
 		}
 
 		switch r {
+		case 'i':
+			o.buf.Clean()
 		case CharCancel:
 			if o.IsSearchMode() {
 				o.ExitSearchMode(true)
-				o.buf.Refresh()
+				o.buf.Refresh(nil)
 			}
 			if o.IsInCompleteMode() {
 				o.ExitCompleteMode(true)
-				o.buf.Refresh()
+				o.buf.Refresh(nil)
 			}
 		case CharTab:
 			if o.opCompleter == nil {
@@ -162,11 +164,11 @@ func (o *Operation) ioloop() {
 			if o.IsInCompleteMode() {
 				o.t.KickRead()
 				o.ExitCompleteMode(true)
-				o.buf.Refresh()
+				o.buf.Refresh(nil)
 				break
 			}
 			o.buf.MoveToLineEnd()
-			o.buf.Refresh()
+			o.buf.Refresh(nil)
 			o.buf.WriteString("^C\n")
 			o.outchan <- nil
 		default:
@@ -183,13 +185,13 @@ func (o *Operation) ioloop() {
 		}
 		if !keepInSearchMode && o.IsSearchMode() {
 			o.ExitSearchMode(false)
-			o.buf.Refresh()
+			o.buf.Refresh(nil)
 		} else if o.IsInCompleteMode() {
 			if !keepInCompleteMode {
 				o.ExitCompleteMode(false)
-				o.buf.Refresh()
+				o.buf.Refresh(nil)
 			} else {
-				o.buf.Refresh()
+				o.buf.Refresh(nil)
 				o.CompleteRefresh()
 			}
 		}
@@ -216,7 +218,7 @@ func (o *Operation) String() (string, error) {
 }
 
 func (o *Operation) Runes() ([]rune, error) {
-	o.buf.Refresh() // print prompt
+	o.buf.Refresh(nil) // print prompt
 	o.t.KickRead()
 	r := <-o.outchan
 	if r == nil {

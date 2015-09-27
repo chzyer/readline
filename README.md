@@ -194,12 +194,17 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 
 # Tested with
 
-| Environment                   | $TERM |
-|-------------------------------|-------|
-| Mac OS X iTerm2               | xterm |
-| Mac OS X default Terminal.app | xterm |
-| Ubuntu Server 14.04 LTS       | linux |
-| Centos 7                      | linux |
+| Environment                   | $TERM  |
+|-------------------------------|--------|
+| Mac OS X iTerm2               | xterm  |
+| Mac OS X default Terminal.app | xterm  |
+| Mac OS X iTerm2 Screen        | screen |
+| Mac OS X iTerm2 Tmux          | screen |
+| Ubuntu Server 14.04 LTS       | linux  |
+| Centos 7                      | linux  |
+
+### Notice:
+* `Ctrl`+`A` is not working as a Control Command in screen
 
 If you test it otherwhere, whether it works fine or not, please let me know!
 
