@@ -12,8 +12,9 @@ import (
 
 func usage(w io.Writer) {
 	io.WriteString(w, `
-sayhello: start to display oneline log per second
-bye: quit
+setprompt <prompt>
+say <hello>
+bye
 `[1:])
 }
 
@@ -22,6 +23,7 @@ var completer = readline.NewPrefixCompleter(
 		readline.PcItem("hello"),
 		readline.PcItem("bye"),
 	),
+	readline.PcItem("setprompt"),
 	readline.PcItem("bye"),
 	readline.PcItem("help"),
 	readline.PcItem("go",
@@ -52,6 +54,13 @@ func main() {
 		switch {
 		case line == "help":
 			usage(l.Stderr())
+		case strings.HasPrefix(line, "setprompt"):
+			prompt := line[10:]
+			if prompt == "" {
+				log.Println("setprompt <prompt>")
+				break
+			}
+			l.SetPrompt(prompt)
 		case strings.HasPrefix(line, "say"):
 			line := strings.TrimSpace(line[3:])
 			if len(line) == 0 {

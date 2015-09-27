@@ -16,10 +16,14 @@ type RuneBuffer struct {
 
 func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
 	rb := &RuneBuffer{
-		prompt: []rune(prompt),
-		w:      w,
+		w: w,
 	}
+	rb.SetPrompt(prompt)
 	return rb
+}
+
+func (r *RuneBuffer) SetPrompt(prompt string) {
+	r.prompt = []rune(prompt)
 }
 
 func (r *RuneBuffer) CurrentWidth(x int) int {

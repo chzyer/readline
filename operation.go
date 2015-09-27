@@ -49,6 +49,10 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 	return op
 }
 
+func (o *Operation) SetPrompt(s string) {
+	o.buf.SetPrompt(s)
+}
+
 func (o *Operation) ioloop() {
 	for {
 		keepInSearchMode := false

@@ -50,6 +50,10 @@ func New(prompt string) (*Instance, error) {
 	return NewEx(&Config{Prompt: prompt})
 }
 
+func (i *Instance) SetPrompt(s string) {
+	i.o.SetPrompt(s)
+}
+
 func (i *Instance) Stdout() io.Writer {
 	return i.o.Stdout()
 }
