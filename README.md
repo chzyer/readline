@@ -19,6 +19,7 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 
 # Todo
 
+* Add support for windows
 * Vim mode
 * More funny examples
 

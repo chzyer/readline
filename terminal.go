@@ -6,7 +6,6 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
-	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -26,7 +25,7 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 	if err := cfg.Init(); err != nil {
 		return nil, err
 	}
-	state, err := MakeRaw(syscall.Stdin)
+	state, err := MakeRaw(StdinFd)
 	if err != nil {
 		return nil, err
 	}
@@ -131,5 +130,5 @@ func (t *Terminal) Close() error {
 	}
 	t.stopChan <- struct{}{}
 	t.wg.Wait()
-	return Restore(syscall.Stdin, t.state)
+	return Restore(StdinFd, t.state)
 }
