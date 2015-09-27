@@ -65,7 +65,7 @@ func (o *opCompleter) OnComplete() {
 	buf := o.op.buf
 	rs := buf.Runes()
 
-	if o.IsInCompleteMode() && EqualRunes(rs, o.candidateSource) {
+	if o.IsInCompleteMode() && RunesEqual(rs, o.candidateSource) {
 		o.EnterCompleteSelectMode()
 		o.doSelect()
 		return
@@ -87,7 +87,7 @@ func (o *opCompleter) OnComplete() {
 			return
 		}
 
-		same, size := AggRunes(newLines)
+		same, size := RunesAggregate(newLines)
 		if size > 0 {
 			buf.WriteRunes(same)
 			o.ExitCompleteMode(false)

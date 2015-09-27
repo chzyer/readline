@@ -146,7 +146,7 @@ func (o *opHistory) NewHistory(current []rune) {
 		prev := back.Prev()
 		if prev != nil {
 			use := o.showItem(o.current.Value.(*hisItem))
-			if equalRunes(use, prev.Value.(*hisItem).Source) {
+			if RunesEqual(use, prev.Value.(*hisItem).Source) {
 				o.current = o.history.Back()
 				o.current.Value.(*hisItem).Clean()
 				o.historyVer++

@@ -1,11 +1,7 @@
 package readline
 
 import (
-	"container/list"
-	"fmt"
-	"os"
 	"syscall"
-	"time"
 	"unicode"
 	"unsafe"
 
@@ -24,6 +20,7 @@ func MakeRaw(fd int) (*terminal.State, error) {
 func Restore(fd int, state *terminal.State) error {
 	err := terminal.Restore(fd, state)
 	if err != nil {
+		// errno 0 means everything is ok :)
 		if err.Error() == "errno 0" {
 			err = nil
 		}
@@ -36,6 +33,7 @@ func IsPrintable(key rune) bool {
 	return key >= 32 && !isInSurrogateArea
 }
 
+// translate Esc[X
 func escapeExKey(r rune) rune {
 	switch r {
 	case 'D':
@@ -50,6 +48,7 @@ func escapeExKey(r rune) rune {
 	return r
 }
 
+// translate EscX to Meta+X
 func escapeKey(r rune) rune {
 	switch r {
 	case 'b':
@@ -68,12 +67,6 @@ func escapeKey(r rune) rune {
 	return r
 }
 
-func Debug(o ...interface{}) {
-	f, _ := os.OpenFile("debug.tmp", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	fmt.Fprintln(f, o...)
-	f.Close()
-}
-
 type winsize struct {
 	Row    uint16
 	Col    uint16
@@ -81,6 +74,8 @@ type winsize struct {
 	Ypixel uint16
 }
 
+// get width of the terminal
+// we can cache it here and refresh after received signal
 func getWidth() int {
 	ws := &winsize{}
 	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
@@ -94,15 +89,7 @@ func getWidth() int {
 	return int(ws.Col)
 }
 
-func debugList(l *list.List) {
-	idx := 0
-	for e := l.Front(); e != nil; e = e.Next() {
-		Debug(idx, fmt.Sprintf("%+v", e.Value))
-		idx++
-	}
-}
-
-func equalRunes(a, b []rune) bool {
+func RunesEqual(a, b []rune) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -114,11 +101,7 @@ func equalRunes(a, b []rune) bool {
 	return true
 }
 
-func sleep(n int) {
-	Debug(n)
-	time.Sleep(2000 * time.Millisecond)
-}
-
+// calculate how many lines for N character
 func LineCount(w int) int {
 	screenWidth := getWidth()
 	r := w / screenWidth
@@ -128,6 +111,7 @@ func LineCount(w int) int {
 	return r
 }
 
+// Search in runes from end to front
 func RunesIndexBck(r, sub []rune) int {
 	for i := len(r) - len(sub); i >= 0; i-- {
 		found := true
@@ -144,6 +128,7 @@ func RunesIndexBck(r, sub []rune) int {
 	return -1
 }
 
+// Search in runes from front to end
 func RunesIndex(r, sub []rune) int {
 	for i := 0; i < len(r); i++ {
 		found := true
@@ -229,7 +214,7 @@ func RunesWidth(r []rune) (length int) {
 	return
 }
 
-func AggRunes(candicate [][]rune) (same []rune, size int) {
+func RunesAggregate(candicate [][]rune) (same []rune, size int) {
 	for i := 0; i < len(candicate[0]); i++ {
 		for j := 0; j < len(candicate)-1; j++ {
 			if i >= len(candicate[j]) || i >= len(candicate[j+1]) {
@@ -243,9 +228,9 @@ func AggRunes(candicate [][]rune) (same []rune, size int) {
 	}
 aggregate:
 	if size > 0 {
-		same = CopyRunes(candicate[0][:size])
+		same = RunesCopy(candicate[0][:size])
 		for i := 0; i < len(candicate); i++ {
-			n := CopyRunes(candicate[i])
+			n := RunesCopy(candicate[i])
 			copy(n, n[size:])
 			candicate[i] = n[:len(n)-size]
 		}
@@ -253,27 +238,15 @@ aggregate:
 	return
 }
 
-func CopyRunes(r []rune) []rune {
+func RunesCopy(r []rune) []rune {
 	n := make([]rune, len(r))
 	copy(n, r)
 	return n
-}
-
-func EqualRunes(r, r2 []rune) bool {
-	if len(r) != len(r2) {
-		return false
-	}
-	for idx := range r {
-		if r[idx] != r2[idx] {
-			return false
-		}
-	}
-	return true
 }
 
 func RunesHasPrefix(r, prefix []rune) bool {
 	if len(r) < len(prefix) {
 		return false
 	}
-	return EqualRunes(r[:len(prefix)], prefix)
+	return RunesEqual(r[:len(prefix)], prefix)
 }
