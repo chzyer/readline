@@ -75,8 +75,6 @@ func (o *Operation) ioloop() {
 		}
 
 		switch r {
-		case 'i':
-			o.buf.Clean()
 		case CharCancel:
 			if o.IsSearchMode() {
 				o.ExitSearchMode(true)
