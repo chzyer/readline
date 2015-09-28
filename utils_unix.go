@@ -7,10 +7,6 @@ import (
 	"unsafe"
 )
 
-var (
-	StdinFd = syscall.Stdin
-)
-
 type winsize struct {
 	Row    uint16
 	Col    uint16

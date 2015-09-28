@@ -33,7 +33,6 @@ type (
 )
 
 var (
-	StdinFd  = 0
 	kernel32 = syscall.NewLazyDLL("kernel32.dll")
 	tmp_info console_screen_buffer_info
 
@@ -63,5 +62,5 @@ func get_term_size(out syscall.Handle) coord {
 
 // get width of the terminal
 func getWidth() int {
-	return int(get_term_size(syscall.Stdin).x)
+	return int(get_term_size(syscall.Stdout).x)
 }

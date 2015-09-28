@@ -1,9 +1,14 @@
 package readline
 
 import (
+	"syscall"
 	"unicode"
 
 	"golang.org/x/crypto/ssh/terminal"
+)
+
+var (
+	StdinFd = int(uintptr(syscall.Stdin))
 )
 
 // IsTerminal returns true if the given file descriptor is a terminal.
