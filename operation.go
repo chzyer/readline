@@ -97,6 +97,8 @@ func (o *Operation) ioloop() {
 		case CharBckSearch:
 			o.SearchMode(S_DIR_BCK)
 			keepInSearchMode = true
+		case CharCtrlU:
+			o.buf.KillFront()
 		case CharFwdSearch:
 			o.SearchMode(S_DIR_FWD)
 			keepInSearchMode = true
@@ -185,6 +187,7 @@ func (o *Operation) ioloop() {
 				keepInCompleteMode = true
 			}
 		}
+
 		if !keepInSearchMode && o.IsSearchMode() {
 			o.ExitSearchMode(false)
 			o.buf.Refresh(nil)

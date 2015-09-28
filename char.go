@@ -18,6 +18,7 @@ const (
 	CharBckSearch = 18
 	CharFwdSearch = 19
 	CharTranspose = 20
+	CharCtrlU     = 21
 	CharCtrlW     = 23
 	CharEsc       = 27
 	CharEscapeEx  = 91

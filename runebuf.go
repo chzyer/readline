@@ -60,20 +60,19 @@ func (r *RuneBuffer) Len() int {
 }
 
 func (r *RuneBuffer) MoveToLineStart() {
-	if r.idx == 0 {
-		return
-	}
-
 	r.Refresh(func() {
+		if r.idx == 0 {
+			return
+		}
 		r.idx = 0
 	})
 }
 
 func (r *RuneBuffer) MoveBackward() {
-	if r.idx == 0 {
-		return
-	}
 	r.Refresh(func() {
+		if r.idx == 0 {
+			return
+		}
 		r.idx--
 	})
 }
@@ -132,26 +131,32 @@ func (r *RuneBuffer) DeleteWord() {
 }
 
 func (r *RuneBuffer) MoveToPrevWord() {
-	if r.idx == 0 {
-		return
-	}
-	for i := r.idx - 1; i > 0; i-- {
-		if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
-			r.Refresh(func() {
-				r.idx = i
-			})
+	r.Refresh(func() {
+		if r.idx == 0 {
 			return
 		}
-	}
-	r.Refresh(func() {
+
+		for i := r.idx - 1; i > 0; i-- {
+			if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
+				r.idx = i
+				return
+			}
+		}
 		r.idx = 0
 	})
 }
 
-func (r *RuneBuffer) SetIdx(idx int) (change int) {
-	i := r.idx
-	r.idx = idx
-	return r.idx - i
+func (r *RuneBuffer) KillFront() {
+	r.Refresh(func() {
+		if r.idx == 0 {
+			return
+		}
+
+		length := len(r.buf) - r.idx
+		copy(r.buf[:length], r.buf[r.idx:])
+		r.idx = 0
+		r.buf = r.buf[:length]
+	})
 }
 
 func (r *RuneBuffer) Kill() {
@@ -161,15 +166,15 @@ func (r *RuneBuffer) Kill() {
 }
 
 func (r *RuneBuffer) Transpose() {
-	if len(r.buf) < 2 {
-		if len(r.buf) == 1 {
-			r.Refresh(func() {
-				r.idx++
-			})
-		}
-		return
-	}
 	r.Refresh(func() {
+		if len(r.buf) == 1 {
+			r.idx++
+		}
+
+		if len(r.buf) < 2 {
+			return
+		}
+
 		if r.idx == 0 {
 			r.idx = 1
 		} else if r.idx >= len(r.buf) {
@@ -181,55 +186,53 @@ func (r *RuneBuffer) Transpose() {
 }
 
 func (r *RuneBuffer) MoveToNextWord() {
-	for i := r.idx + 1; i < len(r.buf); i++ {
-		if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
-			r.Refresh(func() {
-				r.idx = i
-			})
-			return
-		}
-	}
 	r.Refresh(func() {
+		for i := r.idx + 1; i < len(r.buf); i++ {
+			if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
+				r.idx = i
+				return
+			}
+		}
+
 		r.idx = len(r.buf)
 	})
 }
 
 func (r *RuneBuffer) BackEscapeWord() {
-	if r.idx == 0 {
-		return
-	}
-	for i := r.idx - 1; i > 0; i-- {
-		if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
-			r.Refresh(func() {
-				r.buf = append(r.buf[:i], r.buf[r.idx:]...)
-				r.idx = i
-			})
+	r.Refresh(func() {
+		if r.idx == 0 {
 			return
 		}
-	}
+		for i := r.idx - 1; i > 0; i-- {
+			if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
+				r.buf = append(r.buf[:i], r.buf[r.idx:]...)
+				r.idx = i
+				return
+			}
+		}
 
-	r.Refresh(func() {
 		r.buf = r.buf[:0]
 		r.idx = 0
 	})
 }
 
 func (r *RuneBuffer) Backspace() {
-	if r.idx == 0 {
-		return
-	}
 	r.Refresh(func() {
+		if r.idx == 0 {
+			return
+		}
+
 		r.idx--
 		r.buf = append(r.buf[:r.idx], r.buf[r.idx+1:]...)
 	})
 }
 
 func (r *RuneBuffer) MoveToLineEnd() {
-	if r.idx == len(r.buf) {
-		return
-	}
-
 	r.Refresh(func() {
+		if r.idx == len(r.buf) {
+			return
+		}
+
 		r.idx = len(r.buf)
 	})
 }
@@ -242,9 +245,15 @@ func (r *RuneBuffer) IdxLine() int {
 	totalWidth := RunesWidth(r.buf[:r.idx]) + r.PromptLen()
 	w := getWidth()
 	line := totalWidth / w
-	if totalWidth%w == 0 {
+
+	// if cursor is in last colmun and not any character behind it
+	// the cursor will in the first line, otherwise will in the second line
+	// this situation only occurs in golang's Stdout
+	// TODO: figure out why
+	if totalWidth%w == 0 && len(r.buf) == r.idx {
 		line--
 	}
+
 	return line
 }
 

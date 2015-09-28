@@ -162,7 +162,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | `Ctrl`+`S`         | Search forwards in history               |
 | `Ctrl`+`T`         | Transpose characters                     |
 | `Meta`+`T`         | Transpose words (TODO)                   |
-| `Ctrl`+`U`         | Cut text to the beginning of line (TODO) |
+| `Ctrl`+`U`         | Cut text to the beginning of line        |
 | `Ctrl`+`W`         | Cut previous word                        |
 | `Backspace`        | Delete previous character                |
 | `Meta`+`Backspace` | Cut previous word                        |
