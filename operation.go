@@ -20,12 +20,18 @@ type wrapWriter struct {
 }
 
 func (w *wrapWriter) Write(b []byte) (int, error) {
-	buf := w.r.buf
-	buf.Clean()
-	n, err := w.target.Write(b)
-	if w.t.IsReading() {
-		w.r.buf.Refresh(nil)
+	if !w.t.IsReading() {
+		return w.target.Write(b)
 	}
+
+	var (
+		n   int
+		err error
+	)
+	w.r.buf.Refresh(func() {
+		n, err = w.target.Write(b)
+	})
+
 	if w.r.IsSearchMode() {
 		w.r.SearchRefresh(-1)
 	}

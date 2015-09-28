@@ -22,10 +22,6 @@ func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
 	return rb
 }
 
-func (r *RuneBuffer) SetPrompt(prompt string) {
-	r.prompt = []rune(prompt)
-}
-
 func (r *RuneBuffer) CurrentWidth(x int) int {
 	return RunesWidth(r.buf[:x])
 }
@@ -280,31 +276,6 @@ func (r *RuneBuffer) output() []byte {
 	return buf.Bytes()
 }
 
-func (r *RuneBuffer) CleanOutput() []byte {
-	buf := bytes.NewBuffer(nil)
-	buf.Write([]byte("\033[J")) // just like ^k :)
-
-	idxLine := r.IdxLine()
-	if idxLine == 0 {
-		buf.WriteString("\033[2K\r")
-		return buf.Bytes()
-	}
-
-	for i := 0; i < idxLine; i++ {
-		buf.WriteString("\033[2K\r\b")
-	}
-	buf.WriteString("\033[2K\r")
-	return buf.Bytes()
-}
-
-func (r *RuneBuffer) Clean() {
-	if r.cleanInScreen {
-		return
-	}
-	r.cleanInScreen = true
-	r.w.Write(r.CleanOutput())
-}
-
 func (r *RuneBuffer) Reset() []rune {
 	ret := r.buf
 	r.buf = r.buf[:0]
@@ -346,4 +317,33 @@ func (r *RuneBuffer) SetWithIdx(idx int, buf []rune) {
 
 func (r *RuneBuffer) Set(buf []rune) {
 	r.SetWithIdx(len(buf), buf)
+}
+
+func (r *RuneBuffer) SetPrompt(prompt string) {
+	r.prompt = []rune(prompt)
+}
+
+func (r *RuneBuffer) cleanOutput() []byte {
+	buf := bytes.NewBuffer(nil)
+	buf.Write([]byte("\033[J")) // just like ^k :)
+
+	idxLine := r.IdxLine()
+	if idxLine == 0 {
+		buf.WriteString("\033[2K\r")
+		return buf.Bytes()
+	}
+
+	for i := 0; i < idxLine; i++ {
+		buf.WriteString("\033[2K\r\b")
+	}
+	buf.WriteString("\033[2K\r")
+	return buf.Bytes()
+}
+
+func (r *RuneBuffer) Clean() {
+	if r.cleanInScreen {
+		return
+	}
+	r.cleanInScreen = true
+	r.w.Write(r.cleanOutput())
 }

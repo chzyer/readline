@@ -1,9 +1,6 @@
 package readline
 
-import (
-	"io"
-	"os"
-)
+import "io"
 
 type Instance struct {
 	t *Terminal
@@ -26,10 +23,10 @@ func (c *Config) Init() error {
 	}
 	c.inited = true
 	if c.Stdout == nil {
-		c.Stdout = os.Stdout
+		c.Stdout = Stdout
 	}
 	if c.Stderr == nil {
-		c.Stderr = os.Stderr
+		c.Stderr = Stderr
 	}
 	return nil
 }
