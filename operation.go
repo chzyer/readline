@@ -7,6 +7,7 @@ type Operation struct {
 	t       *Terminal
 	buf     *RuneBuffer
 	outchan chan []rune
+	w       io.Writer
 
 	*opHistory
 	*opSearch
@@ -20,12 +21,18 @@ type wrapWriter struct {
 }
 
 func (w *wrapWriter) Write(b []byte) (int, error) {
-	buf := w.r.buf
-	buf.Clean()
-	n, err := w.target.Write(b)
-	if w.t.IsReading() {
-		w.r.buf.Refresh(nil)
+	if !w.t.IsReading() {
+		return w.target.Write(b)
 	}
+
+	var (
+		n   int
+		err error
+	)
+	w.r.buf.Refresh(func() {
+		n, err = w.target.Write(b)
+	})
+
 	if w.r.IsSearchMode() {
 		w.r.SearchRefresh(-1)
 	}
@@ -43,6 +50,7 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 		outchan:   make(chan []rune),
 		opHistory: newOpHistory(cfg.HistoryFile),
 	}
+	op.w = op.buf.w
 	op.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
 	op.opCompleter = newOpCompleter(op.buf.w, op)
 	go op.ioloop()
@@ -230,6 +238,10 @@ func (o *Operation) Runes() ([]rune, error) {
 		return nil, io.EOF
 	}
 	return r, nil
+}
+
+func (o *Operation) SetTitle(t string) {
+	o.w.Write([]byte("\033[2;" + t + "\007"))
 }
 
 func (o *Operation) Slice() ([]byte, error) {

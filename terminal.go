@@ -3,7 +3,6 @@ package readline
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"sync"
 	"sync/atomic"
 
@@ -81,7 +80,7 @@ func (t *Terminal) ioloop() {
 		expectNextChar bool
 	)
 
-	buf := bufio.NewReader(os.Stdin)
+	buf := bufio.NewReader(Stdin)
 	for {
 		if !expectNextChar {
 			atomic.StoreInt64(&t.isReading, 0)

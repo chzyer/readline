@@ -26,7 +26,7 @@ const (
 )
 
 const (
-	MetaPrev = -iota - 1
+	MetaPrev rune = -iota - 1
 	MetaNext
 	MetaDelete
 	MetaBackspace
