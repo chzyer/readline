@@ -15,6 +15,11 @@ Readline will support most of features which GNU Readline is supported, and prov
 
 ![demo](https://raw.githubusercontent.com/chzyer/readline/master/example/demo.gif)
 
+Also works fine in windows
+
+![demo windows](https://raw.githubusercontent.com/chzyer/readline/master/example/windows.gif)
+
+
 You can read the source code in [example/main.go](https://github.com/chzyer/readline/blob/master/example/main.go).
 
 # Todo
