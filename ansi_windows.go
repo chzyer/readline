@@ -12,9 +12,41 @@ import (
 	"unsafe"
 )
 
-func init() {
-	Stdout = NewANSIWriter(Stdout)
-	Stderr = NewANSIWriter(Stderr)
+const (
+	_                = uint16(0)
+	COLOR_FBLUE      = 0x0001
+	COLOR_FGREEN     = 0x0002
+	COLOR_FRED       = 0x0004
+	COLOR_FINTENSITY = 0x0008
+
+	COLOR_BBLUE      = 0x0010
+	COLOR_BGREEN     = 0x0020
+	COLOR_BRED       = 0x0040
+	COLOR_BINTENSITY = 0x0080
+
+	COMMON_LVB_UNDERSCORE = 0x8000
+)
+
+var ColorTableFg = []word{
+	0,                                       // 30: Black
+	COLOR_FRED,                              // 31: Red
+	COLOR_FGREEN,                            // 32: Green
+	COLOR_FRED | COLOR_FGREEN,               // 33: Yellow
+	COLOR_FBLUE,                             // 34: Blue
+	COLOR_FRED | COLOR_FBLUE,                // 35: Magenta
+	COLOR_FGREEN | COLOR_FBLUE,              // 36: Cyan
+	COLOR_FRED | COLOR_FBLUE | COLOR_FGREEN, // 37: White
+}
+
+var ColorTableBg = []word{
+	0,                                       // 40: Black
+	COLOR_BRED,                              // 41: Red
+	COLOR_BGREEN,                            // 42: Green
+	COLOR_BRED | COLOR_BGREEN,               // 43: Yellow
+	COLOR_BBLUE,                             // 44: Blue
+	COLOR_BRED | COLOR_BBLUE,                // 45: Magenta
+	COLOR_BGREEN | COLOR_BBLUE,              // 46: Cyan
+	COLOR_BRED | COLOR_BBLUE | COLOR_BGREEN, // 47: White
 }
 
 type ANSIWriter struct {
@@ -140,11 +172,13 @@ func (a *ANSIWriter) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) boo
 				break
 			}
 			if c >= 30 && c < 40 {
+				color ^= COLOR_FINTENSITY
 				color |= ColorTableFg[c-30]
 			} else if c >= 40 && c < 50 {
+				color ^= COLOR_BINTENSITY
 				color |= ColorTableBg[c-40]
 			} else if c == 4 {
-				color |= COMMON_LVB_UNDERSCORE
+				color |= COMMON_LVB_UNDERSCORE | ColorTableFg[7]
 			} else { // unknown code treat as reset
 				color = ColorTableFg[7]
 			}
@@ -224,41 +258,4 @@ func eraseLine() error {
 		sbi.dwCursorPosition.ptr(),
 		uintptr(unsafe.Pointer(&written)),
 	)
-}
-
-const (
-	_                = uint16(0)
-	COLOR_FBLUE      = 0x0001
-	COLOR_FGREEN     = 0x0002
-	COLOR_FRED       = 0x0004
-	COLOR_FINTENSITY = 0x0008
-
-	COLOR_BBLUE      = 0x0010
-	COLOR_BGREEN     = 0x0020
-	COLOR_BRED       = 0x0040
-	COLOR_BINTENSITY = 0x0080
-
-	COMMON_LVB_UNDERSCORE = 0x8000
-)
-
-var ColorTableFg = []word{
-	0,                                       // 30: Black
-	COLOR_FRED,                              // 31: Red
-	COLOR_FGREEN,                            // 32: Green
-	COLOR_FRED | COLOR_FGREEN,               // 33: Yellow
-	COLOR_FBLUE,                             // 34: Blue
-	COLOR_FRED | COLOR_FBLUE,                // 35: Magenta
-	COLOR_FGREEN | COLOR_FBLUE,              // 36: Cyan
-	COLOR_FRED | COLOR_FBLUE | COLOR_FGREEN, // 37: White
-}
-
-var ColorTableBg = []word{
-	0,                                       // 40: Black
-	COLOR_BRED,                              // 41: Red
-	COLOR_BGREEN,                            // 42: Green
-	COLOR_BRED | COLOR_BGREEN,               // 43: Yellow
-	COLOR_BBLUE,                             // 44: Blue
-	COLOR_BRED | COLOR_BBLUE,                // 45: Magenta
-	COLOR_BGREEN | COLOR_BBLUE,              // 46: Cyan
-	COLOR_BRED | COLOR_BBLUE | COLOR_BGREEN, // 47: White
 }

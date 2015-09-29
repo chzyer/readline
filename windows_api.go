@@ -11,14 +11,16 @@ import (
 var (
 	kernel = NewKernel()
 	stdout = uintptr(syscall.Stdout)
+	stdin  = uintptr(syscall.Stdin)
 )
 
 type Kernel struct {
 	SetConsoleCursorPosition,
 	SetConsoleTextAttribute,
-	GetConsoleScreenBufferInfo,
 	FillConsoleOutputCharacterW,
 	FillConsoleOutputAttribute,
+	ReadConsoleInputW,
+	GetConsoleScreenBufferInfo,
 	GetConsoleCursorInfo,
 	GetStdHandle CallFunc
 }
@@ -26,6 +28,7 @@ type Kernel struct {
 type short int16
 type word uint16
 type dword uint32
+type wchar uint16
 
 type _COORD struct {
 	x short
@@ -34,6 +37,34 @@ type _COORD struct {
 
 func (c *_COORD) ptr() uintptr {
 	return uintptr(*(*int32)(unsafe.Pointer(c)))
+}
+
+const (
+	EVENT_KEY                = 0x0001
+	EVENT_MOUSE              = 0x0002
+	EVENT_WINDOW_BUFFER_SIZE = 0x0004
+	EVENT_MENU               = 0x0008
+	EVENT_FOCUS              = 0x0010
+)
+
+type _KEY_EVENT_RECORD struct {
+	bKeyDown          int32
+	wRepeatCount      word
+	wVirtualKeyCode   word
+	wVirtualScanCode  word
+	unicodeChar       wchar
+	dwControlKeyState dword
+}
+
+// KEY_EVENT_RECORD          KeyEvent;
+// MOUSE_EVENT_RECORD        MouseEvent;
+// WINDOW_BUFFER_SIZE_RECORD WindowBufferSizeEvent;
+// MENU_EVENT_RECORD         MenuEvent;
+// FOCUS_EVENT_RECORD        FocusEvent;
+type _INPUT_RECORD struct {
+	EventType word
+	Padding   uint16
+	Event     [16]byte
 }
 
 type _CONSOLE_SCREEN_BUFFER_INFO struct {
