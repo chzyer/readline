@@ -246,7 +246,7 @@ func (r *RuneBuffer) IdxLine() int {
 	// the cursor will in the first line, otherwise will in the second line
 	// this situation only occurs in golang's Stdout
 	// TODO: figure out why
-	if totalWidth%w == 0 && len(r.buf) == r.idx {
+	if totalWidth%w == 0 && len(r.buf) == r.idx && !isWindows {
 		line--
 	}
 
@@ -328,17 +328,15 @@ func (r *RuneBuffer) cleanOutput() []byte {
 	buf.Write([]byte("\033[J")) // just like ^k :)
 
 	idxLine := r.IdxLine()
+
 	if idxLine == 0 {
 		buf.WriteString("\033[2K\r")
 		return buf.Bytes()
 	}
-
 	for i := 0; i < idxLine; i++ {
-		buf.WriteString("\033[2K\r")
-		if i != idxLine-1 {
-			buf.WriteByte('\b')
-		}
+		buf.WriteString("\033[2K\r\033[A")
 	}
+	buf.WriteString("\033[2K\r")
 	return buf.Bytes()
 }
 

@@ -3,14 +3,13 @@
 package readline
 
 import (
+	"bufio"
 	"io"
 	"strconv"
 	"strings"
 	"sync"
 	"unicode/utf8"
 	"unsafe"
-
-	"gopkg.in/bufio.v1"
 )
 
 func init() {
@@ -28,7 +27,7 @@ type ANSIWriter struct {
 func NewANSIWriter(w io.Writer) *ANSIWriter {
 	a := &ANSIWriter{
 		target: w,
-		ch:     make(chan rune, 1024),
+		ch:     make(chan rune),
 	}
 	go a.ioloop()
 	return a
@@ -105,9 +104,30 @@ read:
 func (a *ANSIWriter) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) bool {
 	arg := *argptr
 	var err error
+
+	if r >= 'A' && r <= 'D' {
+		count := short(GetInt(arg, 1))
+		info, err := GetConsoleScreenBufferInfo()
+		if err != nil {
+			return false
+		}
+		switch r {
+		case 'A': // up
+			info.dwCursorPosition.y -= count
+		case 'B': // down
+			info.dwCursorPosition.y += count
+		case 'C': // right
+			info.dwCursorPosition.x += count
+		case 'D': // left
+			info.dwCursorPosition.x -= count
+		}
+		SetConsoleCursorPosition(&info.dwCursorPosition)
+		return false
+	}
+
 	switch r {
 	case 'J':
-		eraseLine()
+		killLines()
 	case 'K':
 		eraseLine()
 	case 'm':
@@ -121,7 +141,11 @@ func (a *ANSIWriter) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) boo
 			}
 			if c >= 30 && c < 40 {
 				color |= ColorTableFg[c-30]
-			} else if c == 0 {
+			} else if c >= 40 && c < 50 {
+				color |= ColorTableBg[c-40]
+			} else if c == 4 {
+				color |= COMMON_LVB_UNDERSCORE
+			} else { // unknown code treat as reset
 				color = ColorTableFg[7]
 			}
 		}
@@ -129,16 +153,13 @@ func (a *ANSIWriter) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) boo
 			break
 		}
 		kernel.SetConsoleTextAttribute(stdout, uintptr(color))
-	case 'A':
-	case 'B':
-	case 'C':
-	case 'D':
-	case '\007':
+	case '\007': // set title
 	case ';':
 		if len(arg) == 0 || arg[len(arg)-1] != "" {
 			arg = append(arg, "")
+			*argptr = arg
 		}
-		fallthrough
+		return true
 	default:
 		if len(arg) == 0 {
 			arg = append(arg, "")
@@ -167,15 +188,39 @@ func (a *ANSIWriter) Write(b []byte) (int, error) {
 	return off, nil
 }
 
+func killLines() error {
+	sbi, err := GetConsoleScreenBufferInfo()
+	if err != nil {
+		return err
+	}
+
+	size := (sbi.dwCursorPosition.y - sbi.dwSize.y) * sbi.dwSize.x
+	size += sbi.dwCursorPosition.x
+
+	var written int
+	kernel.FillConsoleOutputAttribute(stdout, uintptr(ColorTableFg[7]),
+		uintptr(size),
+		sbi.dwCursorPosition.ptr(),
+		uintptr(unsafe.Pointer(&written)),
+	)
+	return kernel.FillConsoleOutputCharacterW(stdout, uintptr(' '),
+		uintptr(size),
+		sbi.dwCursorPosition.ptr(),
+		uintptr(unsafe.Pointer(&written)),
+	)
+}
+
 func eraseLine() error {
 	sbi, err := GetConsoleScreenBufferInfo()
 	if err != nil {
 		return err
 	}
 
+	size := sbi.dwSize.x
+	sbi.dwCursorPosition.x = 0
 	var written int
 	return kernel.FillConsoleOutputCharacterW(stdout, uintptr(' '),
-		uintptr(sbi.dwSize.x-sbi.dwCursorPosition.x),
+		uintptr(size),
 		sbi.dwCursorPosition.ptr(),
 		uintptr(unsafe.Pointer(&written)),
 	)
@@ -192,6 +237,8 @@ const (
 	COLOR_BGREEN     = 0x0020
 	COLOR_BRED       = 0x0040
 	COLOR_BINTENSITY = 0x0080
+
+	COMMON_LVB_UNDERSCORE = 0x8000
 )
 
 var ColorTableFg = []word{

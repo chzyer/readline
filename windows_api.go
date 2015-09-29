@@ -18,11 +18,14 @@ type Kernel struct {
 	SetConsoleTextAttribute,
 	GetConsoleScreenBufferInfo,
 	FillConsoleOutputCharacterW,
+	FillConsoleOutputAttribute,
+	GetConsoleCursorInfo,
 	GetStdHandle CallFunc
 }
 
 type short int16
 type word uint16
+type dword uint32
 
 type _COORD struct {
 	x short
@@ -46,6 +49,11 @@ type _SMALL_RECT struct {
 	top    short
 	right  short
 	bottom short
+}
+
+type _CONSOLE_CURSOR_INFO struct {
+	dwSize   dword
+	bVisible bool
 }
 
 type CallFunc func(u ...uintptr) error
@@ -100,4 +108,14 @@ func GetConsoleScreenBufferInfo() (*_CONSOLE_SCREEN_BUFFER_INFO, error) {
 		uintptr(unsafe.Pointer(t)),
 	)
 	return t, err
+}
+
+func GetConsoleCursorInfo() (*_CONSOLE_CURSOR_INFO, error) {
+	t := new(_CONSOLE_CURSOR_INFO)
+	err := kernel.GetConsoleCursorInfo(stdout, uintptr(unsafe.Pointer(t)))
+	return t, err
+}
+
+func SetConsoleCursorPosition(c *_COORD) error {
+	return kernel.SetConsoleCursorPosition(stdout, c.ptr())
 }

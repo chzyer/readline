@@ -2,6 +2,10 @@
 
 package readline
 
+func init() {
+	isWindows = true
+}
+
 // get width of the terminal
 func getWidth() int {
 	info, _ := GetConsoleScreenBufferInfo()

@@ -1,6 +1,7 @@
 package readline
 
 import (
+	"strconv"
 	"syscall"
 	"unicode"
 
@@ -8,7 +9,8 @@ import (
 )
 
 var (
-	StdinFd = int(uintptr(syscall.Stdin))
+	StdinFd   = int(uintptr(syscall.Stdin))
+	isWindows = false
 )
 
 // IsTerminal returns true if the given file descriptor is a terminal.
@@ -230,4 +232,15 @@ func RunesHasPrefix(r, prefix []rune) bool {
 		return false
 	}
 	return RunesEqual(r[:len(prefix)], prefix)
+}
+
+func GetInt(s []string, def int) int {
+	if len(s) == 0 {
+		return def
+	}
+	c, err := strconv.Atoi(s[0])
+	if err != nil {
+		return def
+	}
+	return c
 }
