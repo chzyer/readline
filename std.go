@@ -6,6 +6,6 @@ import (
 )
 
 var (
-	Stdout io.Writer = os.Stdout
-	Stderr io.Writer = os.Stderr
+	Stdout io.WriteCloser = os.Stdout
+	Stderr io.WriteCloser = os.Stderr
 )

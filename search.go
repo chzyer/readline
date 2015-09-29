@@ -126,7 +126,7 @@ func (o *opSearch) SearchRefresh(x int) {
 	x = x % getWidth()
 
 	if o.markStart > 0 {
-		o.buf.SetStyle(o.markStart, o.markEnd, "4m")
+		o.buf.SetStyle(o.markStart, o.markEnd, "4")
 	}
 
 	lineCnt := o.buf.CursorLineCount()

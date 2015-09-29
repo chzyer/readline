@@ -7,6 +7,7 @@ type Operation struct {
 	t       *Terminal
 	buf     *RuneBuffer
 	outchan chan []rune
+	w       io.Writer
 
 	*opHistory
 	*opSearch
@@ -49,6 +50,7 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 		outchan:   make(chan []rune),
 		opHistory: newOpHistory(cfg.HistoryFile),
 	}
+	op.w = op.buf.w
 	op.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
 	op.opCompleter = newOpCompleter(op.buf.w, op)
 	go op.ioloop()
@@ -236,6 +238,10 @@ func (o *Operation) Runes() ([]rune, error) {
 		return nil, io.EOF
 	}
 	return r, nil
+}
+
+func (o *Operation) SetTitle(t string) {
+	o.w.Write([]byte("\033[2;" + t + "\007"))
 }
 
 func (o *Operation) Slice() ([]byte, error) {

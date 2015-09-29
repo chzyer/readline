@@ -302,7 +302,7 @@ func (r *RuneBuffer) SetStyle(start, end int, style string) {
 	} else {
 		r.w.Write(bytes.Repeat([]byte("\b"), r.calWidth(move)))
 	}
-	r.w.Write([]byte("\033[" + style))
+	r.w.Write([]byte("\033[" + style + "m"))
 	r.w.Write([]byte(string(r.buf[start:end])))
 	r.w.Write([]byte("\033[0m"))
 	// TODO: move back
@@ -334,9 +334,11 @@ func (r *RuneBuffer) cleanOutput() []byte {
 	}
 
 	for i := 0; i < idxLine; i++ {
-		buf.WriteString("\033[2K\r\b")
+		buf.WriteString("\033[2K\r")
+		if i != idxLine-1 {
+			buf.WriteByte('\b')
+		}
 	}
-	buf.WriteString("\033[2K\r")
 	return buf.Bytes()
 }
 
