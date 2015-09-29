@@ -19,7 +19,6 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 
 # Todo
 
-* Add support for windows
 * Vim mode
 * More funny examples
 
@@ -203,6 +202,7 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | Mac OS X iTerm2 Tmux          | screen |
 | Ubuntu Server 14.04 LTS       | linux  |
 | Centos 7                      | linux  |
+| Windows 10                    | -      |
 
 ### Notice:
 * `Ctrl`+`A` is not working in screen because it used as a control command by default

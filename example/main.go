@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/logex.v1"
-
 	"github.com/chzyer/readline"
 )
 
@@ -41,7 +39,6 @@ func main() {
 		HistoryFile:  "/tmp/readline.tmp",
 		AutoComplete: completer,
 	})
-	logex.SetStd(logex.NewLoggerEx(l.Stderr()))
 	if err != nil {
 		panic(err)
 	}
