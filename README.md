@@ -26,6 +26,7 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 
 * Vim mode
 * More funny examples
+* Support dumb/eterm-color terminal in emacs
 
 # Usage
 
@@ -139,6 +140,7 @@ for {
 
 `Meta`+`B` means press `Esc` and `n` separately.  
 Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
+Notice: `Meta`+`B` is equals with `Alt`+`B` in windows.
 
 * Shortcut in normal mode
 
@@ -210,10 +212,10 @@ Users can change that in terminal simulator(i.e. iTerm2) to `Alt`+`B`
 | Windows 10                    | -      |
 
 ### Notice:
-* `Ctrl`+`A` is not working in screen because it used as a control command by default
+* `Ctrl`+`A` is not working in `screen` because it used as a control command by default
 
 If you test it otherwhere, whether it works fine or not, please let me know!
 
 # Feedback
 
-If you have any question, please submit an GitHub Issues and any pull request is welcomed :)
+If you have any questions, please submit a github issue and any pull requests is welcomed :)

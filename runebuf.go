@@ -240,6 +240,9 @@ func (r *RuneBuffer) LineCount() int {
 func (r *RuneBuffer) IdxLine() int {
 	totalWidth := RunesWidth(r.buf[:r.idx]) + r.PromptLen()
 	w := getWidth()
+	if w == 0 {
+		return 0
+	}
 	line := totalWidth / w
 
 	// if cursor is in last colmun and not any character behind it
