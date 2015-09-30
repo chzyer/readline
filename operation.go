@@ -1,6 +1,12 @@
 package readline
 
-import "io"
+import (
+	"fmt"
+	"io"
+	"os"
+
+	"golang.org/x/crypto/ssh/terminal"
+)
 
 type Operation struct {
 	cfg     *Config
@@ -238,6 +244,16 @@ func (o *Operation) Runes() ([]rune, error) {
 		return nil, io.EOF
 	}
 	return r, nil
+}
+
+func (o *Operation) Password(prompt string) ([]byte, error) {
+	w := o.Stdout()
+	if prompt != "" {
+		fmt.Fprintf(w, prompt)
+	}
+	b, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Fprint(w, "\r\n")
+	return b, err
 }
 
 func (o *Operation) SetTitle(t string) {

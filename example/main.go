@@ -12,6 +12,7 @@ import (
 
 func usage(w io.Writer) {
 	io.WriteString(w, `
+login
 setprompt <prompt>
 say <hello>
 bye
@@ -19,6 +20,7 @@ bye
 }
 
 var completer = readline.NewPrefixCompleter(
+	readline.PcItem("login"),
 	readline.PcItem("say",
 		readline.PcItem("hello"),
 		readline.PcItem("bye"),
@@ -52,6 +54,12 @@ func main() {
 		}
 
 		switch {
+		case line == "login":
+			pswd, err := l.ReadPassword("please enter your password: ")
+			if err != nil {
+				break
+			}
+			println("you enter:", strconv.Quote(string(pswd)))
 		case line == "help":
 			usage(l.Stderr())
 		case strings.HasPrefix(line, "setprompt"):

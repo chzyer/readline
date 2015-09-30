@@ -59,6 +59,10 @@ func (i *Instance) Stderr() io.Writer {
 	return i.o.Stderr()
 }
 
+func (i *Instance) ReadPassword(prompt string) ([]byte, error) {
+	return i.o.Password(prompt)
+}
+
 func (i *Instance) Readline() (string, error) {
 	return i.o.String()
 }
