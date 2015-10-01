@@ -40,6 +40,7 @@ func main() {
 		Prompt:       "\033[31m»\033[0m ",
 		HistoryFile:  "/tmp/readline.tmp",
 		AutoComplete: completer,
+		// VimMode:      true,
 	})
 	if err != nil {
 		panic(err)

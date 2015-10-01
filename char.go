@@ -7,7 +7,7 @@ const (
 	CharDelete    = 4
 	CharLineEnd   = 5
 	CharForward   = 6
-	CharCancel    = 7
+	CharBell      = 7
 	CharCtrlH     = 8
 	CharTab       = 9
 	CharCtrlJ     = 10
@@ -26,8 +26,8 @@ const (
 )
 
 const (
-	MetaPrev rune = -iota - 1
-	MetaNext
+	MetaBackward rune = -iota - 1
+	MetaForward
 	MetaDelete
 	MetaBackspace
 	MetaTranspose

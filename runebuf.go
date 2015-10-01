@@ -98,13 +98,15 @@ func (r *RuneBuffer) MoveForward() {
 	})
 }
 
-func (r *RuneBuffer) Delete() {
+func (r *RuneBuffer) Delete() (success bool) {
 	r.Refresh(func() {
 		if r.idx == len(r.buf) {
 			return
 		}
 		r.buf = append(r.buf[:r.idx], r.buf[r.idx+1:]...)
+		success = true
 	})
+	return
 }
 
 func (r *RuneBuffer) DeleteWord() {
@@ -126,7 +128,7 @@ func (r *RuneBuffer) DeleteWord() {
 	r.Kill()
 }
 
-func (r *RuneBuffer) MoveToPrevWord() {
+func (r *RuneBuffer) MoveToPrevWord() (success bool) {
 	r.Refresh(func() {
 		if r.idx == 0 {
 			return
@@ -135,11 +137,14 @@ func (r *RuneBuffer) MoveToPrevWord() {
 		for i := r.idx - 1; i > 0; i-- {
 			if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
 				r.idx = i
+				success = true
 				return
 			}
 		}
 		r.idx = 0
+		success = true
 	})
+	return
 }
 
 func (r *RuneBuffer) KillFront() {
@@ -235,6 +240,35 @@ func (r *RuneBuffer) MoveToLineEnd() {
 
 func (r *RuneBuffer) LineCount() int {
 	return LineCount(RunesWidth(r.buf) + r.PromptLen())
+}
+
+func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
+	r.Refresh(func() {
+		if reverse {
+			for i := r.idx - 1; i >= 0; i-- {
+				if r.buf[i] == ch {
+					r.idx = i
+					if prevChar {
+						r.idx++
+					}
+					success = true
+					return
+				}
+			}
+			return
+		}
+		for i := r.idx + 1; i < len(r.buf); i++ {
+			if r.buf[i] == ch {
+				r.idx = i
+				if prevChar {
+					r.idx--
+				}
+				success = true
+				return
+			}
+		}
+	})
+	return
 }
 
 func (r *RuneBuffer) IdxLine() int {

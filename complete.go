@@ -127,7 +127,7 @@ func (o *opCompleter) HandleCompleteSelect(r rune) bool {
 		next = false
 	case CharTab, CharForward:
 		o.doSelect()
-	case CharCancel, CharInterrupt:
+	case CharBell, CharInterrupt:
 		o.ExitCompleteMode(true)
 		next = false
 	case CharNext:

@@ -18,6 +18,7 @@ type Operation struct {
 	*opHistory
 	*opSearch
 	*opCompleter
+	*opVim
 }
 
 type wrapWriter struct {
@@ -56,6 +57,7 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 		outchan:   make(chan []rune),
 		opHistory: newOpHistory(cfg.HistoryFile),
 	}
+	op.opVim = newVimMode(op)
 	op.w = op.buf.w
 	op.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
 	op.opCompleter = newOpCompleter(op.buf.w, op)
@@ -87,13 +89,21 @@ func (o *Operation) ioloop() {
 			case CharInterrupt:
 				o.t.KickRead()
 				fallthrough
-			case CharCancel:
+			case CharBell:
+				continue
+			}
+		}
+
+		if o.IsEnableVimMode() {
+			var ok bool
+			r, ok = o.HandleVim(r, o.t.ReadRune)
+			if ok {
 				continue
 			}
 		}
 
 		switch r {
-		case CharCancel:
+		case CharBell:
 			if o.IsSearchMode() {
 				o.ExitSearchMode(true)
 				o.buf.Refresh(nil)
@@ -119,11 +129,11 @@ func (o *Operation) ioloop() {
 		case CharKill:
 			o.buf.Kill()
 			keepInCompleteMode = true
-		case MetaNext:
+		case MetaForward:
 			o.buf.MoveToNextWord()
 		case CharTranspose:
 			o.buf.Transpose()
-		case MetaPrev:
+		case MetaBackward:
 			o.buf.MoveToPrevWord()
 		case MetaDelete:
 			o.buf.DeleteWord()
@@ -132,7 +142,9 @@ func (o *Operation) ioloop() {
 		case CharLineEnd:
 			o.buf.MoveToLineEnd()
 		case CharDelete:
-			o.buf.Delete()
+			if !o.buf.Delete() {
+				o.t.Bell()
+			}
 		case CharBackspace, CharCtrlH:
 			if o.IsSearchMode() {
 				o.SearchBackspace()
@@ -141,6 +153,7 @@ func (o *Operation) ioloop() {
 			}
 
 			if o.buf.Len() == 0 {
+				o.t.Bell()
 				break
 			}
 			o.buf.Backspace()
@@ -167,11 +180,15 @@ func (o *Operation) ioloop() {
 			buf := o.PrevHistory()
 			if buf != nil {
 				o.buf.Set(buf)
+			} else {
+				o.t.Bell()
 			}
 		case CharNext:
 			buf, ok := o.NextHistory()
 			if ok {
 				o.buf.Set(buf)
+			} else {
+				o.t.Bell()
 			}
 		case CharInterrupt:
 			if o.IsSearchMode() {

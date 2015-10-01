@@ -11,6 +11,7 @@ type Config struct {
 	Prompt       string
 	HistoryFile  string
 	AutoComplete AutoCompleter
+	VimMode      bool
 	Stdout       io.Writer
 	Stderr       io.Writer
 
@@ -57,6 +58,10 @@ func (i *Instance) Stdout() io.Writer {
 
 func (i *Instance) Stderr() io.Writer {
 	return i.o.Stderr()
+}
+
+func (i *Instance) SetVimMode(on bool) {
+	i.o.SetVimMode(on)
 }
 
 func (i *Instance) ReadPassword(prompt string) ([]byte, error) {
