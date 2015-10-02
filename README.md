@@ -23,7 +23,7 @@ Also works fine in windows
 You can read the source code in [example/main.go](https://github.com/chzyer/readline/blob/master/example/main.go).
 
 # Todo
-
+* Vi Mode is not completely finish
 * More funny examples
 * Support dumb/eterm-color terminal in emacs
 
