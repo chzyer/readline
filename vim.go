@@ -53,9 +53,9 @@ func (o *opVim) handleVimNormalMovement(r rune, readNext func() rune) (t rune, h
 		rb.MoveToLineStart()
 	case '$':
 		rb.MoveToLineEnd()
-	case 'b':
+	case 'b', 'B':
 		rb.MoveToPrevWord()
-	case 'w':
+	case 'w', 'W', 'e', 'E':
 		rb.MoveToNextWord()
 	case 'f', 'F', 't', 'T':
 		next := readNext()

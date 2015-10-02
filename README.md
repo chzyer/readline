@@ -24,12 +24,11 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 
 # Todo
 
-* Vim mode (WIP)
 * More funny examples
 * Support dumb/eterm-color terminal in emacs
 
 # Features
-* Support emacs/vi mode, almost all basic features GNU-Readline support
+* Support emacs/vi mode, almost all basic features that GNU-Readline is supported
 * zsh-style backward/forward history search
 * zsh-style completion
 * Readline auto refresh when others write to Stdout while editing(it needs specify the Stdout/Stderr provided by *readline.Instance to others).
@@ -204,16 +203,6 @@ Notice: `Meta`+`B` is equals with `Alt`+`B` in windows.
 | `Tab` / `Enter`         | Use the word on cursor to complete          |
 | `Ctrl`+`C` / `Ctrl`+`G` | Exit Complete Select Mode                   |
 | Other                   | Exit Complete Select Mode                   |
-
-* Vim Mode (set Config.VimMode to true)
-
-| Mode   | Shortcut | Comment                                     |
-|--------+----------+---------------------------------------------|
-| Normal | `j`      | Next line (in history)                      |
-|        | `k`      | Prev line (in history)                      |
-|        | `h`      | Move Backward                               |
-|        | `l`      | Move Forward                                |
-
 
 # Tested with
 
