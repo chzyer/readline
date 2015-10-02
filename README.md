@@ -28,6 +28,12 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 * More funny examples
 * Support dumb/eterm-color terminal in emacs
 
+# Features
+* Support emacs/vi mode, almost all basic features GNU-Readline support
+* zsh-style backward/forward history search
+* zsh-style completion
+* Readline auto refresh when others write to Stdout while editing(it needs specify the Stdout/Stderr provided by *readline.Instance to others).
+
 # Usage
 
 * Simplest example

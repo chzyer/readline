@@ -64,6 +64,10 @@ func (i *Instance) SetVimMode(on bool) {
 	i.o.SetVimMode(on)
 }
 
+func (i *Instance) IsVimMode() bool {
+	return i.o.IsEnableVimMode()
+}
+
 func (i *Instance) ReadPassword(prompt string) ([]byte, error) {
 	return i.o.Password(prompt)
 }

@@ -20,6 +20,10 @@ bye
 }
 
 var completer = readline.NewPrefixCompleter(
+	readline.PcItem("mode",
+		readline.PcItem("vi"),
+		readline.PcItem("emacs"),
+	),
 	readline.PcItem("login"),
 	readline.PcItem("say",
 		readline.PcItem("hello"),
@@ -40,7 +44,6 @@ func main() {
 		Prompt:       "\033[31m»\033[0m ",
 		HistoryFile:  "/tmp/readline.tmp",
 		AutoComplete: completer,
-		// VimMode:      true,
 	})
 	if err != nil {
 		panic(err)
@@ -53,8 +56,23 @@ func main() {
 		if err != nil {
 			break
 		}
-
+		line = strings.TrimSpace(line)
 		switch {
+		case strings.HasPrefix(line, "mode "):
+			switch line[5:] {
+			case "vi":
+				l.SetVimMode(true)
+			case "emacs":
+				l.SetVimMode(false)
+			default:
+				println("invalid mode:", line[5:])
+			}
+		case line == "mode":
+			if l.IsVimMode() {
+				println("current mode: vim")
+			} else {
+				println("current mode: emacs")
+			}
 		case line == "login":
 			pswd, err := l.ReadPassword("please enter your password: ")
 			if err != nil {

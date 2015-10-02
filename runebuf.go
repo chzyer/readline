@@ -5,6 +5,11 @@ import (
 	"io"
 )
 
+type runeBufferBck struct {
+	buf []rune
+	idx int
+}
+
 type RuneBuffer struct {
 	buf    []rune
 	idx    int
@@ -12,6 +17,22 @@ type RuneBuffer struct {
 	w      io.Writer
 
 	cleanInScreen bool
+
+	bck *runeBufferBck
+}
+
+func (r *RuneBuffer) Backup() {
+	r.bck = &runeBufferBck{r.buf, r.idx}
+}
+
+func (r *RuneBuffer) Restore() {
+	r.Refresh(func() {
+		if r.bck == nil {
+			return
+		}
+		r.buf = r.bck.buf
+		r.idx = r.bck.idx
+	})
 }
 
 func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
@@ -95,6 +116,13 @@ func (r *RuneBuffer) MoveForward() {
 			return
 		}
 		r.idx++
+	})
+}
+
+func (r *RuneBuffer) Erase() {
+	r.Refresh(func() {
+		r.idx = 0
+		r.buf = r.buf[:0]
 	})
 }
 

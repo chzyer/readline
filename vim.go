@@ -30,92 +30,97 @@ func (o *opVim) SetVimMode(on bool) {
 }
 
 func (o *opVim) ExitVimMode() {
-	o.vimMode = VIM_NORMAL
+	o.vimMode = VIM_INSERT
 }
 
 func (o *opVim) IsEnableVimMode() bool {
 	return o.cfg.VimMode
 }
 
-func (o *opVim) HandleVimNormal(r rune, readNext func() rune) (t rune, handle bool) {
+func (o *opVim) handleVimNormalMovement(r rune, readNext func() rune) (t rune, handled bool) {
+	rb := o.op.buf
+	handled = true
 	switch r {
-	case CharEnter, CharInterrupt:
+	case 'h':
+		t = CharBackward
+	case 'j':
+		t = CharNext
+	case 'k':
+		t = CharPrev
+	case 'l':
+		t = CharForward
+	case '0', '^':
+		rb.MoveToLineStart()
+	case '$':
+		rb.MoveToLineEnd()
+	case 'b':
+		rb.MoveToPrevWord()
+	case 'w':
+		rb.MoveToNextWord()
+	case 'f', 'F', 't', 'T':
+		next := readNext()
+		prevChar := r == 't' || r == 'T'
+		reverse := r == 'F' || r == 'T'
+		switch next {
+		case CharEsc:
+		default:
+			rb.MoveTo(next, prevChar, reverse)
+		}
+	default:
 		return r, false
 	}
+	return t, true
+}
+
+func (o *opVim) handleVimNormalEnterInsert(r rune, readNext func() rune) (t rune, handled bool) {
 	rb := o.op.buf
-	handled := true
-	{
-		switch r {
-		case 'h':
-			t = CharBackward
-		case 'j':
-			t = CharNext
-		case 'k':
-			t = CharPrev
-		case 'l':
-			t = CharForward
-		default:
-			handled = false
-		}
-		if handled {
-			return t, false
-		}
-	}
-
-	{ // to insert
-		handled = true
-		switch r {
-		case 'i':
-		case 'I':
-			rb.MoveToLineStart()
-		case 'a':
-			rb.MoveForward()
-		case 'A':
-			rb.MoveToLineEnd()
-		case 's':
-			rb.Delete()
-		default:
-			handled = false
-		}
-		if handled {
-			o.EnterVimInsertMode()
-			return r, true
-		}
-	}
-
-	{ // movement
-		handled = true
-		switch r {
-		case '0', '^':
-			rb.MoveToLineStart()
-		case '$':
-			rb.MoveToLineEnd()
-		case 'b':
-			rb.MoveToPrevWord()
+	handled = true
+	switch r {
+	case 'i':
+	case 'I':
+		rb.MoveToLineStart()
+	case 'a':
+		rb.MoveForward()
+	case 'A':
+		rb.MoveToLineEnd()
+	case 's':
+		rb.Delete()
+	case 'S':
+		rb.Erase()
+	case 'c':
+		next := readNext()
+		switch next {
+		case 'c':
+			rb.Erase()
 		case 'w':
-			rb.MoveToNextWord()
-		case 'f', 'F', 't', 'T':
-			next := readNext()
-			prevChar := r == 't' || r == 'T'
-			reverse := r == 'F' || r == 'T'
-			switch next {
-			case CharEsc:
-			default:
-				if rb.MoveTo(next, prevChar, reverse) {
-					return r, true
-				}
-			}
-		default:
-			handled = false
+			rb.DeleteWord()
 		}
-		if handled {
-			return r, true
-		}
+	default:
+		return r, false
+	}
+
+	o.EnterVimInsertMode()
+	return
+}
+
+func (o *opVim) HandleVimNormal(r rune, readNext func() rune) (t rune) {
+	switch r {
+	case CharEnter, CharInterrupt:
+		o.ExitVimMode()
+		return r
+	}
+
+	if r, handled := o.handleVimNormalMovement(r, readNext); handled {
+		return r
+	}
+
+	if r, handled := o.handleVimNormalEnterInsert(r, readNext); handled {
+		return r
 	}
 
 	// invalid operation
 	o.op.t.Bell()
-	return r, true
+	return 0
 }
 
 func (o *opVim) EnterVimInsertMode() {
@@ -126,19 +131,19 @@ func (o *opVim) ExitVimInsertMode() {
 	o.vimMode = VIM_NORMAL
 }
 
-func (o *opVim) HandleVim(r rune, readNext func() rune) (rune, bool) {
+func (o *opVim) HandleVim(r rune, readNext func() rune) rune {
 	if o.vimMode == VIM_NORMAL {
 		return o.HandleVimNormal(r, readNext)
 	}
 	if r == CharEsc {
 		o.ExitVimInsertMode()
-		return r, true
+		return 0
 	}
 
 	switch o.vimMode {
 	case VIM_INSERT:
-		return r, false
+		return r
 	case VIM_VISUAL:
 	}
-	return r, false
+	return r
 }

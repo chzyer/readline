@@ -95,9 +95,8 @@ func (o *Operation) ioloop() {
 		}
 
 		if o.IsEnableVimMode() {
-			var ok bool
-			r, ok = o.HandleVim(r, o.t.ReadRune)
-			if ok {
+			r = o.HandleVim(r, o.t.ReadRune)
+			if r == 0 {
 				continue
 			}
 		}
