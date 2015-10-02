@@ -31,7 +31,8 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 * Support emacs/vi mode, almost all basic features that GNU-Readline is supported
 * zsh-style backward/forward history search
 * zsh-style completion
-* Readline auto refresh when others write to Stdout while editing(it needs specify the Stdout/Stderr provided by *readline.Instance to others).
+* Readline auto refresh when others write to Stdout while editing (it needs specify the Stdout/Stderr provided by *readline.Instance to others).
+* Support colourful prompt in all platforms.
 
 # Usage
 
