@@ -113,6 +113,10 @@ func (t *Terminal) ioloop() {
 		expectNextChar = true
 		switch r {
 		case CharEsc:
+			if t.cfg.VimMode {
+				t.outchan <- r
+				break
+			}
 			isEscape = true
 		case CharInterrupt, CharEnter, CharCtrlJ:
 			expectNextChar = false
@@ -121,6 +125,10 @@ func (t *Terminal) ioloop() {
 			t.outchan <- r
 		}
 	}
+}
+
+func (t *Terminal) Bell() {
+	fmt.Fprintf(t, "%c", CharBell)
 }
 
 func (t *Terminal) Close() error {

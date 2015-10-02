@@ -57,9 +57,9 @@ func escapeExKey(r rune) rune {
 func escapeKey(r rune) rune {
 	switch r {
 	case 'b':
-		r = MetaPrev
+		r = MetaBackward
 	case 'f':
-		r = MetaNext
+		r = MetaForward
 	case 'd':
 		r = MetaDelete
 	case CharTranspose:
