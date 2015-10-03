@@ -3,8 +3,8 @@ package readline
 import "io"
 
 type Instance struct {
-	t *Terminal
-	o *Operation
+	Terminal  *Terminal
+	Operation *Operation
 }
 
 type Config struct {
@@ -39,8 +39,8 @@ func NewEx(cfg *Config) (*Instance, error) {
 	}
 	rl := t.Readline()
 	return &Instance{
-		t: t,
-		o: rl,
+		Terminal:  t,
+		Operation: rl,
 	}, nil
 }
 
@@ -49,41 +49,41 @@ func New(prompt string) (*Instance, error) {
 }
 
 func (i *Instance) SetPrompt(s string) {
-	i.o.SetPrompt(s)
+	i.Operation.SetPrompt(s)
 }
 
 func (i *Instance) Stdout() io.Writer {
-	return i.o.Stdout()
+	return i.Operation.Stdout()
 }
 
 func (i *Instance) Stderr() io.Writer {
-	return i.o.Stderr()
+	return i.Operation.Stderr()
 }
 
 func (i *Instance) SetVimMode(on bool) {
-	i.o.SetVimMode(on)
+	i.Operation.SetVimMode(on)
 }
 
 func (i *Instance) IsVimMode() bool {
-	return i.o.IsEnableVimMode()
+	return i.Operation.IsEnableVimMode()
 }
 
 func (i *Instance) ReadPassword(prompt string) ([]byte, error) {
-	return i.o.Password(prompt)
+	return i.Operation.Password(prompt)
 }
 
 func (i *Instance) Readline() (string, error) {
-	return i.o.String()
+	return i.Operation.String()
 }
 
 func (i *Instance) ReadSlice() ([]byte, error) {
-	return i.o.Slice()
+	return i.Operation.Slice()
 }
 
 func (i *Instance) Close() error {
-	if err := i.t.Close(); err != nil {
+	if err := i.Terminal.Close(); err != nil {
 		return err
 	}
-	i.o.Close()
+	i.Operation.Close()
 	return nil
 }
