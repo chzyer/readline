@@ -112,7 +112,8 @@ func (o *Operation) ioloop() {
 				o.buf.Refresh(nil)
 			}
 		case CharTab:
-			if o.opCompleter == nil {
+			if o.cfg.AutoComplete == nil {
+				o.t.Bell()
 				break
 			}
 			o.OnComplete()
