@@ -89,7 +89,7 @@ func (o *opCompleter) OnComplete() {
 			return
 		}
 
-		same, size := RunesAggregate(newLines)
+		same, size := runes.Aggregate(newLines)
 		if size > 0 {
 			buf.WriteRunes(same)
 			o.ExitCompleteMode(false)
