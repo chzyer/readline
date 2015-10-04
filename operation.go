@@ -51,12 +51,12 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 
 func NewOperation(t *Terminal, cfg *Config) *Operation {
 	op := &Operation{
-		cfg:       cfg,
-		t:         t,
-		buf:       NewRuneBuffer(t, cfg.Prompt),
-		outchan:   make(chan []rune),
-		opHistory: newOpHistory(cfg.HistoryFile),
+		cfg:     cfg,
+		t:       t,
+		buf:     NewRuneBuffer(t, cfg.Prompt),
+		outchan: make(chan []rune),
 	}
+	op.SetHistoryPath(cfg.HistoryFile)
 	op.opVim = newVimMode(op)
 	op.w = op.buf.w
 	op.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
@@ -286,5 +286,13 @@ func (o *Operation) Slice() ([]byte, error) {
 }
 
 func (o *Operation) Close() {
-	o.opHistory.Close()
+	o.opHistory.CloseHistory()
+}
+
+func (o *Operation) SetHistoryPath(path string) {
+	if o.opHistory != nil {
+		o.opHistory.CloseHistory()
+	}
+	o.cfg.HistoryFile = path
+	o.opHistory = newOpHistory(o.cfg)
 }

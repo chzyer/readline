@@ -19,40 +19,81 @@ func (h *hisItem) Clean() {
 }
 
 type opHistory struct {
-	path       string
+	cfg        *Config
 	history    *list.List
 	historyVer int64
 	current    *list.Element
 	fd         *os.File
 }
 
-func newOpHistory(path string) (o *opHistory) {
+func newOpHistory(cfg *Config) (o *opHistory) {
 	o = &opHistory{
-		path:    path,
+		cfg:     cfg,
 		history: list.New(),
 	}
-	if o.path == "" {
-		return
+	if o.cfg.HistoryFile != "" {
+		o.historyUpdatePath(o.cfg.HistoryFile)
 	}
-	f, err := os.OpenFile(o.path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	return
+}
+
+// only called by newOpHistory
+func (o *opHistory) historyUpdatePath(path string) {
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		return
 	}
 	o.fd = f
 	r := bufio.NewReader(o.fd)
-	for {
+	total := 0
+	for ; ; total++ {
 		line, err := r.ReadSlice('\n')
 		if err != nil {
 			break
 		}
 		o.PushHistory([]rune(strings.TrimSpace(string(line))))
+		o.CompactHistory()
+	}
+	if total > o.cfg.HistoryLimit {
+		o.HistoryRewrite()
 	}
 	o.historyVer++
 	o.PushHistory(nil)
 	return
 }
 
-func (o *opHistory) Close() {
+func (o *opHistory) CompactHistory() {
+	for o.history.Len() > o.cfg.HistoryLimit {
+		o.history.Remove(o.history.Front())
+	}
+}
+
+func (o *opHistory) HistoryRewrite() {
+	if o.cfg.HistoryFile == "" {
+		return
+	}
+
+	tmpFile := o.cfg.HistoryFile + ".tmp"
+	fd, err := os.OpenFile(tmpFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_APPEND, 0666)
+	if err != nil {
+		return
+	}
+	defer fd.Close()
+
+	buf := bufio.NewWriter(fd)
+	for elem := o.history.Front(); elem != nil; elem = elem.Next() {
+		buf.WriteString(string(elem.Value.(*hisItem).Source))
+	}
+	buf.Flush()
+
+	if o.fd != nil {
+		o.fd.Close()
+	}
+	// fd is write only, just satisfy what we need.
+	o.fd = fd
+}
+
+func (o *opHistory) CloseHistory() {
 	if o.fd != nil {
 		o.fd.Close()
 	}
@@ -197,7 +238,6 @@ func (o *opHistory) UpdateHistory(s []rune, commit bool) {
 }
 
 func (o *opHistory) PushHistory(s []rune) {
-	// copy
 	newCopy := make([]rune, len(s))
 	copy(newCopy, s)
 	elem := o.history.PushBack(&hisItem{Source: newCopy})
