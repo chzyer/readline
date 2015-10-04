@@ -3,6 +3,8 @@ package readline
 import (
 	"bytes"
 	"io"
+
+	"github.com/chzyer/readline/runes"
 )
 
 type runeBufferBck struct {
@@ -44,11 +46,11 @@ func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
 }
 
 func (r *RuneBuffer) CurrentWidth(x int) int {
-	return RunesWidth(r.buf[:x])
+	return runes.WidthAll(r.buf[:x])
 }
 
 func (r *RuneBuffer) PromptLen() int {
-	return RunesWidth(RunesColorFilter(r.prompt))
+	return runes.WidthAll(runes.ColorFilter(r.prompt))
 }
 
 func (r *RuneBuffer) RuneSlice(i int) []rune {
@@ -267,7 +269,7 @@ func (r *RuneBuffer) MoveToLineEnd() {
 }
 
 func (r *RuneBuffer) LineCount() int {
-	return LineCount(RunesWidth(r.buf) + r.PromptLen())
+	return LineCount(runes.WidthAll(r.buf) + r.PromptLen())
 }
 
 func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
@@ -300,7 +302,7 @@ func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
 }
 
 func (r *RuneBuffer) IdxLine() int {
-	totalWidth := RunesWidth(r.buf[:r.idx]) + r.PromptLen()
+	totalWidth := runes.WidthAll(r.buf[:r.idx]) + r.PromptLen()
 	w := getWidth()
 	if w == 0 {
 		return 0
@@ -336,7 +338,7 @@ func (r *RuneBuffer) output() []byte {
 	buf.WriteString(string(r.prompt))
 	buf.Write([]byte(string(r.buf)))
 	if len(r.buf) > r.idx {
-		buf.Write(bytes.Repeat([]byte{'\b'}, RunesWidth(r.buf[r.idx:])))
+		buf.Write(runes.Backspace(r.buf[r.idx:]))
 	}
 	return buf.Bytes()
 }
@@ -350,9 +352,9 @@ func (r *RuneBuffer) Reset() []rune {
 
 func (r *RuneBuffer) calWidth(m int) int {
 	if m > 0 {
-		return RunesWidth(r.buf[r.idx : r.idx+m])
+		return runes.WidthAll(r.buf[r.idx : r.idx+m])
 	}
-	return RunesWidth(r.buf[r.idx+m : r.idx])
+	return runes.WidthAll(r.buf[r.idx+m : r.idx])
 }
 
 func (r *RuneBuffer) SetStyle(start, end int, style string) {

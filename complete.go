@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+
+	"github.com/chzyer/readline/runes"
 )
 
 type AutoCompleter interface {
@@ -65,7 +67,7 @@ func (o *opCompleter) OnComplete() {
 	buf := o.op.buf
 	rs := buf.Runes()
 
-	if o.IsInCompleteMode() && RunesEqual(rs, o.candidateSource) {
+	if o.IsInCompleteMode() && runes.Equal(rs, o.candidateSource) {
 		o.EnterCompleteSelectMode()
 		o.doSelect()
 		return
@@ -176,7 +178,7 @@ func (o *opCompleter) CompleteRefresh() {
 	lineCnt := o.op.buf.CursorLineCount()
 	colWidth := 0
 	for _, c := range o.candidate {
-		w := RunesWidth(c)
+		w := runes.WidthAll(c)
 		if w > colWidth {
 			colWidth = w
 		}

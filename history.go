@@ -5,6 +5,8 @@ import (
 	"container/list"
 	"os"
 	"strings"
+
+	"github.com/chzyer/readline/runes"
 )
 
 type hisItem struct {
@@ -110,7 +112,7 @@ func (o *opHistory) FindHistoryBck(isNewSearch bool, rs []rune, start int) (int,
 				item = item[:start]
 			}
 		}
-		idx := RunesIndexBck(item, rs)
+		idx := runes.IndexAllBck(item, rs)
 		if idx < 0 {
 			continue
 		}
@@ -135,7 +137,7 @@ func (o *opHistory) FindHistoryFwd(isNewSearch bool, rs []rune, start int) (int,
 				continue
 			}
 		}
-		idx := RunesIndex(item, rs)
+		idx := runes.IndexAll(item, rs)
 		if idx < 0 {
 			continue
 		}
@@ -187,7 +189,7 @@ func (o *opHistory) NewHistory(current []rune) {
 		prev := back.Prev()
 		if prev != nil {
 			use := o.showItem(o.current.Value.(*hisItem))
-			if RunesEqual(use, prev.Value.(*hisItem).Source) {
+			if runes.Equal(use, prev.Value.(*hisItem).Source) {
 				o.current = o.history.Back()
 				o.current.Value.(*hisItem).Clean()
 				o.historyVer++
