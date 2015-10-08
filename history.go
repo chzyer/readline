@@ -88,6 +88,11 @@ func (o *opHistory) HistoryRewrite() {
 	}
 	buf.Flush()
 
+	// replace history file
+	if err = os.Rename(tmpFile, o.cfg.HistoryFile); err != nil {
+		return
+	}
+
 	if o.fd != nil {
 		o.fd.Close()
 	}
