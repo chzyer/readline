@@ -80,7 +80,6 @@ func (o *opHistory) HistoryRewrite() {
 	if err != nil {
 		return
 	}
-	defer fd.Close()
 
 	buf := bufio.NewWriter(fd)
 	for elem := o.history.Front(); elem != nil; elem = elem.Next() {
@@ -90,6 +89,7 @@ func (o *opHistory) HistoryRewrite() {
 
 	// replace history file
 	if err = os.Rename(tmpFile, o.cfg.HistoryFile); err != nil {
+		fd.Close()
 		return
 	}
 
