@@ -40,7 +40,7 @@ func (c *Config) Init() error {
 	if c.Stderr == nil {
 		c.Stderr = Stderr
 	}
-	if c.HistoryLimit < 0 {
+	if c.HistoryLimit <= 0 {
 		c.HistoryLimit = 500
 	}
 	return nil
