@@ -24,6 +24,8 @@ const (
 	VK_RCONTROL = 0xA3
 )
 
+// RawReader translate input record to ANSI escape sequence.
+// To provides same behavior as unix terminal.
 type RawReader struct {
 	ctrlKey bool
 	altKey  bool
@@ -34,6 +36,7 @@ func NewRawReader() *RawReader {
 	return r
 }
 
+// only process one action in one read
 func (r *RawReader) Read(buf []byte) (int, error) {
 	ir := new(_INPUT_RECORD)
 	var read int
