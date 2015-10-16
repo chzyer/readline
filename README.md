@@ -46,7 +46,7 @@ go get gopkg.in/readline.v1
 or
 
 ```
-go get https://github.com/chzyer/readline
+go get github.com/chzyer/readline
 ```
 
 * Simplest example
