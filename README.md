@@ -37,10 +37,22 @@ You can read the source code in [example/main.go](https://github.com/chzyer/read
 
 # Usage
 
+* Import package
+
+```
+go get gopkg.in/readline.v1
+```
+
+or
+
+```
+go get https://github.com/chzyer/readline
+```
+
 * Simplest example
 
 ```go
-import "github.com/chzyer/readline"
+import "gopkg.in/readline.v1"
 
 rl, err := readline.New("> ")
 if err != nil {
@@ -83,7 +95,7 @@ for {
 ```go
 import (
 	"log"
-	"github.com/chzyer/readline"
+	"gopkg.in/readline.v1"
 )
 
 rl, err := readline.New("> ")
@@ -113,7 +125,7 @@ for {
 ```go
 import (
 	"log"
-	"github.com/chzyer/readline"
+	"gopkg.in/readline.v1"
 )
 
 var completer = readline.NewPrefixCompleter(
