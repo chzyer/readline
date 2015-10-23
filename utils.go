@@ -40,6 +40,8 @@ func IsPrintable(key rune) bool {
 // translate Esc[X
 func escapeExKey(r rune) rune {
 	switch r {
+	case 51:
+		r = CharDeleteKey
 	case 'D':
 		r = CharBackward
 	case 'C':
@@ -48,6 +50,10 @@ func escapeExKey(r rune) rune {
 		r = CharPrev
 	case 'B':
 		r = CharNext
+	case 'H':
+		r = CharLineStart
+	case 'F':
+		r = CharLineEnd
 	}
 	return r
 }
