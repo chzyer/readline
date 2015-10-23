@@ -41,7 +41,7 @@ func IsPrintable(key rune) bool {
 func escapeExKey(r rune) rune {
 	switch r {
 	case 51:
-		r = CharDeleteKey
+		r = CharDelete
 	case 'D':
 		r = CharBackward
 	case 'C':
