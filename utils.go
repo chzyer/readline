@@ -43,7 +43,7 @@ func escapeExKey(r rune, reader *bufio.Reader) rune {
 	switch r {
 	case 51:
 		r = CharDelete
-		if d, _, err := reader.ReadRune(); err != nil || d != 126 {
+		if reader != nil && d, _, err := reader.ReadRune(); err != nil || d != 126 {
 			reader.UnreadRune()
 		}
 	case 'D':
