@@ -107,13 +107,7 @@ func (t *Terminal) ioloop() {
 			r = escapeKey(r)
 		} else if isEscapeEx {
 			isEscapeEx = false
-			r = escapeExKey(r)
-			// if hw delete button is pressed it is specified as set ot 4 runes [27,91,51,126]. we are now at 51
-			if r == CharDelete {
-				if d, _, err := buf.ReadRune(); err != nil || d != 126 {
-					buf.UnreadRune()
-				}
-			}
+			r = escapeExKey(r, buf)
 		}
 
 		expectNextChar = true

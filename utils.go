@@ -1,6 +1,7 @@
 package readline
 
 import (
+	"bufio"
 	"strconv"
 	"syscall"
 
@@ -38,10 +39,13 @@ func IsPrintable(key rune) bool {
 }
 
 // translate Esc[X
-func escapeExKey(r rune) rune {
+func escapeExKey(r rune, reader *bufio.Reader) rune {
 	switch r {
 	case 51:
 		r = CharDelete
+		if d, _, err := reader.ReadRune(); err != nil || d != 126 {
+			reader.UnreadRune()
+		}
 	case 'D':
 		r = CharBackward
 	case 'C':
