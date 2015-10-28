@@ -41,11 +41,6 @@ func IsPrintable(key rune) bool {
 // translate Esc[X
 func escapeExKey(r rune, reader *bufio.Reader) rune {
 	switch r {
-	case 51:
-		r = CharDelete
-		if d, _, err := reader.ReadRune(); reader != nil && (err != nil || d != 126) {
-			reader.UnreadRune()
-		}
 	case 'D':
 		r = CharBackward
 	case 'C':
@@ -58,6 +53,15 @@ func escapeExKey(r rune, reader *bufio.Reader) rune {
 		r = CharLineStart
 	case 'F':
 		r = CharLineEnd
+	default:
+		if r == '3' && reader != nil {
+			d, _, _ := reader.ReadRune()
+			if d == '~' {
+				r = CharDelete
+			} else {
+				reader.UnreadRune()
+			}
+		}
 	}
 	return r
 }
