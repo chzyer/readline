@@ -107,7 +107,7 @@ func (t *Terminal) ioloop() {
 			r = escapeKey(r)
 		} else if isEscapeEx {
 			isEscapeEx = false
-			r = escapeExKey(r)
+			r = escapeExKey(r, buf)
 		}
 
 		expectNextChar = true
