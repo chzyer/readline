@@ -124,7 +124,6 @@ for {
 
 ```go
 import (
-	"log"
 	"gopkg.in/readline.v1"
 )
 
@@ -136,7 +135,7 @@ var completer = readline.NewPrefixCompleter(
 	readline.PcItem("help"),
 )
 
-rl, err := readline.New(&readline.Config{
+rl, err := readline.NewEx(&readline.Config{
 	Prompt:       "> ",
 	AutoComplete: completer,
 })
