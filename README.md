@@ -237,3 +237,6 @@ If you test it otherwhere, whether it works fine or not, please let me know!
 # Feedback
 
 If you have any questions, please submit a github issue and any pull requests is welcomed :)
+
+* [https://twitter.com/chzyer](https://twitter.com/chzyer)  
+* [http://weibo.com/2145262190](http://weibo.com/2145262190)  
