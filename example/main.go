@@ -37,6 +37,7 @@ var completer = readline.NewPrefixCompleter(
 		readline.PcItem("install"),
 		readline.PcItem("test"),
 	),
+	readline.PcItem("sleep"),
 )
 
 func main() {
@@ -101,6 +102,9 @@ func main() {
 			}()
 		case line == "bye":
 			goto exit
+		case line == "sleep":
+			log.Println("sleep 4 second")
+			time.Sleep(4 * time.Second)
 		case line == "":
 		default:
 			log.Println("you said:", strconv.Quote(line))

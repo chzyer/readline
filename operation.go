@@ -254,6 +254,9 @@ func (o *Operation) String() (string, error) {
 }
 
 func (o *Operation) Runes() ([]rune, error) {
+	o.t.EnterRawMode()
+	defer o.t.ExitRawMode()
+
 	o.buf.Refresh(nil) // print prompt
 	o.t.KickRead()
 	r := <-o.outchan
@@ -268,6 +271,9 @@ func (o *Operation) Password(prompt string) ([]byte, error) {
 	if prompt != "" {
 		fmt.Fprintf(w, prompt)
 	}
+	o.t.EnterRawMode()
+	defer o.t.ExitRawMode()
+
 	b, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Fprint(w, "\r\n")
 	return b, err

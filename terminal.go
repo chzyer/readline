@@ -24,13 +24,8 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 	if err := cfg.Init(); err != nil {
 		return nil, err
 	}
-	state, err := MakeRaw(StdinFd)
-	if err != nil {
-		return nil, err
-	}
 	t := &Terminal{
 		cfg:      cfg,
-		state:    state,
 		kickChan: make(chan struct{}, 1),
 		outchan:  make(chan rune),
 		stopChan: make(chan struct{}, 1),
@@ -38,6 +33,22 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 
 	go t.ioloop()
 	return t, nil
+}
+
+func (t *Terminal) EnterRawMode() (err error) {
+	t.state, err = MakeRaw(StdinFd)
+	return err
+}
+
+func (t *Terminal) ExitRawMode() (err error) {
+	if t.state == nil {
+		return
+	}
+	err = Restore(StdinFd, t.state)
+	if err == nil {
+		t.state = nil
+	}
+	return err
 }
 
 func (t *Terminal) Write(b []byte) (int, error) {
@@ -137,5 +148,5 @@ func (t *Terminal) Close() error {
 	}
 	t.stopChan <- struct{}{}
 	t.wg.Wait()
-	return Restore(StdinFd, t.state)
+	return t.ExitRawMode()
 }
