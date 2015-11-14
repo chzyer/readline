@@ -12,9 +12,7 @@ func NewPrefixCompleter(pc ...*PrefixCompleter) *PrefixCompleter {
 }
 
 func PcItem(name string, pc ...*PrefixCompleter) *PrefixCompleter {
-	if len(pc) != 0 {
-		name += " "
-	}
+	name += " "
 	return &PrefixCompleter{
 		Name:     []rune(name),
 		Children: pc,
@@ -28,7 +26,11 @@ func (p *PrefixCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int
 	for _, child := range p.Children {
 		if len(line) >= len(child.Name) {
 			if runes.HasPrefix(line, child.Name) {
-				newLine = append(newLine, child.Name)
+				if len(line) == len(child.Name) {
+					newLine = append(newLine, []rune{' '})
+				} else {
+					newLine = append(newLine, child.Name)
+				}
 				offset = len(child.Name)
 				lineCompleter = child
 				goNext = true
