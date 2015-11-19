@@ -1,6 +1,7 @@
 package readline
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -8,11 +9,16 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+var (
+	ErrInterrupt = errors.New("Interrupt")
+)
+
 type Operation struct {
 	cfg     *Config
 	t       *Terminal
 	buf     *RuneBuffer
 	outchan chan []rune
+	errchan chan error
 	w       io.Writer
 
 	*opHistory
@@ -55,6 +61,7 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 		t:       t,
 		buf:     NewRuneBuffer(t, cfg.Prompt),
 		outchan: make(chan []rune),
+		errchan: make(chan error),
 	}
 	op.SetHistoryPath(cfg.HistoryFile)
 	op.opVim = newVimMode(op)
@@ -141,10 +148,6 @@ func (o *Operation) ioloop() {
 			o.buf.MoveToLineStart()
 		case CharLineEnd:
 			o.buf.MoveToLineEnd()
-		case CharDelete:
-			if !o.buf.Delete() {
-				o.t.Bell()
-			}
 		case CharBackspace, CharCtrlH:
 			if o.IsSearchMode() {
 				o.SearchBackspace()
@@ -190,6 +193,18 @@ func (o *Operation) ioloop() {
 			} else {
 				o.t.Bell()
 			}
+		case CharDelete:
+			if o.buf.Len() > 0 || !o.IsNormalMode() {
+				o.t.KickRead()
+				if !o.buf.Delete() {
+					o.t.Bell()
+				}
+				break
+			}
+
+			// treat as EOF
+			o.buf.WriteString("^D\n")
+			o.errchan <- io.EOF
 		case CharInterrupt:
 			if o.IsSearchMode() {
 				o.t.KickRead()
@@ -205,7 +220,7 @@ func (o *Operation) ioloop() {
 			o.buf.MoveToLineEnd()
 			o.buf.Refresh(nil)
 			o.buf.WriteString("^C\n")
-			o.outchan <- nil
+			o.errchan <- ErrInterrupt
 		default:
 			if o.IsSearchMode() {
 				o.SearchChar(r)
@@ -259,11 +274,12 @@ func (o *Operation) Runes() ([]rune, error) {
 
 	o.buf.Refresh(nil) // print prompt
 	o.t.KickRead()
-	r := <-o.outchan
-	if r == nil {
-		return nil, io.EOF
+	select {
+	case r := <-o.outchan:
+		return r, nil
+	case err := <-o.errchan:
+		return nil, err
 	}
-	return r, nil
 }
 
 func (o *Operation) Password(prompt string) ([]byte, error) {
@@ -301,4 +317,8 @@ func (o *Operation) SetHistoryPath(path string) {
 	}
 	o.cfg.HistoryFile = path
 	o.opHistory = newOpHistory(o.cfg)
+}
+
+func (o *Operation) IsNormalMode() bool {
+	return !o.IsInCompleteMode() && !o.IsSearchMode()
 }
