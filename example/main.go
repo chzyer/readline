@@ -49,7 +49,7 @@ func main() {
 		Prompt:          "\033[31m»\033[0m ",
 		HistoryFile:     "/tmp/readline.tmp",
 		AutoComplete:    completer,
-		InterruptPrompt: "\nInterrupt",
+		InterruptPrompt: "\nInterrupt, Press Ctrl+D to exit",
 		EOFPrompt:       "exit",
 	})
 	if err != nil {
