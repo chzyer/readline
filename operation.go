@@ -315,7 +315,9 @@ func (o *Operation) GenPasswordConfig() *Config {
 }
 
 func (o *Operation) PasswordWithConfig(cfg *Config) ([]byte, error) {
-	o.opPassword.EnterPasswordMode(cfg)
+	if err := o.opPassword.EnterPasswordMode(cfg); err != nil {
+		return nil, err
+	}
 	defer o.opPassword.ExitPasswordMode()
 	return o.Slice()
 }

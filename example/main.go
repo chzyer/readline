@@ -47,15 +47,13 @@ var completer = readline.NewPrefixCompleter(
 )
 
 func main() {
-	cfg := &readline.Config{
+	l, err := readline.NewEx(&readline.Config{
 		Prompt:          "\033[31m»\033[0m ",
 		HistoryFile:     "/tmp/readline.tmp",
 		AutoComplete:    completer,
 		InterruptPrompt: "\nInterrupt, Press Ctrl+D to exit",
 		EOFPrompt:       "exit",
-	}
-
-	l, err := readline.NewEx(cfg)
+	})
 	if err != nil {
 		panic(err)
 	}
