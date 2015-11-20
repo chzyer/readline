@@ -13,11 +13,11 @@ type Terminal struct {
 	cfg       *Config
 	state     *terminal.State
 	outchan   chan rune
-	closed    int64
+	closed    int32
 	stopChan  chan struct{}
 	kickChan  chan struct{}
 	wg        sync.WaitGroup
-	isReading int64
+	isReading int32
 }
 
 func NewTerminal(cfg *Config) (*Terminal, error) {
@@ -61,7 +61,7 @@ func (t *Terminal) ReadRune() rune {
 }
 
 func (t *Terminal) IsReading() bool {
-	return atomic.LoadInt64(&t.isReading) == 1
+	return atomic.LoadInt32(&t.isReading) == 1
 }
 
 func (t *Terminal) KickRead() {
@@ -83,10 +83,10 @@ func (t *Terminal) ioloop() {
 	buf := bufio.NewReader(Stdin)
 	for {
 		if !expectNextChar {
-			atomic.StoreInt64(&t.isReading, 0)
+			atomic.StoreInt32(&t.isReading, 0)
 			select {
 			case <-t.kickChan:
-				atomic.StoreInt64(&t.isReading, 1)
+				atomic.StoreInt32(&t.isReading, 1)
 			case <-t.stopChan:
 				return
 			}
@@ -132,7 +132,7 @@ func (t *Terminal) Bell() {
 }
 
 func (t *Terminal) Close() error {
-	if atomic.SwapInt64(&t.closed, 1) != 0 {
+	if atomic.SwapInt32(&t.closed, 1) != 0 {
 		return nil
 	}
 	t.stopChan <- struct{}{}
