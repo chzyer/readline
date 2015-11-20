@@ -46,9 +46,11 @@ var completer = readline.NewPrefixCompleter(
 
 func main() {
 	l, err := readline.NewEx(&readline.Config{
-		Prompt:       "\033[31m»\033[0m ",
-		HistoryFile:  "/tmp/readline.tmp",
-		AutoComplete: completer,
+		Prompt:          "\033[31m»\033[0m ",
+		HistoryFile:     "/tmp/readline.tmp",
+		AutoComplete:    completer,
+		InterruptPrompt: "\nInterrupt",
+		EOFPrompt:       "exit",
 	})
 	if err != nil {
 		panic(err)
@@ -58,7 +60,7 @@ func main() {
 	log.SetOutput(l.Stderr())
 	for {
 		line, err := l.Readline()
-		if err != nil {
+		if err == io.EOF {
 			break
 		}
 		line = strings.TrimSpace(line)
