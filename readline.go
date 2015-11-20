@@ -23,6 +23,9 @@ type Config struct {
 	// If VimMode is true, readline will in vim.insert mode by default
 	VimMode bool
 
+	InterruptPrompt string
+	EOFPrompt       string
+
 	Stdout io.Writer
 	Stderr io.Writer
 
@@ -43,6 +46,18 @@ func (c *Config) Init() error {
 	if c.HistoryLimit <= 0 {
 		c.HistoryLimit = 500
 	}
+
+	if c.InterruptPrompt == "" {
+		c.InterruptPrompt = "^C"
+	} else if c.InterruptPrompt == "\n" {
+		c.InterruptPrompt = ""
+	}
+	if c.EOFPrompt == "" {
+		c.EOFPrompt = "^D"
+	} else if c.EOFPrompt == "\n" {
+		c.EOFPrompt = ""
+	}
+
 	return nil
 }
 

@@ -203,7 +203,8 @@ func (o *Operation) ioloop() {
 			}
 
 			// treat as EOF
-			o.buf.WriteString("^D\n")
+			o.buf.WriteString(o.cfg.EOFPrompt + "\n")
+			o.buf.Reset()
 			o.errchan <- io.EOF
 		case CharInterrupt:
 			if o.IsSearchMode() {
@@ -219,7 +220,8 @@ func (o *Operation) ioloop() {
 			}
 			o.buf.MoveToLineEnd()
 			o.buf.Refresh(nil)
-			o.buf.WriteString("^C\n")
+			o.buf.WriteString(o.cfg.InterruptPrompt + "\n")
+			o.buf.Reset()
 			o.errchan <- ErrInterrupt
 		default:
 			if o.IsSearchMode() {
