@@ -3,6 +3,7 @@ package readline
 import (
 	"bytes"
 	"io"
+	"strings"
 
 	"github.com/chzyer/readline/runes"
 )
@@ -17,6 +18,7 @@ type RuneBuffer struct {
 	idx    int
 	prompt []rune
 	w      io.Writer
+	mask   rune
 
 	cleanInScreen bool
 
@@ -37,12 +39,17 @@ func (r *RuneBuffer) Restore() {
 	})
 }
 
-func NewRuneBuffer(w io.Writer, prompt string) *RuneBuffer {
+func NewRuneBuffer(w io.Writer, prompt string, mask rune) *RuneBuffer {
 	rb := &RuneBuffer{
-		w: w,
+		w:    w,
+		mask: mask,
 	}
 	rb.SetPrompt(prompt)
 	return rb
+}
+
+func (r *RuneBuffer) SetMask(m rune) {
+	r.mask = m
 }
 
 func (r *RuneBuffer) CurrentWidth(x int) int {
@@ -336,7 +343,16 @@ func (r *RuneBuffer) Refresh(f func()) {
 func (r *RuneBuffer) output() []byte {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString(string(r.prompt))
-	buf.Write([]byte(string(r.buf)))
+	if r.mask != 0 && len(r.buf) > 0 {
+		buf.Write([]byte(strings.Repeat(string(r.mask), len(r.buf)-1)))
+		if r.buf[len(r.buf)-1] == '\n' {
+			buf.Write([]byte{'\n'})
+		} else {
+			buf.Write([]byte(string(r.mask)))
+		}
+	} else {
+		buf.Write([]byte(string(r.buf)))
+	}
 	if len(r.buf) > r.idx {
 		buf.Write(runes.Backspace(r.buf[r.idx:]))
 	}

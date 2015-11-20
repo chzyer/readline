@@ -14,11 +14,15 @@ type Config struct {
 
 	// readline will persist historys to file where HistoryFile specified
 	HistoryFile string
-	// specify the max length of historys, it's 500 by default
+	// specify the max length of historys, it's 500 by default, set it to -1 to disable history
 	HistoryLimit int
 
 	// AutoCompleter will called once user press TAB
 	AutoComplete AutoCompleter
+
+	// Any key press will pass to Listener
+	// NOTE: Listener will be triggered by (nil, 0, 0) immediately
+	Listener Listener
 
 	// If VimMode is true, readline will in vim.insert mode by default
 	VimMode bool
@@ -29,7 +33,12 @@ type Config struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	inited bool
+	MaskRune rune
+
+	// private fields
+	inited    bool
+	opHistory *opHistory
+	opSearch  *opSearch
 }
 
 func (c *Config) Init() error {
@@ -43,7 +52,7 @@ func (c *Config) Init() error {
 	if c.Stderr == nil {
 		c.Stderr = Stderr
 	}
-	if c.HistoryLimit <= 0 {
+	if c.HistoryLimit == 0 {
 		c.HistoryLimit = 500
 	}
 
@@ -59,6 +68,10 @@ func (c *Config) Init() error {
 	}
 
 	return nil
+}
+
+func (c *Config) SetListener(f func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool)) {
+	c.Listener = FuncListener(f)
 }
 
 func NewEx(cfg *Config) (*Instance, error) {
@@ -80,6 +93,10 @@ func New(prompt string) (*Instance, error) {
 
 func (i *Instance) SetPrompt(s string) {
 	i.Operation.SetPrompt(s)
+}
+
+func (i *Instance) SetMaskRune(r rune) {
+	i.Operation.SetMaskRune(r)
 }
 
 // change hisotry persistence in runtime
@@ -106,6 +123,19 @@ func (i *Instance) IsVimMode() bool {
 	return i.Operation.IsEnableVimMode()
 }
 
+func (i *Instance) GenPasswordConfig() *Config {
+	return i.Operation.GenPasswordConfig()
+}
+
+// we can generate a config by `i.GenPasswordConfig()`
+func (i *Instance) ReadPasswordWithConfig(cfg *Config) ([]byte, error) {
+	return i.Operation.PasswordWithConfig(cfg)
+}
+
+func (i *Instance) ReadPasswordEx(prompt string, l Listener) ([]byte, error) {
+	return i.Operation.PasswordEx(prompt, l)
+}
+
 func (i *Instance) ReadPassword(prompt string) ([]byte, error) {
 	return i.Operation.Password(prompt)
 }
@@ -126,4 +156,19 @@ func (i *Instance) Close() error {
 	}
 	i.Operation.Close()
 	return nil
+}
+
+func (i *Instance) SetConfig(cfg *Config) *Config {
+	if i.Config == cfg {
+		return cfg
+	}
+	old := i.Config
+	i.Config = cfg
+	i.Operation.SetConfig(cfg)
+	i.Terminal.SetConfig(cfg)
+	return old
+}
+
+func (i *Instance) Refresh() {
+	i.Operation.Refresh()
 }

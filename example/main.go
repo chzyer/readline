@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"strconv"
@@ -30,6 +31,7 @@ var completer = readline.NewPrefixCompleter(
 		readline.PcItem("bye"),
 	),
 	readline.PcItem("setprompt"),
+	readline.PcItem("setpassword"),
 	readline.PcItem("bye"),
 	readline.PcItem("help"),
 	readline.PcItem("go",
@@ -45,17 +47,26 @@ var completer = readline.NewPrefixCompleter(
 )
 
 func main() {
-	l, err := readline.NewEx(&readline.Config{
+	cfg := &readline.Config{
 		Prompt:          "\033[31m»\033[0m ",
 		HistoryFile:     "/tmp/readline.tmp",
 		AutoComplete:    completer,
 		InterruptPrompt: "\nInterrupt, Press Ctrl+D to exit",
 		EOFPrompt:       "exit",
-	})
+	}
+
+	l, err := readline.NewEx(cfg)
 	if err != nil {
 		panic(err)
 	}
 	defer l.Close()
+
+	setPasswordCfg := l.GenPasswordConfig()
+	setPasswordCfg.SetListener(func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool) {
+		l.SetPrompt(fmt.Sprintf("Enter password(%v): ", len(line)))
+		l.Refresh()
+		return nil, 0, false
+	})
 
 	log.SetOutput(l.Stderr())
 	for {
@@ -88,6 +99,11 @@ func main() {
 			println("you enter:", strconv.Quote(string(pswd)))
 		case line == "help":
 			usage(l.Stderr())
+		case line == "setpassword":
+			pswd, err := l.ReadPasswordWithConfig(setPasswordCfg)
+			if err == nil {
+				println("you set:", strconv.Quote(string(pswd)))
+			}
 		case strings.HasPrefix(line, "setprompt"):
 			prompt := line[10:]
 			if prompt == "" {

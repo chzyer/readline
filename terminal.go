@@ -150,3 +150,11 @@ func (t *Terminal) Close() error {
 	t.wg.Wait()
 	return t.ExitRawMode()
 }
+
+func (t *Terminal) SetConfig(c *Config) error {
+	if err := c.Init(); err != nil {
+		return err
+	}
+	t.cfg = c
+	return nil
+}

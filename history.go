@@ -33,10 +33,23 @@ func newOpHistory(cfg *Config) (o *opHistory) {
 		cfg:     cfg,
 		history: list.New(),
 	}
+	return o
+}
+
+func (o *opHistory) IsHistoryClosed() bool {
+	return o.fd.Fd() == ^(uintptr(0))
+}
+
+func (o *opHistory) InitHistory() {
+	if o.IsHistoryClosed() {
+		o.initHistory()
+	}
+}
+
+func (o *opHistory) initHistory() {
 	if o.cfg.HistoryFile != "" {
 		o.historyUpdatePath(o.cfg.HistoryFile)
 	}
-	return
 }
 
 // only called by newOpHistory
@@ -65,7 +78,7 @@ func (o *opHistory) historyUpdatePath(path string) {
 }
 
 func (o *opHistory) CompactHistory() {
-	for o.history.Len() > o.cfg.HistoryLimit {
+	for o.history.Len() > o.cfg.HistoryLimit && o.history.Len() > 0 {
 		o.history.Remove(o.history.Front())
 	}
 }
@@ -225,9 +238,15 @@ func (o *opHistory) NewHistory(current []rune) {
 	o.PushHistory(nil)
 }
 
+func (o *opHistory) RevertHistory() {
+	o.historyVer++
+	o.current = o.history.Back()
+}
+
 func (o *opHistory) UpdateHistory(s []rune, commit bool) {
 	if o.current == nil {
 		o.PushHistory(s)
+		o.CompactHistory()
 		return
 	}
 	r := o.current.Value.(*hisItem)
@@ -242,6 +261,7 @@ func (o *opHistory) UpdateHistory(s []rune, commit bool) {
 		r.Tmp = append(r.Tmp[:0], s...)
 	}
 	o.current.Value = r
+	o.CompactHistory()
 }
 
 func (o *opHistory) PushHistory(s []rune) {

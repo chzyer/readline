@@ -24,6 +24,7 @@ type Operation struct {
 	*opHistory
 	*opSearch
 	*opCompleter
+	*opPassword
 	*opVim
 }
 
@@ -57,17 +58,16 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 
 func NewOperation(t *Terminal, cfg *Config) *Operation {
 	op := &Operation{
-		cfg:     cfg,
 		t:       t,
-		buf:     NewRuneBuffer(t, cfg.Prompt),
+		buf:     NewRuneBuffer(t, cfg.Prompt, cfg.MaskRune),
 		outchan: make(chan []rune),
 		errchan: make(chan error),
 	}
-	op.SetHistoryPath(cfg.HistoryFile)
-	op.opVim = newVimMode(op)
 	op.w = op.buf.w
-	op.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
+	op.SetConfig(cfg)
+	op.opVim = newVimMode(op)
 	op.opCompleter = newOpCompleter(op.buf.w, op)
+	op.opPassword = newOpPassword(op)
 	go op.ioloop()
 	return op
 }
@@ -76,11 +76,16 @@ func (o *Operation) SetPrompt(s string) {
 	o.buf.SetPrompt(s)
 }
 
+func (o *Operation) SetMaskRune(r rune) {
+	o.buf.SetMask(r)
+}
+
 func (o *Operation) ioloop() {
 	for {
 		keepInSearchMode := false
 		keepInCompleteMode := false
 		r := o.t.ReadRune()
+		isUpdateHistory := true
 
 		if o.IsInCompleteSelectMode() {
 			keepInCompleteMode = o.HandleCompleteSelect(r)
@@ -205,6 +210,8 @@ func (o *Operation) ioloop() {
 			// treat as EOF
 			o.buf.WriteString(o.cfg.EOFPrompt + "\n")
 			o.buf.Reset()
+			isUpdateHistory = false
+			o.RevertHistory()
 			o.errchan <- io.EOF
 		case CharInterrupt:
 			if o.IsSearchMode() {
@@ -222,6 +229,8 @@ func (o *Operation) ioloop() {
 			o.buf.Refresh(nil)
 			o.buf.WriteString(o.cfg.InterruptPrompt + "\n")
 			o.buf.Reset()
+			isUpdateHistory = false
+			o.RevertHistory()
 			o.errchan <- ErrInterrupt
 		default:
 			if o.IsSearchMode() {
@@ -236,19 +245,26 @@ func (o *Operation) ioloop() {
 			}
 		}
 
+		if o.cfg.Listener != nil {
+			newLine, newPos, ok := o.cfg.Listener.OnChange(o.buf.Runes(), o.buf.Pos(), r)
+			if ok {
+				o.buf.SetWithIdx(newPos, newLine)
+			}
+		}
+
 		if !keepInSearchMode && o.IsSearchMode() {
 			o.ExitSearchMode(false)
 			o.buf.Refresh(nil)
 		} else if o.IsInCompleteMode() {
 			if !keepInCompleteMode {
 				o.ExitCompleteMode(false)
-				o.buf.Refresh(nil)
+				o.Refresh()
 			} else {
 				o.buf.Refresh(nil)
 				o.CompleteRefresh()
 			}
 		}
-		if !o.IsSearchMode() {
+		if isUpdateHistory && !o.IsSearchMode() {
 			o.UpdateHistory(o.buf.Runes(), false)
 		}
 	}
@@ -274,6 +290,9 @@ func (o *Operation) Runes() ([]rune, error) {
 	o.t.EnterRawMode()
 	defer o.t.ExitRawMode()
 
+	if o.cfg.Listener != nil {
+		o.cfg.Listener.OnChange(nil, 0, 0)
+	}
 	o.buf.Refresh(nil) // print prompt
 	o.t.KickRead()
 	select {
@@ -282,6 +301,23 @@ func (o *Operation) Runes() ([]rune, error) {
 	case err := <-o.errchan:
 		return nil, err
 	}
+}
+
+func (o *Operation) PasswordEx(prompt string, l Listener) ([]byte, error) {
+	cfg := o.GenPasswordConfig()
+	cfg.Prompt = prompt
+	cfg.Listener = l
+	return o.PasswordWithConfig(cfg)
+}
+
+func (o *Operation) GenPasswordConfig() *Config {
+	return o.opPassword.PasswordConfig()
+}
+
+func (o *Operation) PasswordWithConfig(cfg *Config) ([]byte, error) {
+	o.opPassword.EnterPasswordMode(cfg)
+	defer o.opPassword.ExitPasswordMode()
+	return o.Slice()
 }
 
 func (o *Operation) Password(prompt string) ([]byte, error) {
@@ -323,4 +359,53 @@ func (o *Operation) SetHistoryPath(path string) {
 
 func (o *Operation) IsNormalMode() bool {
 	return !o.IsInCompleteMode() && !o.IsSearchMode()
+}
+
+func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
+	if op.cfg == cfg {
+		return op.cfg, nil
+	}
+	if err := cfg.Init(); err != nil {
+		return op.cfg, err
+	}
+	old := op.cfg
+	op.cfg = cfg
+	op.SetPrompt(cfg.Prompt)
+	op.SetMaskRune(cfg.MaskRune)
+
+	if cfg.opHistory == nil {
+		op.SetHistoryPath(cfg.HistoryFile)
+		cfg.opHistory = op.opHistory
+		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
+	}
+	op.opHistory = cfg.opHistory
+
+	// SetHistoryPath will close opHistory which already exists
+	// so if we use it next time, we need to reopen it by `InitHistory()`
+	op.opHistory.InitHistory()
+
+	op.opSearch = cfg.opSearch
+	return old, nil
+}
+
+func (o *Operation) Refresh() {
+	if o.t.IsReading() {
+		o.buf.Refresh(nil)
+	}
+}
+
+func FuncListener(f func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool)) Listener {
+	return &DumpListener{f: f}
+}
+
+type DumpListener struct {
+	f func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool)
+}
+
+func (d *DumpListener) OnChange(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool) {
+	return d.f(line, pos, key)
+}
+
+type Listener interface {
+	OnChange(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool)
 }
