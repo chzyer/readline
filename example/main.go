@@ -12,12 +12,8 @@ import (
 )
 
 func usage(w io.Writer) {
-	io.WriteString(w, `
-login
-setprompt <prompt>
-say <hello>
-bye
-`[1:])
+	io.WriteString(w, "commands:\n")
+	io.WriteString(w, completer.Tree("    "))
 }
 
 var completer = readline.NewPrefixCompleter(

@@ -1,10 +1,37 @@
 package readline
 
-import "github.com/chzyer/readline/runes"
+import (
+	"bytes"
+	"strings"
+
+	"github.com/chzyer/readline/runes"
+)
 
 type PrefixCompleter struct {
 	Name     []rune
 	Children []*PrefixCompleter
+}
+
+func (p *PrefixCompleter) Tree(prefix string) string {
+	buf := bytes.NewBuffer(nil)
+	p.Print(prefix, 0, buf)
+	return buf.String()
+}
+
+func (p *PrefixCompleter) Print(prefix string, level int, buf *bytes.Buffer) {
+	if strings.TrimSpace(string(p.Name)) != "" {
+		buf.WriteString(prefix)
+		if level > 0 {
+			buf.WriteString("├")
+			buf.WriteString(strings.Repeat("─", (level*4)-2))
+			buf.WriteString(" ")
+		}
+		buf.WriteString(string(p.Name) + "\n")
+		level++
+	}
+	for _, ch := range p.Children {
+		ch.Print(prefix, level, buf)
+	}
 }
 
 func NewPrefixCompleter(pc ...*PrefixCompleter) *PrefixCompleter {
