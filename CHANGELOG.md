@@ -2,7 +2,7 @@
 
 ### 1.1 - 2015-11-20
 
-* #12 Add support for key <Delete>/<Home>/<End>
+* #12 Add support for key `<Delete>`/`<Home>`/`<End>`
 * Only enter raw mode as needed (calling `Readline()`), program will receive signal(e.g. Ctrl+C) if not interact with `readline`.
 * Bugs fixed for `PrefixCompleter`
 * Press `Ctrl+D` in empty line will cause `io.EOF` in error, Press `Ctrl+C` in anytime will cause `ErrInterrupt` instead of `io.EOF`, this will privodes a shell-like user experience.
