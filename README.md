@@ -21,7 +21,9 @@ Also works fine in windows
 ![demo windows](https://raw.githubusercontent.com/chzyer/readline/assets/windows.gif)
 
 
-You can read the source code in [example/main.go](https://github.com/chzyer/readline/blob/master/example/main.go).
+* [example/readline-demo](https://github.com/chzyer/readline/blob/master/example/readline-demo/readline-demo.go) The source code about the demo above
+
+* [example/readline-pass-strength](https://github.com/chzyer/readline/blob/master/example/readline-pass-strength/readline-pass-strength.go) A example about checking password strength, written by [@sahib](https://github.com/sahib)
 
 # Todo
 * Vi Mode is not completely finish
