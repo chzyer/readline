@@ -1,11 +1,19 @@
 package readline
 
-import "io"
+import (
+	"io"
+	"os"
+)
 
 type Instance struct {
 	Config    *Config
 	Terminal  *Terminal
 	Operation *Operation
+}
+
+type FdReader interface {
+	io.Reader
+	Fd() uintptr
 }
 
 type Config struct {
@@ -30,6 +38,7 @@ type Config struct {
 	InterruptPrompt string
 	EOFPrompt       string
 
+	Stdin  FdReader
 	Stdout io.Writer
 	Stderr io.Writer
 
@@ -46,6 +55,9 @@ func (c *Config) Init() error {
 		return nil
 	}
 	c.inited = true
+	if c.Stdin == nil {
+		c.Stdin = os.Stdin
+	}
 	if c.Stdout == nil {
 		c.Stdout = Stdout
 	}
