@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -330,7 +329,7 @@ func (o *Operation) Password(prompt string) ([]byte, error) {
 	o.t.EnterRawMode()
 	defer o.t.ExitRawMode()
 
-	b, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	b, err := terminal.ReadPassword(int(o.cfg.Stdin.Fd()))
 	fmt.Fprint(w, "\r\n")
 	return b, err
 }

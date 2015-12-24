@@ -36,7 +36,7 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 }
 
 func (t *Terminal) EnterRawMode() (err error) {
-	t.state, err = MakeRaw(StdinFd)
+	t.state, err = MakeRaw(int(t.cfg.Stdin.Fd()))
 	return err
 }
 
@@ -44,7 +44,7 @@ func (t *Terminal) ExitRawMode() (err error) {
 	if t.state == nil {
 		return
 	}
-	err = Restore(StdinFd, t.state)
+	err = Restore(int(t.cfg.Stdin.Fd()), t.state)
 	if err == nil {
 		t.state = nil
 	}
@@ -91,7 +91,7 @@ func (t *Terminal) ioloop() {
 		expectNextChar bool
 	)
 
-	buf := bufio.NewReader(Stdin)
+	buf := bufio.NewReader(t.cfg.Stdin)
 	for {
 		if !expectNextChar {
 			atomic.StoreInt32(&t.isReading, 0)
