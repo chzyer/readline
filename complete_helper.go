@@ -7,9 +7,16 @@ import (
 	"github.com/chzyer/readline/runes"
 )
 
+type DynChildrenFunc func() [][]rune
+
 type PrefixCompleter struct {
-	Name     []rune
-	Children []*PrefixCompleter
+	Name        []rune
+	Children    []*PrefixCompleter
+	DynChildren DynChildrenFunc
+}
+
+func empty() [][]rune {
+	return [][]rune{}
 }
 
 func (p *PrefixCompleter) Tree(prefix string) string {
@@ -38,15 +45,25 @@ func NewPrefixCompleter(pc ...*PrefixCompleter) *PrefixCompleter {
 	return PcItem("", pc...)
 }
 
+func PcDyn(name string, term DynChildrenFunc) *PrefixCompleter {
+	name += " "
+	return &PrefixCompleter{
+		Name:        []rune(name),
+		DynChildren: term,
+	}
+}
+
 func PcItem(name string, pc ...*PrefixCompleter) *PrefixCompleter {
 	name += " "
 	return &PrefixCompleter{
-		Name:     []rune(name),
-		Children: pc,
+		Name:        []rune(name),
+		Children:    pc,
+		DynChildren: empty,
 	}
 }
 
 func (p *PrefixCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int) {
+	end := PcItem("")
 	line = line[:pos]
 	goNext := false
 	var lineCompleter *PrefixCompleter
@@ -67,6 +84,25 @@ func (p *PrefixCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int
 				newLine = append(newLine, child.Name[len(line):])
 				offset = len(line)
 				lineCompleter = child
+			}
+		}
+	}
+	for _, dynChild := range p.DynChildren() {
+		if len(line) >= len(dynChild) {
+			if runes.HasPrefix(line, dynChild) {
+				if len(line) == len(dynChild) {
+					newLine = append(newLine, []rune{' '})
+				} else {
+					newLine = append(newLine, dynChild)
+				}
+				offset = len(dynChild)
+				lineCompleter = end
+			}
+		} else {
+			if runes.HasPrefix(dynChild, line) {
+				newLine = append(newLine, dynChild[len(line):])
+				offset = len(line)
+				lineCompleter = end
 			}
 		}
 	}
