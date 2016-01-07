@@ -9,56 +9,13 @@ import (
 )
 
 type AutoCompleter interface {
-	GetName() []rune
-	GetChildren() []AutoCompleter
-}
-
-func Do(ac AutoCompleter, line []rune, pos int) (newLine [][]rune, offset int) {
-	line = line[:pos]
-	goNext := false
-	var lineCompleter AutoCompleter
-
-	for _, child := range ac.GetChildren() {
-		childName := child.GetName()
-		if len(line) >= len(childName) {
-			if runes.HasPrefix(line, childName) {
-				if len(line) == len(childName) {
-					newLine = append(newLine, []rune{' '})
-				} else {
-					newLine = append(newLine, childName)
-				}
-				offset = len(childName)
-				lineCompleter = child
-				goNext = true
-			}
-		} else {
-			if runes.HasPrefix(childName, line) {
-				newLine = append(newLine, childName[len(line):])
-				offset = len(line)
-				lineCompleter = child
-			}
-		}
-	}
-
-	if len(newLine) != 1 {
-		return
-	}
-
-	tmpLine := make([]rune, 0, len(line))
-	for i := offset; i < len(line); i++ {
-		if line[i] == ' ' {
-			continue
-		}
-
-		tmpLine = append(tmpLine, line[i:]...)
-		return Do(lineCompleter, tmpLine, len(tmpLine))
-	}
-
-	if goNext {
-		return Do(lineCompleter, nil, 0)
-	}
-
-	return
+	// Readline will pass the whole line and current offset to it
+	// Completer need to pass all the candidates, and how long they shared the same characters in line
+	// Example:
+	//   Do("g", 1) => ["o", "it", "it-shell", "rep"], 1
+	//   Do("gi", 2) => ["t", "t-shell"], 1
+	//   Do("git", 3) => ["", "-shell"], 0
+	Do(line []rune, pos int) (newLine [][]rune, length int)
 }
 
 type opCompleter struct {
@@ -118,7 +75,7 @@ func (o *opCompleter) OnComplete() {
 
 	o.ExitCompleteSelectMode()
 	o.candidateSource = rs
-	newLines, offset := Do(o.ac, rs, buf.idx)
+	newLines, offset := o.ac.Do(rs, buf.idx)
 	if len(newLines) == 0 {
 		o.ExitCompleteMode(false)
 		return
