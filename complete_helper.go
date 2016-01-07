@@ -19,6 +19,12 @@ type PrefixCompleter struct {
 	Children []PrefixCompleterInterface
 }
 
+func (p *PrefixCompleter) Tree(prefix string) string {
+	buf := bytes.NewBuffer(nil)
+	p.Print(prefix, 0, buf)
+	return buf.String()
+}
+
 func Print(p PrefixCompleterInterface, prefix string, level int, buf *bytes.Buffer) {
 	if strings.TrimSpace(string(p.GetName())) != "" {
 		buf.WriteString(prefix)
