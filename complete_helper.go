@@ -7,9 +7,16 @@ import (
 	"github.com/chzyer/readline/runes"
 )
 
+type PrefixCompleterInterface interface {
+	Print(prefix string, level int, buf *bytes.Buffer)
+	Do(line []rune, pos int) (newLine [][]rune, length int)
+	GetName() []rune
+	GetChildren() []PrefixCompleterInterface
+}
+
 type PrefixCompleter struct {
 	Name     []rune
-	Children []*PrefixCompleter
+	Children []PrefixCompleterInterface
 }
 
 func (p *PrefixCompleter) Tree(prefix string) string {
@@ -18,27 +25,39 @@ func (p *PrefixCompleter) Tree(prefix string) string {
 	return buf.String()
 }
 
-func (p *PrefixCompleter) Print(prefix string, level int, buf *bytes.Buffer) {
-	if strings.TrimSpace(string(p.Name)) != "" {
+func Print(p PrefixCompleterInterface, prefix string, level int, buf *bytes.Buffer) {
+	if strings.TrimSpace(string(p.GetName())) != "" {
 		buf.WriteString(prefix)
 		if level > 0 {
 			buf.WriteString("├")
 			buf.WriteString(strings.Repeat("─", (level*4)-2))
 			buf.WriteString(" ")
 		}
-		buf.WriteString(string(p.Name) + "\n")
+		buf.WriteString(string(p.GetName()) + "\n")
 		level++
 	}
-	for _, ch := range p.Children {
+	for _, ch := range p.GetChildren() {
 		ch.Print(prefix, level, buf)
 	}
 }
 
-func NewPrefixCompleter(pc ...*PrefixCompleter) *PrefixCompleter {
+func (p *PrefixCompleter) Print(prefix string, level int, buf *bytes.Buffer) {
+	Print(p, prefix, level, buf)
+}
+
+func (p *PrefixCompleter) GetName() []rune {
+	return p.Name
+}
+
+func (p *PrefixCompleter) GetChildren() []PrefixCompleterInterface {
+	return p.Children
+}
+
+func NewPrefixCompleter(pc ...PrefixCompleterInterface) *PrefixCompleter {
 	return PcItem("", pc...)
 }
 
-func PcItem(name string, pc ...*PrefixCompleter) *PrefixCompleter {
+func PcItem(name string, pc ...PrefixCompleterInterface) *PrefixCompleter {
 	name += " "
 	return &PrefixCompleter{
 		Name:     []rune(name),
@@ -47,24 +66,29 @@ func PcItem(name string, pc ...*PrefixCompleter) *PrefixCompleter {
 }
 
 func (p *PrefixCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int) {
+	return Do(p, line, pos)
+}
+
+func Do(p PrefixCompleterInterface, line []rune, pos int) (newLine [][]rune, offset int) {
 	line = line[:pos]
 	goNext := false
-	var lineCompleter *PrefixCompleter
-	for _, child := range p.Children {
-		if len(line) >= len(child.Name) {
-			if runes.HasPrefix(line, child.Name) {
-				if len(line) == len(child.Name) {
+	var lineCompleter PrefixCompleterInterface
+	for _, child := range p.GetChildren() {
+		childName := child.GetName()
+		if len(line) >= len(childName) {
+			if runes.HasPrefix(line, childName) {
+				if len(line) == len(childName) {
 					newLine = append(newLine, []rune{' '})
 				} else {
-					newLine = append(newLine, child.Name)
+					newLine = append(newLine, childName)
 				}
-				offset = len(child.Name)
+				offset = len(childName)
 				lineCompleter = child
 				goNext = true
 			}
 		} else {
-			if runes.HasPrefix(child.Name, line) {
-				newLine = append(newLine, child.Name[len(line):])
+			if runes.HasPrefix(childName, line) {
+				newLine = append(newLine, childName[len(line):])
 				offset = len(line)
 				lineCompleter = child
 			}
