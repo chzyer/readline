@@ -35,7 +35,7 @@ func (c *Conn) Run() error {
 	return err
 }
 
-func Dial(network string, address string) (*Remote, error) {
+func Dial(network string, address string) (*Conn, error) {
 	conn, err := net.Dial(network, address)
 	if err != nil {
 		return nil, err
@@ -45,5 +45,5 @@ func Dial(network string, address string) (*Remote, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewRemote(conn, t)
+	return NewConn(conn, t)
 }
