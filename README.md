@@ -2,7 +2,7 @@
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
-[![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)  
+[![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/chzyer/readline?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Readline is A Pure Go Implementation of a libreadline-style Library.  
@@ -11,6 +11,8 @@ The goal is to be a powerful alternater for GNU-Readline.
 
 **WHY:**
 Readline will support most of features which GNU Readline is supported, and provide a pure go environment and a MIT license.
+
+It can also provides shell-like interactives by using [flagly](https://github.com/chzyer/flagly) (demo: [flagly-shell](https://github.com/chzyer/flagly/blob/master/demo/flagly-shell/flagly-shell.go))
 
 # Demo
 
