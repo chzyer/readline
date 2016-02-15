@@ -44,6 +44,8 @@ type Config struct {
 
 	MaskRune rune
 
+	UniqueEditLine bool
+
 	// private fields
 	inited    bool
 	opHistory *opHistory

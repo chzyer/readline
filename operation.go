@@ -174,9 +174,15 @@ func (o *Operation) ioloop() {
 				o.ExitSearchMode(false)
 			}
 			o.buf.MoveToLineEnd()
-			o.buf.WriteRune('\n')
-			data := o.buf.Reset()
-			data = data[:len(data)-1] // trim \n
+			var data []rune
+			if !o.cfg.UniqueEditLine {
+				o.buf.WriteRune('\n')
+				data = o.buf.Reset()
+				data = data[:len(data)-1] // trim \n
+			} else {
+				o.buf.Clean()
+				data = o.buf.Reset()
+			}
 			o.outchan <- data
 			o.NewHistory(data)
 		case CharBackward:
