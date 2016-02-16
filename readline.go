@@ -23,7 +23,8 @@ type Config struct {
 	// readline will persist historys to file where HistoryFile specified
 	HistoryFile string
 	// specify the max length of historys, it's 500 by default, set it to -1 to disable history
-	HistoryLimit int
+	HistoryLimit           int
+	DisableAutoSaveHistory bool
 
 	// AutoCompleter will called once user press TAB
 	AutoComplete AutoCompleter
@@ -154,8 +155,13 @@ func (i *Instance) ReadPassword(prompt string) ([]byte, error) {
 	return i.Operation.Password(prompt)
 }
 
+// err is one of (nil, io.EOF, readline.ErrInterrupt)
 func (i *Instance) Readline() (string, error) {
 	return i.Operation.String()
+}
+
+func (i *Instance) SaveHistory(content string) {
+	i.Operation.SaveHistory(content)
 }
 
 // same as readline

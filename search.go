@@ -51,9 +51,9 @@ func (o *opSearch) SearchBackspace() {
 
 func (o *opSearch) findHistoryBy(isNewSearch bool) (int, *list.Element) {
 	if o.dir == S_DIR_BCK {
-		return o.history.FindHistoryBck(isNewSearch, o.data, o.buf.idx)
+		return o.history.FindBck(isNewSearch, o.data, o.buf.idx)
 	}
-	return o.history.FindHistoryFwd(isNewSearch, o.data, o.buf.idx)
+	return o.history.FindFwd(isNewSearch, o.data, o.buf.idx)
 }
 
 func (o *opSearch) search(isChange bool) bool {

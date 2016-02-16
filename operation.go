@@ -20,7 +20,7 @@ type Operation struct {
 	errchan chan error
 	w       io.Writer
 
-	*opHistory
+	history *opHistory
 	*opSearch
 	*opCompleter
 	*opPassword
@@ -95,7 +95,7 @@ func (o *Operation) ioloop() {
 			o.buf.Refresh(nil)
 			switch r {
 			case CharEnter, CharCtrlJ:
-				o.UpdateHistory(o.buf.Runes(), false)
+				o.history.Update(o.buf.Runes(), false)
 				fallthrough
 			case CharInterrupt:
 				o.t.KickRead()
@@ -184,20 +184,24 @@ func (o *Operation) ioloop() {
 				data = o.buf.Reset()
 			}
 			o.outchan <- data
-			o.NewHistory(data)
+			if !o.cfg.DisableAutoSaveHistory {
+				o.history.New(data)
+			} else {
+				isUpdateHistory = false
+			}
 		case CharBackward:
 			o.buf.MoveBackward()
 		case CharForward:
 			o.buf.MoveForward()
 		case CharPrev:
-			buf := o.PrevHistory()
+			buf := o.history.Prev()
 			if buf != nil {
 				o.buf.Set(buf)
 			} else {
 				o.t.Bell()
 			}
 		case CharNext:
-			buf, ok := o.NextHistory()
+			buf, ok := o.history.Next()
 			if ok {
 				o.buf.Set(buf)
 			} else {
@@ -216,7 +220,7 @@ func (o *Operation) ioloop() {
 			o.buf.WriteString(o.cfg.EOFPrompt + "\n")
 			o.buf.Reset()
 			isUpdateHistory = false
-			o.RevertHistory()
+			o.history.Revert()
 			o.errchan <- io.EOF
 		case CharInterrupt:
 			if o.IsSearchMode() {
@@ -235,7 +239,7 @@ func (o *Operation) ioloop() {
 			o.buf.WriteString(o.cfg.InterruptPrompt + "\n")
 			o.buf.Reset()
 			isUpdateHistory = false
-			o.RevertHistory()
+			o.history.Revert()
 			o.errchan <- ErrInterrupt
 		default:
 			if o.IsSearchMode() {
@@ -270,7 +274,8 @@ func (o *Operation) ioloop() {
 			}
 		}
 		if isUpdateHistory && !o.IsSearchMode() {
-			o.UpdateHistory(o.buf.Runes(), false)
+			// it will cause null history
+			o.history.Update(o.buf.Runes(), false)
 		}
 	}
 }
@@ -353,15 +358,15 @@ func (o *Operation) Slice() ([]byte, error) {
 }
 
 func (o *Operation) Close() {
-	o.opHistory.CloseHistory()
+	o.history.Close()
 }
 
 func (o *Operation) SetHistoryPath(path string) {
-	if o.opHistory != nil {
-		o.opHistory.CloseHistory()
+	if o.history != nil {
+		o.history.Close()
 	}
 	o.cfg.HistoryFile = path
-	o.opHistory = newOpHistory(o.cfg)
+	o.history = newOpHistory(o.cfg)
 }
 
 func (o *Operation) IsNormalMode() bool {
@@ -382,17 +387,21 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 
 	if cfg.opHistory == nil {
 		op.SetHistoryPath(cfg.HistoryFile)
-		cfg.opHistory = op.opHistory
-		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.opHistory)
+		cfg.opHistory = op.history
+		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history)
 	}
-	op.opHistory = cfg.opHistory
+	op.history = cfg.opHistory
 
 	// SetHistoryPath will close opHistory which already exists
 	// so if we use it next time, we need to reopen it by `InitHistory()`
-	op.opHistory.InitHistory()
+	op.history.Init()
 
 	op.opSearch = cfg.opSearch
 	return old, nil
+}
+
+func (o *Operation) SaveHistory(content string) {
+	o.history.New([]rune(content))
 }
 
 func (o *Operation) Refresh() {

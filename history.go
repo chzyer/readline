@@ -40,7 +40,7 @@ func (o *opHistory) IsHistoryClosed() bool {
 	return o.fd.Fd() == ^(uintptr(0))
 }
 
-func (o *opHistory) InitHistory() {
+func (o *opHistory) Init() {
 	if o.IsHistoryClosed() {
 		o.initHistory()
 	}
@@ -66,24 +66,24 @@ func (o *opHistory) historyUpdatePath(path string) {
 		if err != nil {
 			break
 		}
-		o.PushHistory([]rune(strings.TrimSpace(string(line))))
-		o.CompactHistory()
+		o.Push([]rune(strings.TrimSpace(string(line))))
+		o.Compact()
 	}
 	if total > o.cfg.HistoryLimit {
-		o.HistoryRewrite()
+		o.Rewrite()
 	}
 	o.historyVer++
-	o.PushHistory(nil)
+	o.Push(nil)
 	return
 }
 
-func (o *opHistory) CompactHistory() {
+func (o *opHistory) Compact() {
 	for o.history.Len() > o.cfg.HistoryLimit && o.history.Len() > 0 {
 		o.history.Remove(o.history.Front())
 	}
 }
 
-func (o *opHistory) HistoryRewrite() {
+func (o *opHistory) Rewrite() {
 	if o.cfg.HistoryFile == "" {
 		return
 	}
@@ -113,13 +113,13 @@ func (o *opHistory) HistoryRewrite() {
 	o.fd = fd
 }
 
-func (o *opHistory) CloseHistory() {
+func (o *opHistory) Close() {
 	if o.fd != nil {
 		o.fd.Close()
 	}
 }
 
-func (o *opHistory) FindHistoryBck(isNewSearch bool, rs []rune, start int) (int, *list.Element) {
+func (o *opHistory) FindBck(isNewSearch bool, rs []rune, start int) (int, *list.Element) {
 	for elem := o.current; elem != nil; elem = elem.Prev() {
 		item := o.showItem(elem.Value)
 		if isNewSearch {
@@ -139,7 +139,7 @@ func (o *opHistory) FindHistoryBck(isNewSearch bool, rs []rune, start int) (int,
 	return -1, nil
 }
 
-func (o *opHistory) FindHistoryFwd(isNewSearch bool, rs []rune, start int) (int, *list.Element) {
+func (o *opHistory) FindFwd(isNewSearch bool, rs []rune, start int) (int, *list.Element) {
 	for elem := o.current; elem != nil; elem = elem.Next() {
 		item := o.showItem(elem.Value)
 		if isNewSearch {
@@ -175,7 +175,7 @@ func (o *opHistory) showItem(obj interface{}) []rune {
 	return item.Source
 }
 
-func (o *opHistory) PrevHistory() []rune {
+func (o *opHistory) Prev() []rune {
 	if o.current == nil {
 		return nil
 	}
@@ -187,7 +187,7 @@ func (o *opHistory) PrevHistory() []rune {
 	return o.showItem(current.Value)
 }
 
-func (o *opHistory) NextHistory() ([]rune, bool) {
+func (o *opHistory) Next() ([]rune, bool) {
 	if o.current == nil {
 		return nil, false
 	}
@@ -200,7 +200,8 @@ func (o *opHistory) NextHistory() ([]rune, bool) {
 	return o.showItem(current.Value), true
 }
 
-func (o *opHistory) NewHistory(current []rune) {
+// save history
+func (o *opHistory) New(current []rune) {
 	// if just use last command without modify
 	// just clean lastest history
 	if back := o.history.Back(); back != nil {
@@ -231,22 +232,22 @@ func (o *opHistory) NewHistory(current []rune) {
 		current = use.Tmp
 	}
 
-	o.UpdateHistory(current, true)
+	o.Update(current, true)
 
 	// push a new one to commit current command
 	o.historyVer++
-	o.PushHistory(nil)
+	o.Push(nil)
 }
 
-func (o *opHistory) RevertHistory() {
+func (o *opHistory) Revert() {
 	o.historyVer++
 	o.current = o.history.Back()
 }
 
-func (o *opHistory) UpdateHistory(s []rune, commit bool) {
+func (o *opHistory) Update(s []rune, commit bool) {
 	if o.current == nil {
-		o.PushHistory(s)
-		o.CompactHistory()
+		o.Push(s)
+		o.Compact()
 		return
 	}
 	r := o.current.Value.(*hisItem)
@@ -261,10 +262,10 @@ func (o *opHistory) UpdateHistory(s []rune, commit bool) {
 		r.Tmp = append(r.Tmp[:0], s...)
 	}
 	o.current.Value = r
-	o.CompactHistory()
+	o.Compact()
 }
 
-func (o *opHistory) PushHistory(s []rune) {
+func (o *opHistory) Push(s []rune) {
 	newCopy := make([]rune, len(s))
 	copy(newCopy, s)
 	elem := o.history.PushBack(&hisItem{Source: newCopy})
