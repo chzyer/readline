@@ -360,7 +360,7 @@ func (r *RuneBuffer) output() []byte {
 }
 
 func (r *RuneBuffer) Reset() []rune {
-	ret := r.buf
+	ret := runes.Copy(r.buf)
 	r.buf = r.buf[:0]
 	r.idx = 0
 	return ret

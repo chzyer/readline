@@ -3,6 +3,7 @@ package readline
 import (
 	"bufio"
 	"container/list"
+	"fmt"
 	"os"
 	"strings"
 
@@ -184,7 +185,7 @@ func (o *opHistory) Prev() []rune {
 		return nil
 	}
 	o.current = current
-	return o.showItem(current.Value)
+	return runes.Copy(o.showItem(current.Value))
 }
 
 func (o *opHistory) Next() ([]rune, bool) {
@@ -197,11 +198,19 @@ func (o *opHistory) Next() ([]rune, bool) {
 	}
 
 	o.current = current
-	return o.showItem(current.Value), true
+	return runes.Copy(o.showItem(current.Value)), true
+}
+
+func (o *opHistory) debug() {
+	Debug("-------")
+	for item := o.history.Front(); item != nil; item = item.Next() {
+		Debug(fmt.Sprintf("%+v", item.Value))
+	}
 }
 
 // save history
 func (o *opHistory) New(current []rune) {
+	current = runes.Copy(current)
 	// if just use last command without modify
 	// just clean lastest history
 	if back := o.history.Back(); back != nil {
@@ -227,9 +236,11 @@ func (o *opHistory) New(current []rune) {
 
 	if o.current != o.history.Back() {
 		// move history item to current command
-		use := o.current.Value.(*hisItem)
+		currentItem := o.current.Value.(*hisItem)
+		// set current to last item
 		o.current = o.history.Back()
-		current = use.Tmp
+
+		current = runes.Copy(currentItem.Tmp)
 	}
 
 	o.Update(current, true)
@@ -245,6 +256,7 @@ func (o *opHistory) Revert() {
 }
 
 func (o *opHistory) Update(s []rune, commit bool) {
+	s = runes.Copy(s)
 	if o.current == nil {
 		o.Push(s)
 		o.Compact()
@@ -253,8 +265,7 @@ func (o *opHistory) Update(s []rune, commit bool) {
 	r := o.current.Value.(*hisItem)
 	r.Version = o.historyVer
 	if commit {
-		r.Source = make([]rune, len(s))
-		copy(r.Source, s)
+		r.Source = s
 		if o.fd != nil {
 			o.fd.Write([]byte(string(r.Source) + "\n"))
 		}
@@ -266,8 +277,7 @@ func (o *opHistory) Update(s []rune, commit bool) {
 }
 
 func (o *opHistory) Push(s []rune) {
-	newCopy := make([]rune, len(s))
-	copy(newCopy, s)
-	elem := o.history.PushBack(&hisItem{Source: newCopy})
+	s = runes.Copy(s)
+	elem := o.history.PushBack(&hisItem{Source: s})
 	o.current = elem
 }
