@@ -10,6 +10,7 @@ import (
 
 var (
 	StdinFd   = int(uintptr(syscall.Stdin))
+	StdoutFd  = int(uintptr(syscall.Stdout))
 	isWindows = false
 )
 

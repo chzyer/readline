@@ -84,6 +84,13 @@ func (o *Operation) ioloop() {
 		keepInSearchMode := false
 		keepInCompleteMode := false
 		r := o.t.ReadRune()
+		if r == 0 { // io.EOF
+			o.buf.Clean()
+			select {
+			case o.errchan <- io.EOF:
+			}
+			break
+		}
 		isUpdateHistory := true
 
 		if o.IsInCompleteSelectMode() {

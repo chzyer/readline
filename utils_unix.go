@@ -18,7 +18,7 @@ type winsize struct {
 func getWidth() int {
 	ws := &winsize{}
 	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
-		uintptr(StdinFd),
+		uintptr(StdoutFd),
 		uintptr(syscall.TIOCGWINSZ),
 		uintptr(unsafe.Pointer(ws)))
 

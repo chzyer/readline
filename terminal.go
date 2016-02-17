@@ -67,8 +67,13 @@ func (t *Terminal) Readline() *Operation {
 	return NewOperation(t, t.cfg)
 }
 
+// return rune(0) if meet EOF
 func (t *Terminal) ReadRune() rune {
-	return <-t.outchan
+	ch, ok := <-t.outchan
+	if !ok {
+		return rune(0)
+	}
+	return ch
 }
 
 func (t *Terminal) IsReading() bool {
@@ -136,6 +141,7 @@ func (t *Terminal) ioloop() {
 			t.outchan <- r
 		}
 	}
+	close(t.outchan)
 }
 
 func (t *Terminal) Bell() {
