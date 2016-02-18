@@ -209,7 +209,7 @@ func (o *opHistory) debug() {
 }
 
 // save history
-func (o *opHistory) New(current []rune) {
+func (o *opHistory) New(current []rune) (err error) {
 	current = runes.Copy(current)
 	// if just use last command without modify
 	// just clean lastest history
@@ -221,7 +221,7 @@ func (o *opHistory) New(current []rune) {
 				o.current = o.history.Back()
 				o.current.Value.(*hisItem).Clean()
 				o.historyVer++
-				return
+				return nil
 			}
 		}
 	}
@@ -230,7 +230,7 @@ func (o *opHistory) New(current []rune) {
 		if o.current != nil {
 			o.current.Value.(*hisItem).Clean()
 			o.historyVer++
-			return
+			return nil
 		}
 	}
 
@@ -243,11 +243,13 @@ func (o *opHistory) New(current []rune) {
 		current = runes.Copy(currentItem.Tmp)
 	}
 
-	o.Update(current, true)
+	// err only can be a IO error, just report
+	err = o.Update(current, true)
 
 	// push a new one to commit current command
 	o.historyVer++
 	o.Push(nil)
+	return
 }
 
 func (o *opHistory) Revert() {
@@ -255,7 +257,7 @@ func (o *opHistory) Revert() {
 	o.current = o.history.Back()
 }
 
-func (o *opHistory) Update(s []rune, commit bool) {
+func (o *opHistory) Update(s []rune, commit bool) (err error) {
 	s = runes.Copy(s)
 	if o.current == nil {
 		o.Push(s)
@@ -267,13 +269,15 @@ func (o *opHistory) Update(s []rune, commit bool) {
 	if commit {
 		r.Source = s
 		if o.fd != nil {
-			o.fd.Write([]byte(string(r.Source) + "\n"))
+			// just report the error
+			_, err = o.fd.Write([]byte(string(r.Source) + "\n"))
 		}
 	} else {
 		r.Tmp = append(r.Tmp[:0], s...)
 	}
 	o.current.Value = r
 	o.Compact()
+	return
 }
 
 func (o *opHistory) Push(s []rune) {

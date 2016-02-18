@@ -192,7 +192,8 @@ func (o *Operation) ioloop() {
 			}
 			o.outchan <- data
 			if !o.cfg.DisableAutoSaveHistory {
-				o.history.New(data)
+				// ignore IO error
+				_ = o.history.New(data)
 			} else {
 				isUpdateHistory = false
 			}
@@ -407,8 +408,10 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	return old, nil
 }
 
-func (o *Operation) SaveHistory(content string) {
-	o.history.New([]rune(content))
+// if err is not nil, it just mean it fail to write to file
+// other things goes fine.
+func (o *Operation) SaveHistory(content string) error {
+	return o.history.New([]rune(content))
 }
 
 func (o *Operation) Refresh() {
