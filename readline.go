@@ -48,6 +48,7 @@ type Config struct {
 	UniqueEditLine bool
 
 	// force use interactive even stdout is not a tty
+	StdinFd             int
 	StdoutFd            int
 	ForceUseInteractive bool
 
@@ -58,7 +59,10 @@ type Config struct {
 }
 
 func (c *Config) useInteractive() bool {
-	return c.ForceUseInteractive || IsTerminal(c.StdoutFd)
+	if c.ForceUseInteractive {
+		return true
+	}
+	return IsTerminal(c.StdoutFd) && IsTerminal(c.StdinFd)
 }
 
 func (c *Config) Init() error {
@@ -74,6 +78,9 @@ func (c *Config) Init() error {
 	}
 	if c.Stderr == nil {
 		c.Stderr = Stderr
+	}
+	if c.StdinFd == 0 {
+		c.StdinFd = StdinFd
 	}
 	if c.StdoutFd == 0 {
 		c.StdoutFd = StdoutFd
