@@ -7,10 +7,10 @@ func init() {
 }
 
 // get width of the terminal
-func getWidth() int {
+func getWidth(fd int) int {
 	info, _ := GetConsoleScreenBufferInfo()
 	if info == nil {
-		return 0
+		return -1
 	}
 	return int(info.dwSize.x)
 }

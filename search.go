@@ -26,11 +26,12 @@ type opSearch struct {
 	buf       *RuneBuffer
 	data      []rune
 	history   *opHistory
+	cfg       *Config
 	markStart int
 	markEnd   int
 }
 
-func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory) *opSearch {
+func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory, cfg *Config) *opSearch {
 	return &opSearch{
 		w:       w,
 		buf:     buf,
@@ -123,7 +124,7 @@ func (o *opSearch) SearchRefresh(x int) {
 	}
 	x = o.buf.CurrentWidth(x)
 	x += o.buf.PromptLen()
-	x = x % getWidth()
+	x = x % getWidth(o.cfg.StdoutFd)
 
 	if o.markStart > 0 {
 		o.buf.SetStyle(o.markStart, o.markEnd, "4")

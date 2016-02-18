@@ -58,7 +58,7 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 func NewOperation(t *Terminal, cfg *Config) *Operation {
 	op := &Operation{
 		t:       t,
-		buf:     NewRuneBuffer(t, cfg.Prompt, cfg.MaskRune),
+		buf:     NewRuneBuffer(t, cfg.Prompt, cfg.MaskRune, cfg),
 		outchan: make(chan []rune),
 		errchan: make(chan error),
 	}
@@ -392,11 +392,12 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	op.cfg = cfg
 	op.SetPrompt(cfg.Prompt)
 	op.SetMaskRune(cfg.MaskRune)
+	op.buf.SetConfig(cfg)
 
 	if cfg.opHistory == nil {
 		op.SetHistoryPath(cfg.HistoryFile)
 		cfg.opHistory = op.history
-		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history)
+		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg)
 	}
 	op.history = cfg.opHistory
 

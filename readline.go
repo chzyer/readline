@@ -47,10 +47,18 @@ type Config struct {
 
 	UniqueEditLine bool
 
+	// force use interactive even stdout is not a tty
+	StdoutFd            int
+	ForceUseInteractive bool
+
 	// private fields
 	inited    bool
 	opHistory *opHistory
 	opSearch  *opSearch
+}
+
+func (c *Config) useInteractive() bool {
+	return c.ForceUseInteractive || IsTerminal(c.StdoutFd)
 }
 
 func (c *Config) Init() error {
@@ -66,6 +74,9 @@ func (c *Config) Init() error {
 	}
 	if c.Stderr == nil {
 		c.Stderr = Stderr
+	}
+	if c.StdoutFd == 0 {
+		c.StdoutFd = StdoutFd
 	}
 	if c.HistoryLimit == 0 {
 		c.HistoryLimit = 500
@@ -83,6 +94,12 @@ func (c *Config) Init() error {
 	}
 
 	return nil
+}
+
+func (c Config) Clone() *Config {
+	c.opHistory = nil
+	c.opSearch = nil
+	return &c
 }
 
 func (c *Config) SetListener(f func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool)) {
@@ -160,8 +177,8 @@ func (i *Instance) Readline() (string, error) {
 	return i.Operation.String()
 }
 
-func (i *Instance) SaveHistory(content string) {
-	i.Operation.SaveHistory(content)
+func (i *Instance) SaveHistory(content string) error {
+	return i.Operation.SaveHistory(content)
 }
 
 // same as readline
