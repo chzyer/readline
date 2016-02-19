@@ -320,7 +320,7 @@ func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
 func (r *RuneBuffer) IdxLine() int {
 	totalWidth := runes.WidthAll(r.buf[:r.idx]) + r.PromptLen()
 	w := getWidth(r.cfg.StdoutFd)
-	if w < 0 {
+	if w <= 0 {
 		return -1
 	}
 	line := totalWidth / w
