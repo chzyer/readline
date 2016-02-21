@@ -35,6 +35,7 @@ func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory, cfg *Config) 
 	return &opSearch{
 		w:       w,
 		buf:     buf,
+		cfg:     cfg,
 		history: history,
 	}
 }
