@@ -405,6 +405,10 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	// so if we use it next time, we need to reopen it by `InitHistory()`
 	op.history.Init()
 
+	if op.cfg.AutoComplete != nil {
+		op.opCompleter = newOpCompleter(op.buf.w, op)
+	}
+
 	op.opSearch = cfg.opSearch
 	return old, nil
 }

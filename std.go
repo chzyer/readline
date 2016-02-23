@@ -33,6 +33,13 @@ func SetHistoryPath(fp string) {
 	ins.SetConfig(cfg)
 }
 
+func SetAutoComplete(completer AutoCompleter) {
+	ins := getInstance()
+	cfg := ins.Config.Clone()
+	cfg.AutoComplete = completer
+	ins.SetConfig(cfg)
+}
+
 func AddHistory(content string) error {
 	ins := getInstance()
 	return ins.SaveHistory(content)
