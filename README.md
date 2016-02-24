@@ -66,7 +66,7 @@ defer rl.Close()
 
 for {
 	line, err := rl.Readline()
-	if err != nil { // io.EOF
+	if err != nil { // io.EOF, readline.ErrInterrupt
 		break
 	}
 	println(line)
@@ -87,37 +87,7 @@ defer rl.Close()
 
 for {
 	line, err := rl.Readline()
-	if err != nil { // io.EOF
-		break
-	}
-	println(line)
-}
-```
-
-* Example with auto refresh
-
-```go
-import (
-	"log"
-	"gopkg.in/readline.v1"
-)
-
-rl, err := readline.New("> ")
-if err != nil {
-	panic(err)
-}
-defer rl.Close()
-log.SetOutput(l.Stderr()) // let "log" write to l.Stderr instead of os.Stderr
-
-go func() {
-	for _ = range time.Tick(time.Second) {
-		log.Println("hello")
-	}
-}()
-
-for {
-	line, err := rl.Readline()
-	if err != nil { // io.EOF
+	if err != nil { // io.EOF, readline.ErrInterrupt
 		break
 	}
 	println(line)
@@ -150,7 +120,7 @@ defer rl.Close()
 
 for {
 	line, err := rl.Readline()
-	if err != nil { // io.EOF
+	if err != nil { // io.EOF, readline.ErrInterrupt
 		break
 	}
 	println(line)
@@ -237,6 +207,14 @@ Notice: `Meta`+`B` is equals with `Alt`+`B` in windows.
 * `Ctrl`+`A` is not working in `screen` because it used as a control command by default
 
 If you test it otherwhere, whether it works fine or not, please let me know!
+
+## Who is using Readline
+
+* [cockroachdb/cockroach](https://github.com/cockroachdb/cockroach)
+* [youtube/doorman](https://github.com/youtube/doorman)
+* [bom-d-van/harp](https://github.com/bom-d-van/harp)
+* [abiosoft/ishell](https://github.com/abiosoft/ishell)
+* [robertkrimen/otto](https://github.com/robertkrimen/otto)
 
 # Feedback
 
