@@ -53,6 +53,25 @@ func (o *opVim) handleVimNormalMovement(r rune, readNext func() rune) (t rune, h
 		rb.MoveToLineStart()
 	case '$':
 		rb.MoveToLineEnd()
+	case 'x':
+		rb.Delete()
+		if rb.IsCursorInEnd() {
+			rb.MoveBackward()
+		}
+	case 'r':
+		rb.Replace(readNext())
+	case 'd':
+		next := readNext()
+		switch next {
+		case 'd':
+			rb.Erase()
+		case 'w':
+			rb.DeleteWord()
+		case 'h':
+			rb.Backspace()
+		case 'l':
+			rb.Delete()
+		}
 	case 'b', 'B':
 		rb.MoveToPrevWord()
 	case 'w', 'W', 'e', 'E':
@@ -94,6 +113,10 @@ func (o *opVim) handleVimNormalEnterInsert(r rune, readNext func() rune) (t rune
 			rb.Erase()
 		case 'w':
 			rb.DeleteWord()
+		case 'h':
+			rb.Backspace()
+		case 'l':
+			rb.Delete()
 		}
 	default:
 		return r, false

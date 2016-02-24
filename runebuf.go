@@ -137,6 +137,16 @@ func (r *RuneBuffer) MoveForward() {
 	})
 }
 
+func (r *RuneBuffer) IsCursorInEnd() bool {
+	return r.idx == len(r.buf)
+}
+
+func (r *RuneBuffer) Replace(ch rune) {
+	r.Refresh(func() {
+		r.buf[r.idx] = ch
+	})
+}
+
 func (r *RuneBuffer) Erase() {
 	r.Refresh(func() {
 		r.idx = 0
