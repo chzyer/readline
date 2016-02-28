@@ -3,7 +3,8 @@
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
 [![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/chzyer/readline?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/chzyer/readline?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) 
+[![OpenCollective](https://opencollective.com/readline/badge/backers.svg)](https://opencollective.com/readline#support)
 
 Readline is A Pure Go Implementation of a libreadline-style Library.  
 The goal is to be a powerful alternater for GNU-Readline.
@@ -222,3 +223,102 @@ If you have any questions, please submit a github issue and any pull requests is
 
 * [https://twitter.com/chzyer](https://twitter.com/chzyer)  
 * [http://weibo.com/2145262190](http://weibo.com/2145262190)  
+
+
+# Backers
+
+Love Readline? Help me keep it alive by donating funds to cover project expenses!<br />
+[[Become a backer](https://opencollective.com/readline)]
+
+  <a href="https://opencollective.com/readline/backers/0/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/0/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/1/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/1/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/2/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/2/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/3/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/3/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/4/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/4/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/5/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/5/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/6/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/6/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/7/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/7/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/8/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/8/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/9/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/9/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/10/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/10/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/11/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/11/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/12/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/12/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/13/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/13/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/14/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/14/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/15/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/15/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/16/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/16/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/17/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/17/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/18/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/18/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/19/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/19/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/20/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/20/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/21/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/21/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/22/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/22/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/23/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/23/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/24/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/24/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/25/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/25/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/26/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/26/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/27/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/27/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/28/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/28/avatar">
+  </a>
+  <a href="https://opencollective.com/readline/backers/29/website" target="_blank">
+    <img src="https://opencollective.com/readline/backers/29/avatar">
+  </a>
+
+
