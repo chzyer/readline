@@ -41,7 +41,7 @@ type Config struct {
 	MaskRune   rune
 
 	// erase the editing line after user submited it
-	// it often use in IM.
+	// it use in IM usually.
 	UniqueEditLine bool
 
 	// force use interactive even stdout is not a tty

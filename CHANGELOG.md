@@ -1,5 +1,15 @@
 # ChangeLog
 
+### 1.2 - 2016-03-05
+
+* Add a demo for checking password strength [example/readline-pass-strength](https://github.com/chzyer/readline/blob/master/example/readline-pass-strength/readline-pass-strength.go), , written by [@sahib](https://github.com/sahib)
+* #23, support stdin remapping
+* #27, add a `UniqueEditLine` to `Config`, which will erase the editing line after user submited it, usually use in IM.
+* Add a demo for multiline [example/readline-multiline](https://github.com/chzyer/readline/blob/master/example/readline-multiline/readline-multiline.go) which can submit one SQL by multiple lines.
+* Supports performs even stdin/stdout is not a tty.
+* Add a new simple apis for single instance, check by [here](https://github.com/chzyer/readline/blob/master/std.go). It need to save history manually if using this api.
+* #28, fixes the history is not working as expected.
+
 ### 1.1 - 2015-11-20
 
 * #12 Add support for key `<Delete>`/`<Home>`/`<End>`
