@@ -1,9 +1,6 @@
 package readline
 
-import (
-	"io"
-	"os"
-)
+import "io"
 
 type Instance struct {
 	Config    *Config
@@ -71,7 +68,7 @@ func (c *Config) Init() error {
 	}
 	c.inited = true
 	if c.Stdin == nil {
-		c.Stdin = os.Stdin
+		c.Stdin = Stdin
 	}
 	if c.Stdout == nil {
 		c.Stdout = Stdout
