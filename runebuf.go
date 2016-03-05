@@ -18,7 +18,6 @@ type RuneBuffer struct {
 	idx    int
 	prompt []rune
 	w      io.Writer
-	mask   rune
 
 	cleanInScreen bool
 	interactive   bool
@@ -41,10 +40,9 @@ func (r *RuneBuffer) Restore() {
 	})
 }
 
-func NewRuneBuffer(w io.Writer, prompt string, mask rune, cfg *Config) *RuneBuffer {
+func NewRuneBuffer(w io.Writer, prompt string, cfg *Config) *RuneBuffer {
 	rb := &RuneBuffer{
 		w:           w,
-		mask:        mask,
 		interactive: cfg.useInteractive(),
 		cfg:         cfg,
 	}
@@ -58,7 +56,7 @@ func (r *RuneBuffer) SetConfig(cfg *Config) {
 }
 
 func (r *RuneBuffer) SetMask(m rune) {
-	r.mask = m
+	r.cfg.MaskRune = m
 }
 
 func (r *RuneBuffer) CurrentWidth(x int) int {
@@ -295,7 +293,7 @@ func (r *RuneBuffer) MoveToLineEnd() {
 }
 
 func (r *RuneBuffer) LineCount() int {
-	return LineCount(r.cfg.StdoutFd, runes.WidthAll(r.buf)+r.PromptLen())
+	return LineCount(r.cfg.FuncGetWidth, runes.WidthAll(r.buf)+r.PromptLen())
 }
 
 func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
@@ -329,7 +327,7 @@ func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
 
 func (r *RuneBuffer) IdxLine() int {
 	totalWidth := runes.WidthAll(r.buf[:r.idx]) + r.PromptLen()
-	w := getWidth(r.cfg.StdoutFd)
+	w := r.cfg.FuncGetWidth()
 	if w <= 0 {
 		return -1
 	}
@@ -368,12 +366,12 @@ func (r *RuneBuffer) Refresh(f func()) {
 func (r *RuneBuffer) output() []byte {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString(string(r.prompt))
-	if r.mask != 0 && len(r.buf) > 0 {
-		buf.Write([]byte(strings.Repeat(string(r.mask), len(r.buf)-1)))
+	if r.cfg.EnableMask && len(r.buf) > 0 {
+		buf.Write([]byte(strings.Repeat(string(r.cfg.MaskRune), len(r.buf)-1)))
 		if r.buf[len(r.buf)-1] == '\n' {
 			buf.Write([]byte{'\n'})
 		} else {
-			buf.Write([]byte(string(r.mask)))
+			buf.Write([]byte(string(r.cfg.MaskRune)))
 		}
 	} else {
 		buf.Write([]byte(string(r.buf)))

@@ -2,10 +2,7 @@ package readline
 
 import (
 	"errors"
-	"fmt"
 	"io"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
@@ -58,7 +55,7 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 func NewOperation(t *Terminal, cfg *Config) *Operation {
 	op := &Operation{
 		t:       t,
-		buf:     NewRuneBuffer(t, cfg.Prompt, cfg.MaskRune, cfg),
+		buf:     NewRuneBuffer(t, cfg.Prompt, cfg),
 		outchan: make(chan []rune),
 		errchan: make(chan error),
 	}
@@ -341,16 +338,7 @@ func (o *Operation) PasswordWithConfig(cfg *Config) ([]byte, error) {
 }
 
 func (o *Operation) Password(prompt string) ([]byte, error) {
-	w := o.Stdout()
-	if prompt != "" {
-		fmt.Fprintf(w, prompt)
-	}
-	o.t.EnterRawMode()
-	defer o.t.ExitRawMode()
-
-	b, err := terminal.ReadPassword(int(o.cfg.Stdin.Fd()))
-	fmt.Fprint(w, "\r\n")
-	return b, err
+	return o.PasswordEx(prompt, nil)
 }
 
 func (o *Operation) SetTitle(t string) {

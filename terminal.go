@@ -36,7 +36,7 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 }
 
 func (t *Terminal) EnterRawMode() (err error) {
-	t.state, err = MakeRaw(int(t.cfg.Stdin.Fd()))
+	t.state, err = MakeRaw(int(t.cfg.StdinFd))
 	return err
 }
 
@@ -44,7 +44,7 @@ func (t *Terminal) ExitRawMode() (err error) {
 	if t.state == nil {
 		return
 	}
-	err = Restore(int(t.cfg.Stdin.Fd()), t.state)
+	err = Restore(int(t.cfg.StdinFd), t.state)
 	if err == nil {
 		t.state = nil
 	}

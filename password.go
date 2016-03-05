@@ -21,7 +21,7 @@ func (o *opPassword) EnterPasswordMode(cfg *Config) (err error) {
 
 func (o *opPassword) PasswordConfig() *Config {
 	return &Config{
-		MaskRune:        '*',
+		EnableMask:      true,
 		InterruptPrompt: "\n",
 		EOFPrompt:       "\n",
 		HistoryLimit:    -1,

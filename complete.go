@@ -183,7 +183,7 @@ func (o *opCompleter) CompleteRefresh() {
 			colWidth = w
 		}
 	}
-	colNum := getWidth(o.op.cfg.StdoutFd) / (colWidth + o.candidateOff + 2)
+	colNum := o.op.cfg.FuncGetWidth() / (colWidth + o.candidateOff + 2)
 	o.candidateColNum = colNum
 	buf := bytes.NewBuffer(nil)
 	buf.Write(bytes.Repeat([]byte("\n"), lineCnt))

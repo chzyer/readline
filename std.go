@@ -17,6 +17,7 @@ var (
 	stdOnce sync.Once
 )
 
+// global instance will not submit history automatic
 func getInstance() *Instance {
 	stdOnce.Do(func() {
 		std, _ = NewEx(&Config{
@@ -26,6 +27,10 @@ func getInstance() *Instance {
 	return std
 }
 
+// let readline load history from filepath
+// and try to persist history into disk
+// set fp to "" to prevent readline persisting history to disk
+// so the `AddHistory` will return nil error forever.
 func SetHistoryPath(fp string) {
 	ins := getInstance()
 	cfg := ins.Config.Clone()
@@ -33,6 +38,7 @@ func SetHistoryPath(fp string) {
 	ins.SetConfig(cfg)
 }
 
+// set auto completer to global instance
 func SetAutoComplete(completer AutoCompleter) {
 	ins := getInstance()
 	cfg := ins.Config.Clone()
@@ -40,11 +46,14 @@ func SetAutoComplete(completer AutoCompleter) {
 	ins.SetConfig(cfg)
 }
 
+// add history to global instance manually
+// raise error only if `SetHistoryPath` is set with a non-empty path
 func AddHistory(content string) error {
 	ins := getInstance()
 	return ins.SaveHistory(content)
 }
 
+// readline with global configs
 func Line(prompt string) (string, error) {
 	ins := getInstance()
 	ins.SetPrompt(prompt)

@@ -125,7 +125,7 @@ func (o *opSearch) SearchRefresh(x int) {
 	}
 	x = o.buf.CurrentWidth(x)
 	x += o.buf.PromptLen()
-	x = x % getWidth(o.cfg.StdoutFd)
+	x = x % o.cfg.FuncGetWidth()
 
 	if o.markStart > 0 {
 		o.buf.SetStyle(o.markStart, o.markEnd, "4")

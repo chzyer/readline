@@ -87,8 +87,8 @@ func escapeKey(r rune) rune {
 }
 
 // calculate how many lines for N character
-func LineCount(stdoutFd int, w int) int {
-	screenWidth := getWidth(stdoutFd)
+func LineCount(getWidth func() int, w int) int {
+	screenWidth := getWidth()
 	r := w / screenWidth
 	if w%screenWidth != 0 {
 		r++
@@ -115,4 +115,10 @@ func GetInt(s []string, def int) int {
 		return def
 	}
 	return c
+}
+
+func genGetWidthFunc(fd int) func() int {
+	return func() int {
+		return getWidth(fd)
+	}
 }

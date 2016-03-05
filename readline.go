@@ -11,11 +11,6 @@ type Instance struct {
 	Operation *Operation
 }
 
-type FdReader interface {
-	io.Reader
-	Fd() uintptr
-}
-
 type Config struct {
 	// prompt supports ANSI escape sequence, so we can color some characters even in windows
 	Prompt string
@@ -39,12 +34,17 @@ type Config struct {
 	InterruptPrompt string
 	EOFPrompt       string
 
-	Stdin  FdReader
+	FuncGetWidth func() int
+
+	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 
-	MaskRune rune
+	EnableMask bool
+	MaskRune   rune
 
+	// erase the editing line after user submited it
+	// it often use in IM.
 	UniqueEditLine bool
 
 	// force use interactive even stdout is not a tty
@@ -98,6 +98,10 @@ func (c *Config) Init() error {
 		c.EOFPrompt = "^D"
 	} else if c.EOFPrompt == "\n" {
 		c.EOFPrompt = ""
+	}
+
+	if c.FuncGetWidth == nil {
+		c.FuncGetWidth = genGetWidthFunc(c.StdoutFd)
 	}
 
 	return nil
