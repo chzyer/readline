@@ -9,6 +9,7 @@
 * Supports performs even stdin/stdout is not a tty.
 * Add a new simple apis for single instance, check by [here](https://github.com/chzyer/readline/blob/master/std.go). It need to save history manually if using this api.
 * #28, fixes the history is not working as expected.
+* #33, vim mode now support `c`, `d`, `x (delete character)`, `r (replace character)`
 
 ### 1.1 - 2015-11-20
 
