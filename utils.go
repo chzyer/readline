@@ -2,8 +2,11 @@ package readline
 
 import (
 	"bufio"
+	"bytes"
 	"strconv"
 	"syscall"
+
+	"github.com/chzyer/readline/runes"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -86,9 +89,26 @@ func escapeKey(r rune) rune {
 	return r
 }
 
+func SplitByLine(start, screenWidth int, rs []rune) []string {
+	var ret []string
+	buf := bytes.NewBuffer(nil)
+	currentWidth := start
+	for _, r := range rs {
+		w := runes.Width(r)
+		currentWidth += w
+		buf.WriteRune(r)
+		if currentWidth >= screenWidth {
+			ret = append(ret, buf.String())
+			buf.Reset()
+			currentWidth = 0
+		}
+	}
+	ret = append(ret, buf.String())
+	return ret
+}
+
 // calculate how many lines for N character
-func LineCount(getWidth func() int, w int) int {
-	screenWidth := getWidth()
+func LineCount(screenWidth, w int) int {
 	r := w / screenWidth
 	if w%screenWidth != 0 {
 		r++

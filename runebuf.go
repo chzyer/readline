@@ -2,6 +2,7 @@ package readline
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 
@@ -293,7 +294,8 @@ func (r *RuneBuffer) MoveToLineEnd() {
 }
 
 func (r *RuneBuffer) LineCount() int {
-	return LineCount(r.cfg.FuncGetWidth, runes.WidthAll(r.buf)+r.PromptLen())
+	return LineCount(r.cfg.FuncGetWidth(),
+		runes.WidthAll(r.buf)+r.PromptLen())
 }
 
 func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
@@ -326,22 +328,9 @@ func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
 }
 
 func (r *RuneBuffer) IdxLine() int {
-	totalWidth := runes.WidthAll(r.buf[:r.idx]) + r.PromptLen()
-	w := r.cfg.FuncGetWidth()
-	if w <= 0 {
-		return -1
-	}
-	line := totalWidth / w
-
-	// if cursor is in last colmun and not any character behind it
-	// the cursor will in the first line, otherwise will in the second line
-	// this situation only occurs in golang's Stdout
-	// TODO: figure out why
-	if totalWidth%w == 0 && len(r.buf) == r.idx && !isWindows {
-		line--
-	}
-
-	return line
+	sw := r.cfg.FuncGetWidth()
+	sp := SplitByLine(r.PromptLen(), sw, r.buf[:r.idx])
+	return len(sp) - 1
 }
 
 func (r *RuneBuffer) CursorLineCount() int {
@@ -373,11 +362,45 @@ func (r *RuneBuffer) output() []byte {
 		} else {
 			buf.Write([]byte(string(r.cfg.MaskRune)))
 		}
+		if len(r.buf) > r.idx {
+			buf.Write(runes.Backspace(r.buf[r.idx:]))
+		}
+
 	} else {
-		buf.Write([]byte(string(r.buf)))
-	}
-	if len(r.buf) > r.idx {
-		buf.Write(runes.Backspace(r.buf[r.idx:]))
+		sw := r.cfg.FuncGetWidth()
+		sp := SplitByLine(r.PromptLen(), sw, r.buf)
+		written := 0
+		idxInLine := 0
+		for idx, s := range sp {
+			buf.Write([]byte(s))
+			if r.idx > written && r.idx < written+len(s) {
+				idxInLine = r.idx - written
+			}
+			written += len(s)
+
+			if idx < len(sp)-1 && !isWindows {
+				buf.Write([]byte{'\n'})
+			}
+		}
+		if len(r.buf) > r.idx {
+			targetLine := r.IdxLine()
+			currentLine := len(sp) - 1
+			// assert currentLine >= targetLine
+			if targetLine == 0 {
+				idxInLine += r.PromptLen()
+			}
+			buf.WriteString("\r")
+			if currentLine > targetLine {
+				buf.WriteString(fmt.Sprintf(
+					"\033[%vA", currentLine-targetLine,
+				))
+			}
+			if idxInLine > 0 {
+				buf.WriteString(fmt.Sprintf(
+					"\033[%vC", idxInLine,
+				))
+			}
+		}
 	}
 	return buf.Bytes()
 }
