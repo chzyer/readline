@@ -3,6 +3,9 @@
 package readline
 
 import (
+	"os"
+	"os/signal"
+	"sync"
 	"syscall"
 	"unsafe"
 )
@@ -27,4 +30,41 @@ func getWidth(stdoutFd int) int {
 		return -1
 	}
 	return int(ws.Col)
+}
+
+func GetScreenWidth() int {
+	return getWidth(syscall.Stdout)
+}
+
+func DefaultIsTerminal() bool {
+	return IsTerminal(syscall.Stdin) && IsTerminal(syscall.Stdout)
+}
+
+func GetStdin() int {
+	return syscall.Stdin
+}
+
+// -----------------------------------------------------------------------------
+
+var (
+	widthChange         sync.Once
+	widthChangeCallback func()
+)
+
+func DefaultOnWidthChanged(f func()) {
+	widthChangeCallback = f
+	widthChange.Do(func() {
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGWINCH)
+
+		go func() {
+			for {
+				_, ok := <-ch
+				if !ok {
+					break
+				}
+				widthChangeCallback()
+			}
+		}()
+	})
 }

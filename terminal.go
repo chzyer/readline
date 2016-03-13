@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 type Terminal struct {
 	cfg       *Config
-	state     *terminal.State
 	outchan   chan rune
 	closed    int32
 	stopChan  chan struct{}
@@ -36,19 +33,11 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 }
 
 func (t *Terminal) EnterRawMode() (err error) {
-	t.state, err = MakeRaw(int(t.cfg.StdinFd))
-	return err
+	return t.cfg.FuncMakeRaw()
 }
 
 func (t *Terminal) ExitRawMode() (err error) {
-	if t.state == nil {
-		return
-	}
-	err = Restore(int(t.cfg.StdinFd), t.state)
-	if err == nil {
-		t.state = nil
-	}
-	return err
+	return t.cfg.FuncExitRaw()
 }
 
 func (t *Terminal) Write(b []byte) (int, error) {

@@ -45,8 +45,10 @@ type Config struct {
 	UniqueEditLine bool
 
 	// force use interactive even stdout is not a tty
-	StdinFd             int
-	StdoutFd            int
+	FuncIsTerminal      func() bool
+	FuncMakeRaw         func() error
+	FuncExitRaw         func() error
+	FuncOnWidthChanged  func(func())
 	ForceUseInteractive bool
 
 	// private fields
@@ -59,7 +61,7 @@ func (c *Config) useInteractive() bool {
 	if c.ForceUseInteractive {
 		return true
 	}
-	return IsTerminal(c.StdoutFd) && IsTerminal(c.StdinFd)
+	return c.FuncIsTerminal()
 }
 
 func (c *Config) Init() error {
@@ -75,12 +77,6 @@ func (c *Config) Init() error {
 	}
 	if c.Stderr == nil {
 		c.Stderr = Stderr
-	}
-	if c.StdinFd == 0 {
-		c.StdinFd = StdinFd
-	}
-	if c.StdoutFd == 0 {
-		c.StdoutFd = StdoutFd
 	}
 	if c.HistoryLimit == 0 {
 		c.HistoryLimit = 500
@@ -98,7 +94,20 @@ func (c *Config) Init() error {
 	}
 
 	if c.FuncGetWidth == nil {
-		c.FuncGetWidth = genGetWidthFunc(c.StdoutFd)
+		c.FuncGetWidth = GetScreenWidth
+	}
+	if c.FuncIsTerminal == nil {
+		c.FuncIsTerminal = DefaultIsTerminal
+	}
+	rm := new(RawMode)
+	if c.FuncMakeRaw == nil {
+		c.FuncMakeRaw = rm.Enter
+	}
+	if c.FuncExitRaw == nil {
+		c.FuncExitRaw = rm.Exit
+	}
+	if c.FuncOnWidthChanged == nil {
+		c.FuncOnWidthChanged = DefaultOnWidthChanged
 	}
 
 	return nil

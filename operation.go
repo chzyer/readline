@@ -53,17 +53,24 @@ func (w *wrapWriter) Write(b []byte) (int, error) {
 }
 
 func NewOperation(t *Terminal, cfg *Config) *Operation {
+	width := cfg.FuncGetWidth()
 	op := &Operation{
 		t:       t,
-		buf:     NewRuneBuffer(t, cfg.Prompt, cfg),
+		buf:     NewRuneBuffer(t, cfg.Prompt, cfg, width),
 		outchan: make(chan []rune),
 		errchan: make(chan error),
 	}
 	op.w = op.buf.w
 	op.SetConfig(cfg)
 	op.opVim = newVimMode(op)
-	op.opCompleter = newOpCompleter(op.buf.w, op)
+	op.opCompleter = newOpCompleter(op.buf.w, op, width)
 	op.opPassword = newOpPassword(op)
+	op.cfg.FuncOnWidthChanged(func() {
+		newWidth := cfg.FuncGetWidth()
+		op.opCompleter.OnWidthChange(newWidth)
+		op.opSearch.OnWidthChange(newWidth)
+		op.buf.OnWidthChange(newWidth)
+	})
 	go op.ioloop()
 	return op
 }
@@ -381,11 +388,12 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	op.SetPrompt(cfg.Prompt)
 	op.SetMaskRune(cfg.MaskRune)
 	op.buf.SetConfig(cfg)
+	width := op.cfg.FuncGetWidth()
 
 	if cfg.opHistory == nil {
 		op.SetHistoryPath(cfg.HistoryFile)
 		cfg.opHistory = op.history
-		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg)
+		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg, width)
 	}
 	op.history = cfg.opHistory
 
@@ -394,7 +402,7 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	op.history.Init()
 
 	if op.cfg.AutoComplete != nil {
-		op.opCompleter = newOpCompleter(op.buf.w, op)
+		op.opCompleter = newOpCompleter(op.buf.w, op, width)
 	}
 
 	op.opSearch = cfg.opSearch

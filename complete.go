@@ -19,9 +19,10 @@ type AutoCompleter interface {
 }
 
 type opCompleter struct {
-	w  io.Writer
-	op *Operation
-	ac AutoCompleter
+	w     io.Writer
+	op    *Operation
+	ac    AutoCompleter
+	width int
 
 	inCompleteMode  bool
 	inSelectMode    bool
@@ -32,11 +33,12 @@ type opCompleter struct {
 	candidateColNum int
 }
 
-func newOpCompleter(w io.Writer, op *Operation) *opCompleter {
+func newOpCompleter(w io.Writer, op *Operation, width int) *opCompleter {
 	return &opCompleter{
-		w:  w,
-		op: op,
-		ac: op.cfg.AutoComplete,
+		w:     w,
+		op:    op,
+		ac:    op.cfg.AutoComplete,
+		width: width,
 	}
 }
 
@@ -171,6 +173,10 @@ func (o *opCompleter) getMatrixSize() int {
 	return line * o.candidateColNum
 }
 
+func (o *opCompleter) OnWidthChange(newWidth int) {
+	o.width = newWidth
+}
+
 func (o *opCompleter) CompleteRefresh() {
 	if !o.inCompleteMode {
 		return
@@ -183,7 +189,7 @@ func (o *opCompleter) CompleteRefresh() {
 			colWidth = w
 		}
 	}
-	colNum := o.op.cfg.FuncGetWidth() / (colWidth + o.candidateOff + 2)
+	colNum := o.width / (colWidth + o.candidateOff + 2)
 	o.candidateColNum = colNum
 	buf := bytes.NewBuffer(nil)
 	buf.Write(bytes.Repeat([]byte("\n"), lineCnt))

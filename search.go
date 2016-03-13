@@ -29,15 +29,21 @@ type opSearch struct {
 	cfg       *Config
 	markStart int
 	markEnd   int
+	width     int
 }
 
-func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory, cfg *Config) *opSearch {
+func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory, cfg *Config, width int) *opSearch {
 	return &opSearch{
 		w:       w,
 		buf:     buf,
 		cfg:     cfg,
 		history: history,
+		width:   width,
 	}
+}
+
+func (o *opSearch) OnWidthChange(newWidth int) {
+	o.width = newWidth
 }
 
 func (o *opSearch) IsSearchMode() bool {
@@ -125,7 +131,7 @@ func (o *opSearch) SearchRefresh(x int) {
 	}
 	x = o.buf.CurrentWidth(x)
 	x += o.buf.PromptLen()
-	x = x % o.cfg.FuncGetWidth()
+	x = x % o.width
 
 	if o.markStart > 0 {
 		o.buf.SetStyle(o.markStart, o.markEnd, "4")
