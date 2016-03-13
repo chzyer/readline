@@ -354,6 +354,7 @@ func (r *RemoteCli) Serve() error {
 			}
 		}
 	}()
+	defer r.raw.Exit()
 	r.readLoop()
 	return nil
 }

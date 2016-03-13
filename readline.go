@@ -212,6 +212,10 @@ func (i *Instance) Close() error {
 	return nil
 }
 
+func (i *Instance) Write(b []byte) (int, error) {
+	return i.Stdout().Write(b)
+}
+
 func (i *Instance) SetConfig(cfg *Config) *Config {
 	if i.Config == cfg {
 		return cfg
