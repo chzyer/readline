@@ -12,6 +12,7 @@ type PrefixCompleterInterface interface {
 	Do(line []rune, pos int) (newLine [][]rune, length int)
 	GetName() []rune
 	GetChildren() []PrefixCompleterInterface
+	SetChildren(children []PrefixCompleterInterface)
 }
 
 type PrefixCompleter struct {
@@ -51,6 +52,10 @@ func (p *PrefixCompleter) GetName() []rune {
 
 func (p *PrefixCompleter) GetChildren() []PrefixCompleterInterface {
 	return p.Children
+}
+
+func (p *PrefixCompleter) SetChildren(children []PrefixCompleterInterface) {
+	p.Children = children
 }
 
 func NewPrefixCompleter(pc ...PrefixCompleterInterface) *PrefixCompleter {
