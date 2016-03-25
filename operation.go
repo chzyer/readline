@@ -9,6 +9,14 @@ var (
 	ErrInterrupt = errors.New("Interrupt")
 )
 
+type InterruptError struct {
+	Line []rune
+}
+
+func (*InterruptError) Error() string {
+	return "Interrupted"
+}
+
 type Operation struct {
 	cfg     *Config
 	t       *Terminal
@@ -248,11 +256,13 @@ func (o *Operation) ioloop() {
 			}
 			o.buf.MoveToLineEnd()
 			o.buf.Refresh(nil)
-			o.buf.WriteString(o.cfg.InterruptPrompt + "\n")
-			o.buf.Reset()
+			hint := o.cfg.InterruptPrompt + "\n"
+			o.buf.WriteString(hint)
+			remain := o.buf.Reset()
+			remain = remain[:len(remain)-len([]rune(hint))]
 			isUpdateHistory = false
 			o.history.Revert()
-			o.errchan <- ErrInterrupt
+			o.errchan <- &InterruptError{remain}
 		default:
 			if o.IsSearchMode() {
 				o.SearchChar(r)
@@ -302,10 +312,7 @@ func (o *Operation) Stdout() io.Writer {
 
 func (o *Operation) String() (string, error) {
 	r, err := o.Runes()
-	if err != nil {
-		return "", err
-	}
-	return string(r), nil
+	return string(r), err
 }
 
 func (o *Operation) Runes() ([]rune, error) {
@@ -321,6 +328,9 @@ func (o *Operation) Runes() ([]rune, error) {
 	case r := <-o.outchan:
 		return r, nil
 	case err := <-o.errchan:
+		if e, ok := err.(*InterruptError); ok {
+			return e.Line, ErrInterrupt
+		}
 		return nil, err
 	}
 }

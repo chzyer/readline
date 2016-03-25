@@ -47,7 +47,7 @@ func main() {
 		Prompt:          "\033[31m»\033[0m ",
 		HistoryFile:     "/tmp/readline.tmp",
 		AutoComplete:    completer,
-		InterruptPrompt: "\nInterrupt, Press Ctrl+D to exit",
+		InterruptPrompt: "^C",
 		EOFPrompt:       "exit",
 	})
 	if err != nil {
@@ -65,9 +65,16 @@ func main() {
 	log.SetOutput(l.Stderr())
 	for {
 		line, err := l.Readline()
-		if err == io.EOF {
+		if err == readline.ErrInterrupt {
+			if len(line) == 0 {
+				break
+			} else {
+				continue
+			}
+		} else if err == io.EOF {
 			break
 		}
+
 		line = strings.TrimSpace(line)
 		switch {
 		case strings.HasPrefix(line, "mode "):
