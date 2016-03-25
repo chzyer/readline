@@ -137,13 +137,14 @@ func LineCount(screenWidth, w int) int {
 }
 
 func IsWordBreak(i rune) bool {
-	if i >= 'a' && i <= 'z' {
-		return false
+	switch {
+	case i >= 'a' && i <= 'z':
+	case i >= 'A' && i <= 'Z':
+	case i >= '0' && i <= '9':
+	default:
+		return true
 	}
-	if i >= 'A' && i <= 'Z' {
-		return false
-	}
-	return true
+	return false
 }
 
 func GetInt(s []string, def int) int {
