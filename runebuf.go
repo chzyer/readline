@@ -30,17 +30,7 @@ type RuneBuffer struct {
 }
 
 func (r *RuneBuffer) OnWidthChange(newWidth int) {
-	oldWidth := r.width
-	if newWidth < oldWidth {
-		sp := SplitByMultiLine(
-			r.PromptLen(), oldWidth, newWidth, r.buf[:r.idx])
-		idxLine := len(sp) - 1
-		r.clean(idxLine)
-	} else {
-		r.Clean()
-	}
 	r.width = newWidth
-	r.print()
 }
 
 func (r *RuneBuffer) Backup() {

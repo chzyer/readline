@@ -86,29 +86,6 @@ func escapeKey(r rune) rune {
 	return r
 }
 
-func SplitByMultiLine(start, oldWidth, newWidth int, rs []rune) []string {
-	var ret []string
-	buf := bytes.NewBuffer(nil)
-	currentWidth := start
-	for _, r := range rs {
-		w := runes.Width(r)
-		currentWidth += w
-		buf.WriteRune(r)
-		if currentWidth == newWidth {
-			ret = append(ret, buf.String())
-			buf.Reset()
-			continue
-		}
-		if currentWidth >= oldWidth {
-			ret = append(ret, buf.String())
-			buf.Reset()
-			currentWidth = 0
-		}
-	}
-	ret = append(ret, buf.String())
-	return ret
-}
-
 func SplitByLine(start, screenWidth int, rs []rune) []string {
 	var ret []string
 	buf := bytes.NewBuffer(nil)
