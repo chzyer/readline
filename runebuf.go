@@ -3,7 +3,6 @@ package readline
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"strings"
 
@@ -348,8 +347,20 @@ func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
 	return
 }
 
+func (r *RuneBuffer) isInLineEdge() bool {
+	if isWindows {
+		return false
+	}
+	sp := r.getSplitByLine(r.buf)
+	return len(sp[len(sp)-1]) == 0
+}
+
+func (r *RuneBuffer) getSplitByLine(rs []rune) []string {
+	return SplitByLine(r.PromptLen(), r.width, rs)
+}
+
 func (r *RuneBuffer) IdxLine(width int) int {
-	sp := SplitByLine(r.PromptLen(), width, r.buf[:r.idx])
+	sp := r.getSplitByLine(r.buf[:r.idx])
 	return len(sp) - 1
 }
 
@@ -391,39 +402,14 @@ func (r *RuneBuffer) output() []byte {
 		}
 
 	} else {
-		sp := SplitByLine(r.PromptLen(), r.width, r.buf)
-		written := 0
-		idxInLine := 0
-		for idx, s := range sp {
-			buf.Write([]byte(s))
-			if r.idx > written && r.idx < written+len(s) {
-				idxInLine = r.idx - written
-			}
-			written += len(s)
+		buf.Write([]byte(string(r.buf)))
+		if r.isInLineEdge() {
+			buf.Write([]byte(" \b"))
+		}
+	}
 
-			if idx < len(sp)-1 && !isWindows {
-				buf.Write([]byte{'\n'})
-			}
-		}
-		if len(r.buf) > r.idx {
-			targetLine := r.IdxLine(r.width)
-			currentLine := len(sp) - 1
-			// assert currentLine >= targetLine
-			if targetLine == 0 {
-				idxInLine += r.PromptLen()
-			}
-			buf.WriteString("\r")
-			if currentLine > targetLine {
-				buf.WriteString(fmt.Sprintf(
-					"\033[%vA", currentLine-targetLine,
-				))
-			}
-			if idxInLine > 0 {
-				buf.WriteString(fmt.Sprintf(
-					"\033[%vC", idxInLine,
-				))
-			}
-		}
+	if len(r.buf) > r.idx {
+		buf.Write(runes.Backspace(r.buf[r.idx:]))
 	}
 	return buf.Bytes()
 }
