@@ -394,10 +394,15 @@ func (r *RemoteCli) Serve() error {
 	return nil
 }
 
-func ListenRemote(n, addr string, cfg *Config, h func(*Instance)) error {
+func ListenRemote(n, addr string, cfg *Config, h func(*Instance), onListen ...func(net.Listener) error) error {
 	ln, err := net.Listen(n, addr)
 	if err != nil {
 		return err
+	}
+	if len(onListen) > 0 {
+		if err := onListen[0](ln); err != nil {
+			return err
+		}
 	}
 	for {
 		conn, err := ln.Accept()
