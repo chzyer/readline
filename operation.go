@@ -237,11 +237,16 @@ func (o *Operation) ioloop() {
 			}
 
 			// treat as EOF
-			o.buf.WriteString(o.cfg.EOFPrompt + "\n")
+			if !o.cfg.UniqueEditLine {
+				o.buf.WriteString(o.cfg.EOFPrompt + "\n")
+			}
 			o.buf.Reset()
 			isUpdateHistory = false
 			o.history.Revert()
 			o.errchan <- io.EOF
+			if o.cfg.UniqueEditLine {
+				o.buf.Clean()
+			}
 		case CharInterrupt:
 			if o.IsSearchMode() {
 				o.t.KickRead()
@@ -257,9 +262,13 @@ func (o *Operation) ioloop() {
 			o.buf.MoveToLineEnd()
 			o.buf.Refresh(nil)
 			hint := o.cfg.InterruptPrompt + "\n"
-			o.buf.WriteString(hint)
+			if !o.cfg.UniqueEditLine {
+				o.buf.WriteString(hint)
+			}
 			remain := o.buf.Reset()
-			remain = remain[:len(remain)-len([]rune(hint))]
+			if !o.cfg.UniqueEditLine {
+				remain = remain[:len(remain)-len([]rune(hint))]
+			}
 			isUpdateHistory = false
 			o.history.Revert()
 			o.errchan <- &InterruptError{remain}
@@ -419,6 +428,10 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	return old, nil
 }
 
+func (o *Operation) ResetHistory() {
+	o.history.Reset()
+}
+
 // if err is not nil, it just mean it fail to write to file
 // other things goes fine.
 func (o *Operation) SaveHistory(content string) error {
@@ -429,6 +442,10 @@ func (o *Operation) Refresh() {
 	if o.t.IsReading() {
 		o.buf.Refresh(nil)
 	}
+}
+
+func (o *Operation) Clean() {
+	o.buf.Clean()
 }
 
 func FuncListener(f func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool)) Listener {

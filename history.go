@@ -37,6 +37,11 @@ func newOpHistory(cfg *Config) (o *opHistory) {
 	return o
 }
 
+func (o *opHistory) Reset() {
+	o.history = list.New()
+	o.current = nil
+}
+
 func (o *opHistory) IsHistoryClosed() bool {
 	return o.fd.Fd() == ^(uintptr(0))
 }

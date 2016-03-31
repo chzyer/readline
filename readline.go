@@ -140,6 +140,10 @@ func New(prompt string) (*Instance, error) {
 	return NewEx(&Config{Prompt: prompt})
 }
 
+func (i *Instance) ResetHistory() {
+	i.Operation.ResetHistory()
+}
+
 func (i *Instance) SetPrompt(s string) {
 	i.Operation.SetPrompt(s)
 }
@@ -189,6 +193,24 @@ func (i *Instance) ReadPassword(prompt string) ([]byte, error) {
 	return i.Operation.Password(prompt)
 }
 
+type Result struct {
+	Line  string
+	Error error
+}
+
+func (l *Result) CanContinue() bool {
+	return len(l.Line) != 0 && l.Error == ErrInterrupt
+}
+
+func (l *Result) CanBreak() bool {
+	return !l.CanContinue() && l.Error != nil
+}
+
+func (i *Instance) Line() *Result {
+	ret, err := i.Readline()
+	return &Result{ret, err}
+}
+
 // err is one of (nil, io.EOF, readline.ErrInterrupt)
 func (i *Instance) Readline() (string, error) {
 	return i.Operation.String()
@@ -210,6 +232,9 @@ func (i *Instance) Close() error {
 	}
 	i.Operation.Close()
 	return nil
+}
+func (i *Instance) Clean() {
+	i.Operation.Clean()
 }
 
 func (i *Instance) Write(b []byte) (int, error) {

@@ -20,9 +20,9 @@ type RuneBuffer struct {
 	prompt []rune
 	w      io.Writer
 
-	cleanInScreen bool
-	interactive   bool
-	cfg           *Config
+	hadClean    bool
+	interactive bool
+	cfg         *Config
 
 	width int
 
@@ -374,7 +374,7 @@ func (r *RuneBuffer) Refresh(f func()) {
 
 func (r *RuneBuffer) print() {
 	r.w.Write(r.output())
-	r.cleanInScreen = false
+	r.hadClean = false
 }
 
 func (r *RuneBuffer) output() []byte {
@@ -472,9 +472,9 @@ func (r *RuneBuffer) Clean() {
 }
 
 func (r *RuneBuffer) clean(idxLine int) {
-	if r.cleanInScreen || !r.interactive {
+	if r.hadClean || !r.interactive {
 		return
 	}
-	r.cleanInScreen = true
+	r.hadClean = true
 	r.cleanOutput(r.w, idxLine)
 }
