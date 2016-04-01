@@ -53,6 +53,11 @@ func AddHistory(content string) error {
 	return ins.SaveHistory(content)
 }
 
+func Password(prompt string) ([]byte, error) {
+	ins := getInstance()
+	return ins.ReadPassword(prompt)
+}
+
 // readline with global configs
 func Line(prompt string) (string, error) {
 	ins := getInstance()
