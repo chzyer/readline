@@ -12,16 +12,16 @@ type AutoCompleter interface {
 	// Readline will pass the whole line and current offset to it
 	// Completer need to pass all the candidates, and how long they shared the same characters in line
 	// Example:
+	//   [go, git, git-shell, grep]
 	//   Do("g", 1) => ["o", "it", "it-shell", "rep"], 1
-	//   Do("gi", 2) => ["t", "t-shell"], 1
-	//   Do("git", 3) => ["", "-shell"], 0
+	//   Do("gi", 2) => ["t", "t-shell"], 2
+	//   Do("git", 3) => ["", "-shell"], 3
 	Do(line []rune, pos int) (newLine [][]rune, length int)
 }
 
 type opCompleter struct {
 	w     io.Writer
 	op    *Operation
-	ac    AutoCompleter
 	width int
 
 	inCompleteMode  bool
@@ -37,7 +37,6 @@ func newOpCompleter(w io.Writer, op *Operation, width int) *opCompleter {
 	return &opCompleter{
 		w:     w,
 		op:    op,
-		ac:    op.cfg.AutoComplete,
 		width: width,
 	}
 }
@@ -77,7 +76,7 @@ func (o *opCompleter) OnComplete() {
 
 	o.ExitCompleteSelectMode()
 	o.candidateSource = rs
-	newLines, offset := o.ac.Do(rs, buf.idx)
+	newLines, offset := o.op.cfg.AutoComplete.Do(rs, buf.idx)
 	if len(newLines) == 0 {
 		o.ExitCompleteMode(false)
 		return
