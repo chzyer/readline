@@ -1,10 +1,6 @@
 package readline
 
-import (
-	"strconv"
-
-	"github.com/chzyer/readline/runes"
-)
+import "github.com/chzyer/readline/runes"
 
 type SegmentCompleter interface {
 	// a
@@ -75,6 +71,5 @@ func (c *SegmentComplete) Do(line []rune, pos int) (newLine [][]rune, offset int
 
 	cands := c.DoSegment(segment, idx)
 	newLine, offset = RetSegment(segment, cands, idx)
-	Debug(strconv.Quote(string(line)), cands)
 	return newLine, offset
 }
