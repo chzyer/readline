@@ -1,5 +1,11 @@
 package readline
 
+import (
+	"strconv"
+
+	"github.com/chzyer/readline/runes"
+)
+
 type SegmentCompleter interface {
 	// a
 	// |- a1
@@ -37,6 +43,9 @@ func RetSegment(segments [][]rune, cands [][]rune, idx int) ([][]rune, int) {
 	ret := make([][]rune, 0, len(cands))
 	lastSegment := segments[len(segments)-1]
 	for _, cand := range cands {
+		if !runes.HasPrefix(cand, lastSegment) {
+			continue
+		}
 		ret = append(ret, cand[len(lastSegment):])
 	}
 	return ret, idx
@@ -61,6 +70,11 @@ func SplitSegment(line []rune, pos int) ([][]rune, int) {
 }
 
 func (c *SegmentComplete) Do(line []rune, pos int) (newLine [][]rune, offset int) {
+
 	segment, idx := SplitSegment(line, pos)
-	return RetSegment(segment, c.DoSegment(segment, idx), idx)
+
+	cands := c.DoSegment(segment, idx)
+	newLine, offset = RetSegment(segment, cands, idx)
+	Debug(strconv.Quote(string(line)), cands)
+	return newLine, offset
 }

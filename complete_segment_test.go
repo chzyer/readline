@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"gopkg.in/logex.v1"
-
 	"github.com/chzyer/test"
 )
 
@@ -34,6 +32,8 @@ func TestRetSegment(t *testing.T) {
 	// |- a2
 	// |--- a21
 	// b
+	// add
+	// adddomain
 	ret := []struct {
 		Segments [][]rune
 		Cands    [][]rune
@@ -41,11 +41,12 @@ func TestRetSegment(t *testing.T) {
 		Ret      [][]rune
 		pos      int
 	}{
-		{sr(""), sr("a", "b"), 0, sr("a", "b"), 0},
-		{sr("a"), sr("a"), 1, sr(""), 1},
+		{sr(""), sr("a", "b", "add", "adddomain"), 0, sr("a", "b", "add", "adddomain"), 0},
+		{sr("a"), sr("a", "add", "adddomain"), 1, sr("", "dd", "dddomain"), 1},
 		{sr("a", ""), sr("a1", "a2"), 0, sr("a1", "a2"), 0},
 		{sr("a", "a"), sr("a1", "a2"), 1, sr("1", "2"), 1},
 		{sr("a", "a1"), sr("a1"), 2, sr(""), 2},
+		{sr("add"), sr("add", "adddomain"), 2, sr("", "domain"), 2},
 	}
 	for idx, r := range ret {
 		ret, pos := RetSegment(r.Segments, r.Cands, r.idx)
@@ -103,12 +104,15 @@ func TestSegmentCompleter(t *testing.T) {
 			}},
 		}},
 		{"b", nil},
+		{"route", []Tree{
+			{"add", nil},
+			{"adddomain", nil},
+		}},
 	}}
 	s := SegmentFunc(func(ret [][]rune, n int) [][]rune {
-
 		tree := tree
 	main:
-		for level := 0; level < len(ret); {
+		for level := 0; level < len(ret)-1; {
 			name := string(ret[level])
 			for _, t := range tree.Children {
 				if t.Name == name {
@@ -117,16 +121,13 @@ func TestSegmentCompleter(t *testing.T) {
 					continue main
 				}
 			}
-			ret = make([][]rune, len(tree.Children))
-			for idx, r := range tree.Children {
-				ret[idx] = []rune(r.Name)
-			}
-
-			return ret
 		}
 
-		logex.Info(rs(ret), n, tree)
-		return [][]rune{[]rune(tree.Name)}
+		ret = make([][]rune, len(tree.Children))
+		for idx, r := range tree.Children {
+			ret[idx] = []rune(r.Name)
+		}
+		return ret
 	})
 
 	// a
@@ -142,7 +143,7 @@ func TestSegmentCompleter(t *testing.T) {
 		Ret   [][]rune
 		Share int
 	}{
-		{"", 0, sr("a", "b"), 0},
+		{"", 0, sr("a", "b", "route"), 0},
 		{"a", 1, sr(""), 1},
 		{"a ", 2, sr("a1", "a2"), 0},
 		{"a a", 3, sr("1", "2"), 1},
@@ -151,10 +152,11 @@ func TestSegmentCompleter(t *testing.T) {
 		{"a a1 a", 6, sr("11", "12"), 1},
 		{"a a1 a1", 7, sr("1", "2"), 2},
 		{"a a1 a11", 8, sr(""), 3},
+		{"route add", 9, sr("", "domain"), 3},
 	}
 	for i, r := range ret {
 		newLine, length := s.Do([]rune(r.Line), r.Pos)
-		test.Equal(newLine, r.Ret, fmt.Errorf("%v", i))
+		test.Equal(rs(newLine), rs(r.Ret), fmt.Errorf("%v", i))
 		test.Equal(length, r.Share, fmt.Errorf("%v", i))
 	}
 }
