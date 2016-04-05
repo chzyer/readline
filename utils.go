@@ -5,8 +5,6 @@ import (
 	"bytes"
 	"strconv"
 
-	"github.com/chzyer/readline/runes"
-
 	"golang.org/x/crypto/ssh/terminal"
 )
 

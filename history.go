@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/chzyer/readline/runes"
 )
 
 type hisItem struct {

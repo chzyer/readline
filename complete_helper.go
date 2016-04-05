@@ -3,8 +3,6 @@ package readline
 import (
 	"bytes"
 	"strings"
-
-	"github.com/chzyer/readline/runes"
 )
 
 type PrefixCompleterInterface interface {

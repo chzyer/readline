@@ -5,8 +5,6 @@ import (
 	"bytes"
 	"io"
 	"strings"
-
-	"github.com/chzyer/readline/runes"
 )
 
 type runeBufferBck struct {

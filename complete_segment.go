@@ -1,7 +1,5 @@
 package readline
 
-import "github.com/chzyer/readline/runes"
-
 type SegmentCompleter interface {
 	// a
 	// |- a1

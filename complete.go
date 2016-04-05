@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-
-	"github.com/chzyer/readline/runes"
 )
 
 type AutoCompleter interface {
