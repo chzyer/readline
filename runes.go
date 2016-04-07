@@ -154,3 +154,14 @@ aggregate:
 	}
 	return
 }
+
+func TrimSpaceLeft(in []rune) []rune {
+	firstIndex := 0
+	for i, r := range in {
+		if unicode.IsSpace(r) == false {
+			firstIndex = i
+			break
+		}
+	}
+	return in[firstIndex:]
+}
