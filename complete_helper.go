@@ -73,7 +73,7 @@ func (p *PrefixCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int
 }
 
 func Do(p PrefixCompleterInterface, line []rune, pos int) (newLine [][]rune, offset int) {
-	line = line[:pos]
+	line = runes.TrimSpaceLeft(line[:pos])
 	goNext := false
 	var lineCompleter PrefixCompleterInterface
 	for _, child := range p.GetChildren() {

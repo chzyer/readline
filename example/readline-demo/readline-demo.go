@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chzyer/readline"
+	"github.com/michalpristas/readline"
 )
 
 func usage(w io.Writer) {
