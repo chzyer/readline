@@ -154,6 +154,11 @@ func TestSegmentCompleter(t *testing.T) {
 		{"a a1 a11", 8, sr(""), 3},
 		{"route add", 9, sr("", "domain"), 3},
 	}
+	for _, r := range ret {
+		for idx, rr := range r.Ret {
+			r.Ret[idx] = append(rr, ' ')
+		}
+	}
 	for i, r := range ret {
 		newLine, length := s.Do([]rune(r.Line), r.Pos)
 		test.Equal(rs(newLine), rs(r.Ret), fmt.Errorf("%v", i))
