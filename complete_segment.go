@@ -69,5 +69,8 @@ func (c *SegmentComplete) Do(line []rune, pos int) (newLine [][]rune, offset int
 
 	cands := c.DoSegment(segment, idx)
 	newLine, offset = RetSegment(segment, cands, idx)
+	for idx := range newLine {
+		newLine[idx] = append(newLine[idx], ' ')
+	}
 	return newLine, offset
 }

@@ -287,6 +287,8 @@ type RemoteCli struct {
 	conn        net.Conn
 	raw         RawMode
 	receiveChan chan struct{}
+	inited      int32
+	isTerminal  *bool
 
 	data  bytes.Buffer
 	dataM sync.Mutex
@@ -297,13 +299,18 @@ func NewRemoteCli(conn net.Conn) (*RemoteCli, error) {
 		conn:        conn,
 		receiveChan: make(chan struct{}),
 	}
-	if err := r.init(); err != nil {
-		return nil, err
-	}
 	return r, nil
 }
 
+func (r *RemoteCli) MarkIsTerminal(is bool) {
+	r.isTerminal = &is
+}
+
 func (r *RemoteCli) init() error {
+	if !atomic.CompareAndSwapInt32(&r.inited, 0, 1) {
+		return nil
+	}
+
 	if err := r.reportIsTerminal(); err != nil {
 		return err
 	}
@@ -329,9 +336,9 @@ func (r *RemoteCli) writeMsg(m *Message) error {
 func (r *RemoteCli) Write(b []byte) (int, error) {
 	m := NewMessage(T_DATA, b)
 	r.dataM.Lock()
-	n, err := m.WriteTo(r.conn)
+	_, err := m.WriteTo(r.conn)
 	r.dataM.Unlock()
-	return n, err
+	return len(b), err
 }
 
 func (r *RemoteCli) reportWidth() error {
@@ -347,7 +354,12 @@ func (r *RemoteCli) reportWidth() error {
 }
 
 func (r *RemoteCli) reportIsTerminal() error {
-	isTerminal := DefaultIsTerminal()
+	var isTerminal bool
+	if r.isTerminal != nil {
+		isTerminal = *r.isTerminal
+	} else {
+		isTerminal = DefaultIsTerminal()
+	}
 	data := make([]byte, 2)
 	if isTerminal {
 		binary.BigEndian.PutUint16(data, 1)
@@ -379,12 +391,16 @@ func (r *RemoteCli) readLoop() {
 	}
 }
 
-func (r *RemoteCli) Serve() error {
+func (r *RemoteCli) ServeBy(source io.Reader) error {
+	if err := r.init(); err != nil {
+		return err
+	}
+
 	go func() {
+		defer r.Close()
 		for {
-			n, _ := io.Copy(r, os.Stdin)
+			n, _ := io.Copy(r, source)
 			if n == 0 {
-				r.writeMsg(NewMessage(T_EOF, nil))
 				break
 			}
 		}
@@ -392,6 +408,14 @@ func (r *RemoteCli) Serve() error {
 	defer r.raw.Exit()
 	r.readLoop()
 	return nil
+}
+
+func (r *RemoteCli) Close() {
+	r.writeMsg(NewMessage(T_EOF, nil))
+}
+
+func (r *RemoteCli) Serve() error {
+	return r.ServeBy(os.Stdin)
 }
 
 func ListenRemote(n, addr string, cfg *Config, h func(*Instance), onListen ...func(net.Listener) error) error {
