@@ -29,6 +29,12 @@ func SegmentFunc(f func([][]rune, int) [][]rune) AutoCompleter {
 	return &SegmentComplete{&dumpSegmentCompleter{f}}
 }
 
+func SegmentAutoComplete(completer SegmentCompleter) *SegmentComplete {
+	return &SegmentComplete{
+		SegmentCompleter: completer,
+	}
+}
+
 type SegmentComplete struct {
 	SegmentCompleter
 }
