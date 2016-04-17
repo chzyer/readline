@@ -34,6 +34,7 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 	return t, nil
 }
 
+// SleepToResume will sleep myself, and return only if I'm resumed.
 func (t *Terminal) SleepToResume() {
 	if !atomic.CompareAndSwapInt32(&t.sleeping, 0, 1) {
 		return
