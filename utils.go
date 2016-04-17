@@ -3,7 +3,11 @@ package readline
 import (
 	"bufio"
 	"bytes"
+	"os"
 	"strconv"
+	"sync"
+	"syscall"
+	"time"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -11,6 +15,35 @@ import (
 var (
 	isWindows = false
 )
+
+func SuspendMe() {
+	p, _ := os.FindProcess(os.Getppid())
+	p.Signal(syscall.SIGTSTP)
+	p, _ = os.FindProcess(os.Getpid())
+	p.Signal(syscall.SIGTSTP)
+}
+
+func WaitForResume() chan struct{} {
+	ch := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		ticker := time.NewTicker(10 * time.Millisecond)
+		t := time.Now()
+		wg.Done()
+		for {
+			now := <-ticker.C
+			if now.Sub(t) > 100*time.Millisecond {
+				break
+			}
+			t = now
+		}
+		ticker.Stop()
+		ch <- struct{}{}
+	}()
+	wg.Wait()
+	return ch
+}
 
 // IsTerminal returns true if the given file descriptor is a terminal.
 func IsTerminal(fd int) bool {

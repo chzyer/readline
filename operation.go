@@ -186,6 +186,10 @@ func (o *Operation) ioloop() {
 			if o.IsInCompleteMode() {
 				o.OnComplete()
 			}
+		case CharCtrlZ:
+			o.buf.Clean()
+			o.t.SleepToResume()
+			o.Refresh()
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
 		case CharEnter, CharCtrlJ:
