@@ -3,6 +3,7 @@ package readline
 import (
 	"bufio"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -15,6 +16,7 @@ type Terminal struct {
 	kickChan  chan struct{}
 	wg        sync.WaitGroup
 	isReading int32
+	sleeping  int32
 }
 
 func NewTerminal(cfg *Config) (*Terminal, error) {
@@ -30,6 +32,20 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 
 	go t.ioloop()
 	return t, nil
+}
+
+// SleepToResume will sleep myself, and return only if I'm resumed.
+func (t *Terminal) SleepToResume() {
+	if !atomic.CompareAndSwapInt32(&t.sleeping, 0, 1) {
+		return
+	}
+	defer atomic.StoreInt32(&t.sleeping, 0)
+
+	t.ExitRawMode()
+	ch := WaitForResume()
+	SuspendMe()
+	<-ch
+	t.EnterRawMode()
 }
 
 func (t *Terminal) EnterRawMode() (err error) {
@@ -99,6 +115,10 @@ func (t *Terminal) ioloop() {
 		expectNextChar = false
 		r, _, err := buf.ReadRune()
 		if err != nil {
+			if strings.Contains(err.Error(), "interrupted system call") {
+				expectNextChar = true
+				continue
+			}
 			break
 		}
 

@@ -4,6 +4,9 @@ package readline
 
 import "syscall"
 
+func SuspendMe() {
+}
+
 func GetStdin() int {
 	return int(syscall.Stdin)
 }
