@@ -3,10 +3,8 @@ package readline
 import (
 	"bufio"
 	"bytes"
-	"os"
 	"strconv"
 	"sync"
-	"syscall"
 	"time"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -15,13 +13,6 @@ import (
 var (
 	isWindows = false
 )
-
-func SuspendMe() {
-	p, _ := os.FindProcess(os.Getppid())
-	p.Signal(syscall.SIGTSTP)
-	p, _ = os.FindProcess(os.Getpid())
-	p.Signal(syscall.SIGTSTP)
-}
 
 func WaitForResume() chan struct{} {
 	ch := make(chan struct{})

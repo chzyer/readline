@@ -17,6 +17,13 @@ type winsize struct {
 	Ypixel uint16
 }
 
+func SuspendMe() {
+	p, _ := os.FindProcess(os.Getppid())
+	p.Signal(syscall.SIGTSTP)
+	p, _ = os.FindProcess(os.Getpid())
+	p.Signal(syscall.SIGTSTP)
+}
+
 // get width of the terminal
 func getWidth(stdoutFd int) int {
 	ws := &winsize{}
