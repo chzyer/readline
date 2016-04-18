@@ -220,6 +220,7 @@ If you test it otherwhere, whether it works fine or not, please let me know!
 * [bom-d-van/harp](https://github.com/bom-d-van/harp)
 * [abiosoft/ishell](https://github.com/abiosoft/ishell)
 * [robertkrimen/otto](https://github.com/robertkrimen/otto)
+* [Netflix/hal-9001](https://github.com/Netflix/hal-9001)
 
 # Feedback
 
