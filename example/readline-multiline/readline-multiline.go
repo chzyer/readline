@@ -28,7 +28,7 @@ func main() {
 			continue
 		}
 		cmds = append(cmds, line)
-		if !strings.Contains(line, ";") {
+		if !strings.HasSuffix(line, ";") {
 			rl.SetPrompt(">>> ")
 			continue
 		}

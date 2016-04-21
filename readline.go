@@ -152,7 +152,7 @@ func (i *Instance) SetMaskRune(r rune) {
 	i.Operation.SetMaskRune(r)
 }
 
-// change hisotry persistence in runtime
+// change history persistence in runtime
 func (i *Instance) SetHistoryPath(p string) {
 	i.Operation.SetHistoryPath(p)
 }
