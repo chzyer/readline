@@ -66,7 +66,7 @@ func (o *opCompleter) OnComplete() {
 	buf := o.op.buf
 	rs := buf.Runes()
 
-	if o.IsInCompleteMode() && runes.Equal(rs, o.candidateSource) {
+	if o.IsInCompleteMode() && o.candidateSource != nil && runes.Equal(rs, o.candidateSource) {
 		o.EnterCompleteSelectMode()
 		o.doSelect()
 		return
