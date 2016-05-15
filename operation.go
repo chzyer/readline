@@ -3,6 +3,9 @@ package readline
 import (
 	"errors"
 	"io"
+	"os"
+	"os/exec"
+	"runtime"
 )
 
 var (
@@ -190,6 +193,9 @@ func (o *Operation) ioloop() {
 			o.buf.Clean()
 			o.t.SleepToResume()
 			o.Refresh()
+		case CharCtrlL:
+			o.ClearScreen()
+			o.Refresh()
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
 		case CharEnter, CharCtrlJ:
@@ -373,6 +379,21 @@ func (o *Operation) Password(prompt string) ([]byte, error) {
 
 func (o *Operation) SetTitle(t string) {
 	o.w.Write([]byte("\033[2;" + t + "\007"))
+}
+
+func (o *Operation) ClearScreen() {
+	switch runtime.GOOS {
+	case "linux", "darwin", "freebsd", "dragonfly", "netbsd", "openbsd", "solaris":
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	case "windows":
+		cmd := exec.Command("cls")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	default:
+		// do nothing
+	}
 }
 
 func (o *Operation) Slice() ([]byte, error) {
