@@ -3,6 +3,7 @@
 package readline
 
 import (
+	"io"
 	"os"
 	"os/signal"
 	"sync"
@@ -44,6 +45,11 @@ func getWidth(stdoutFd int) int {
 
 func GetScreenWidth() int {
 	return getWidth(syscall.Stdout)
+}
+
+// ClearScreen clears the console screen
+func ClearScreen(w io.Writer) (int, error) {
+	return w.Write([]byte("\033[H"))
 }
 
 func DefaultIsTerminal() bool {

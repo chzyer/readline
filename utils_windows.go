@@ -2,7 +2,10 @@
 
 package readline
 
-import "syscall"
+import (
+	"io"
+	"syscall"
+)
 
 func SuspendMe() {
 }
@@ -22,6 +25,11 @@ func GetScreenWidth() int {
 		return -1
 	}
 	return int(info.dwSize.x)
+}
+
+// ClearScreen clears the console screen
+func ClearScreen(_ io.Writer) error {
+	return SetConsoleCursorPosition(&_COORD{0, 0})
 }
 
 func DefaultIsTerminal() bool {
