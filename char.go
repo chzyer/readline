@@ -12,6 +12,7 @@ const (
 	CharTab       = 9
 	CharCtrlJ     = 10
 	CharKill      = 11
+	CharCtrlL     = 12
 	CharEnter     = 13
 	CharNext      = 14
 	CharPrev      = 16

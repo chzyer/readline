@@ -190,6 +190,9 @@ func (o *Operation) ioloop() {
 			o.buf.Clean()
 			o.t.SleepToResume()
 			o.Refresh()
+		case CharCtrlL:
+			ClearScreen(o.w)
+			o.Refresh()
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
 		case CharEnter, CharCtrlJ:
