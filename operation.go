@@ -191,7 +191,7 @@ func (o *Operation) ioloop() {
 			o.t.SleepToResume()
 			o.Refresh()
 		case CharCtrlL:
-			o.ClearScreen()
+			ClearScreen(o.w)
 			o.Refresh()
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
@@ -376,10 +376,6 @@ func (o *Operation) Password(prompt string) ([]byte, error) {
 
 func (o *Operation) SetTitle(t string) {
 	o.w.Write([]byte("\033[2;" + t + "\007"))
-}
-
-func (o *Operation) ClearScreen() {
-	ClearScreen(o.w)
 }
 
 func (o *Operation) Slice() ([]byte, error) {
