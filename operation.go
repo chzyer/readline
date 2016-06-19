@@ -97,11 +97,18 @@ func (o *Operation) ioloop() {
 		keepInCompleteMode := false
 		r := o.t.ReadRune()
 		if r == 0 { // io.EOF
-			o.buf.Clean()
-			select {
-			case o.errchan <- io.EOF:
+			if o.buf.Len() == 0 {
+				o.buf.Clean()
+				select {
+				case o.errchan <- io.EOF:
+				}
+				break
+			} else {
+				// if stdin got io.EOF and there is something left in buffer,
+				// let's flush them by sending CharEnter.
+				// And we will got io.EOF int next loop.
+				r = CharEnter
 			}
-			break
 		}
 		isUpdateHistory := true
 
