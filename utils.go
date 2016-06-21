@@ -93,7 +93,7 @@ func escapeExKey(r rune, reader *bufio.Reader) rune {
 }
 
 // translate EscX to Meta+X
-func escapeKey(r rune) rune {
+func escapeKey(r rune, reader *bufio.Reader) rune {
 	switch r {
 	case 'b':
 		r = MetaBackward
@@ -105,6 +105,16 @@ func escapeKey(r rune) rune {
 		r = MetaTranspose
 	case CharBackspace:
 		r = MetaBackspace
+	case 'O':
+		d, _, _ := reader.ReadRune()
+		switch d {
+		case 'H':
+			r = CharLineStart
+		case 'F':
+			r = CharLineEnd
+		default:
+			reader.UnreadRune()
+		}
 	case CharEsc:
 
 	}

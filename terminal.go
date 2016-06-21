@@ -129,7 +129,7 @@ func (t *Terminal) ioloop() {
 				isEscapeEx = true
 				continue
 			}
-			r = escapeKey(r)
+			r = escapeKey(r, buf)
 		} else if isEscapeEx {
 			isEscapeEx = false
 			r = escapeExKey(r, buf)
