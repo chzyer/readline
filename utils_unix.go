@@ -44,7 +44,11 @@ func getWidth(stdoutFd int) int {
 }
 
 func GetScreenWidth() int {
-	return getWidth(syscall.Stdout)
+	w := getWidth(syscall.Stdout)
+	if w < 0 {
+		w = getWidth(syscall.Stderr)
+	}
+	return w
 }
 
 // ClearScreen clears the console screen
@@ -53,7 +57,7 @@ func ClearScreen(w io.Writer) (int, error) {
 }
 
 func DefaultIsTerminal() bool {
-	return IsTerminal(syscall.Stdin) && IsTerminal(syscall.Stdout)
+	return IsTerminal(syscall.Stdin) && (IsTerminal(syscall.Stdout) || IsTerminal(syscall.Stderr))
 }
 
 func GetStdin() int {
