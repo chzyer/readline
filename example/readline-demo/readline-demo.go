@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
@@ -16,6 +17,18 @@ func usage(w io.Writer) {
 	io.WriteString(w, completer.Tree("    "))
 }
 
+// Function constructor - constructs new function for listing given directory
+func listFiles(path string) func(string) []string {
+	return func(line string) []string {
+		names := make([]string, 0)
+		files, _ := ioutil.ReadDir(path)
+		for _, f := range files {
+			names = append(names, f.Name())
+		}
+		return names
+	}
+}
+
 var completer = readline.NewPrefixCompleter(
 	readline.PcItem("mode",
 		readline.PcItem("vi"),
@@ -23,6 +36,12 @@ var completer = readline.NewPrefixCompleter(
 	),
 	readline.PcItem("login"),
 	readline.PcItem("say",
+		readline.PcItemDynamic(listFiles("./"),
+			readline.PcItem("with",
+				readline.PcItem("following"),
+				readline.PcItem("items"),
+			),
+		),
 		readline.PcItem("hello"),
 		readline.PcItem("bye"),
 	),
@@ -119,7 +138,7 @@ func main() {
 				break
 			}
 			go func() {
-				for _ = range time.Tick(time.Second) {
+				for range time.Tick(time.Second) {
 					log.Println(line)
 				}
 			}()
