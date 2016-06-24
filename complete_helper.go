@@ -5,16 +5,23 @@ import (
 	"strings"
 )
 
+// Caller type for dynamic completion
+type DynamicCompleteFunc func(string) []string
+
 type PrefixCompleterInterface interface {
 	Print(prefix string, level int, buf *bytes.Buffer)
 	Do(line []rune, pos int) (newLine [][]rune, length int)
+	IsDynamic() bool
 	GetName() []rune
+	GetDynamicNames(line []rune) [][]rune
 	GetChildren() []PrefixCompleterInterface
 	SetChildren(children []PrefixCompleterInterface)
 }
 
 type PrefixCompleter struct {
 	Name     []rune
+	Dynamic  bool
+	Callback DynamicCompleteFunc
 	Children []PrefixCompleterInterface
 }
 
@@ -44,8 +51,20 @@ func (p *PrefixCompleter) Print(prefix string, level int, buf *bytes.Buffer) {
 	Print(p, prefix, level, buf)
 }
 
+func (p *PrefixCompleter) IsDynamic() bool {
+	return p.Dynamic
+}
+
 func (p *PrefixCompleter) GetName() []rune {
 	return p.Name
+}
+
+func (p *PrefixCompleter) GetDynamicNames(line []rune) [][]rune {
+	var names = [][]rune{}
+	for _, name := range p.Callback(string(line)) {
+		names = append(names, []rune(name+" "))
+	}
+	return names
 }
 
 func (p *PrefixCompleter) GetChildren() []PrefixCompleterInterface {
@@ -64,6 +83,15 @@ func PcItem(name string, pc ...PrefixCompleterInterface) *PrefixCompleter {
 	name += " "
 	return &PrefixCompleter{
 		Name:     []rune(name),
+		Dynamic:  false,
+		Children: pc,
+	}
+}
+
+func PcItemDynamic(callback DynamicCompleteFunc, pc ...PrefixCompleterInterface) *PrefixCompleter {
+	return &PrefixCompleter{
+		Callback: callback,
+		Dynamic:  true,
 		Children: pc,
 	}
 }
@@ -77,23 +105,32 @@ func Do(p PrefixCompleterInterface, line []rune, pos int) (newLine [][]rune, off
 	goNext := false
 	var lineCompleter PrefixCompleterInterface
 	for _, child := range p.GetChildren() {
-		childName := child.GetName()
-		if len(line) >= len(childName) {
-			if runes.HasPrefix(line, childName) {
-				if len(line) == len(childName) {
-					newLine = append(newLine, []rune{' '})
-				} else {
-					newLine = append(newLine, childName)
-				}
-				offset = len(childName)
-				lineCompleter = child
-				goNext = true
-			}
+		childNames := make([][]rune, 1)
+		if child.IsDynamic() {
+			childNames = child.GetDynamicNames(line)
 		} else {
-			if runes.HasPrefix(childName, line) {
-				newLine = append(newLine, childName[len(line):])
-				offset = len(line)
-				lineCompleter = child
+			childNames[0] = child.GetName()
+		}
+		for _, childName := range childNames {
+			if len(line) >= len(childName) {
+				if runes.HasPrefix(line, childName) {
+					if len(line) == len(childName) {
+						newLine = append(newLine, []rune{' '})
+					} else {
+						newLine = append(newLine, childName)
+						//newLine = append(newLine, []rune("bbb"))
+					}
+					offset = len(childName)
+					lineCompleter = child
+					goNext = true
+				}
+			} else {
+				if runes.HasPrefix(childName, line) {
+					newLine = append(newLine, childName[len(line):])
+					//newLine = append(newLine, []rune("ccc "))
+					offset = len(line)
+					lineCompleter = child
+				}
 			}
 		}
 	}
