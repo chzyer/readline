@@ -97,17 +97,17 @@ func PcItemDynamic(callback DynamicCompleteFunc, pc ...PrefixCompleterInterface)
 }
 
 func (p *PrefixCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int) {
-	return Do(p, line, pos)
+	return Do(p, line, pos, line)
 }
 
-func Do(p PrefixCompleterInterface, line []rune, pos int) (newLine [][]rune, offset int) {
+func Do(p PrefixCompleterInterface, line []rune, pos int, origLine []rune) (newLine [][]rune, offset int) {
 	line = runes.TrimSpaceLeft(line[:pos])
 	goNext := false
 	var lineCompleter PrefixCompleterInterface
 	for _, child := range p.GetChildren() {
 		childNames := make([][]rune, 1)
 		if child.IsDynamic() {
-			childNames = child.GetDynamicNames(line)
+			childNames = child.GetDynamicNames(origLine)
 		} else {
 			childNames[0] = child.GetName()
 		}
@@ -146,11 +146,11 @@ func Do(p PrefixCompleterInterface, line []rune, pos int) (newLine [][]rune, off
 		}
 
 		tmpLine = append(tmpLine, line[i:]...)
-		return lineCompleter.Do(tmpLine, len(tmpLine))
+		return Do(lineCompleter, tmpLine, len(tmpLine), origLine)
 	}
 
 	if goNext {
-		return lineCompleter.Do(nil, 0)
+		return Do(lineCompleter, nil, 0, origLine)
 	}
 	return
 }
