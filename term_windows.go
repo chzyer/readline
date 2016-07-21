@@ -45,9 +45,6 @@ var (
 )
 
 type (
-	short int16
-	word  uint16
-
 	coord struct {
 		x short
 		y short
