@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
@@ -39,17 +37,8 @@ func WaitForResume() chan struct{} {
 	return ch
 }
 
-// IsTerminal returns true if the given file descriptor is a terminal.
-func IsTerminal(fd int) bool {
-	return terminal.IsTerminal(fd)
-}
-
-func MakeRaw(fd int) (*terminal.State, error) {
-	return terminal.MakeRaw(fd)
-}
-
-func Restore(fd int, state *terminal.State) error {
-	err := terminal.Restore(fd, state)
+func Restore(fd int, state *State) error {
+	err := restoreTerm(fd, state)
 	if err != nil {
 		// errno 0 means everything is ok :)
 		if err.Error() == "errno 0" {
@@ -171,7 +160,7 @@ func GetInt(s []string, def int) int {
 }
 
 type RawMode struct {
-	state *terminal.State
+	state *State
 }
 
 func (r *RawMode) Enter() (err error) {
