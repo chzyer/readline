@@ -51,89 +51,73 @@ var ColorTableBg = []word{
 
 type ANSIWriter struct {
 	target io.Writer
-	ch     chan rune
 	wg     sync.WaitGroup
+	ctx    *ANSIWriterCtx
 	sync.Mutex
 }
 
 func NewANSIWriter(w io.Writer) *ANSIWriter {
 	a := &ANSIWriter{
 		target: w,
-		ch:     make(chan rune),
+		ctx:    NewANSIWriterCtx(w),
 	}
-	go a.ioloop()
 	return a
 }
 
 func (a *ANSIWriter) Close() error {
-	close(a.ch)
 	a.wg.Wait()
 	return nil
 }
 
-func (a *ANSIWriter) ioloop() {
-	a.wg.Add(1)
-	defer a.wg.Done()
+type ANSIWriterCtx struct {
+	isEsc     bool
+	isEscSeq  bool
+	arg       []string
+	target    *bufio.Writer
+	wantFlush bool
+}
 
-	var (
-		ok       bool
-		isEsc    bool
-		isEscSeq bool
+func NewANSIWriterCtx(target io.Writer) *ANSIWriterCtx {
+	return &ANSIWriterCtx{
+		target: bufio.NewWriter(target),
+	}
+}
 
-		char rune
-		arg  []string
+func (a *ANSIWriterCtx) Flush() {
+	a.target.Flush()
+}
 
-		target = bufio.NewWriter(a.target)
-	)
-
-	peek := func() rune {
-		select {
-		case ch := <-a.ch:
-			return ch
-		default:
-			return 0
+func (a *ANSIWriterCtx) process(r rune) bool {
+	if a.wantFlush {
+		if r == 0 || r == CharEsc {
+			a.wantFlush = false
+			a.target.Flush()
 		}
 	}
-
-read:
-	r := char
-	if char == 0 {
-		r, ok = <-a.ch
-		if !ok {
-			target.Flush()
-			return
-		}
-	} else {
-		char = 0
-	}
-
-	if isEscSeq {
-		isEscSeq = a.ioloopEscSeq(target, r, &arg)
-		goto read
+	if a.isEscSeq {
+		a.isEscSeq = a.ioloopEscSeq(a.target, r, &a.arg)
+		return true
 	}
 
 	switch r {
 	case CharEsc:
-		isEsc = true
+		a.isEsc = true
 	case '[':
-		if isEsc {
-			arg = nil
-			isEscSeq = true
-			isEsc = false
+		if a.isEsc {
+			a.arg = nil
+			a.isEscSeq = true
+			a.isEsc = false
 			break
 		}
 		fallthrough
 	default:
-		target.WriteRune(r)
-		char = peek()
-		if char == 0 || char == CharEsc {
-			target.Flush()
-		}
+		a.target.WriteRune(r)
+		a.wantFlush = true
 	}
-	goto read
+	return true
 }
 
-func (a *ANSIWriter) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) bool {
+func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) bool {
 	arg := *argptr
 	var err error
 
@@ -217,8 +201,9 @@ func (a *ANSIWriter) Write(b []byte) (int, error) {
 			return off, io.ErrShortWrite
 		}
 		off += size
-		a.ch <- r
+		a.ctx.process(r)
 	}
+	a.ctx.Flush()
 	return off, nil
 }
 
