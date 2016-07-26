@@ -259,6 +259,28 @@ func (r *RuneBuffer) MoveToNextWord() {
 	})
 }
 
+func (r *RuneBuffer) MoveToEndWord() {
+	r.Refresh(func() {
+		// already at the end, so do nothing
+		if r.idx == len(r.buf) {
+			return
+		}
+		// if we are at the end of a word already, go to next
+		if !IsWordBreak(r.buf[r.idx]) && IsWordBreak(r.buf[r.idx+1]) {
+			r.idx++
+		}
+
+		// keep going until at the end of a word
+		for i := r.idx + 1; i < len(r.buf); i++ {
+			if IsWordBreak(r.buf[i]) && !IsWordBreak(r.buf[i-1]) {
+				r.idx = i - 1
+				return
+			}
+		}
+		r.idx = len(r.buf)
+	})
+}
+
 func (r *RuneBuffer) BackEscapeWord() {
 	r.Refresh(func() {
 		if r.idx == 0 {
