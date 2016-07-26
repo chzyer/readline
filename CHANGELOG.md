@@ -1,5 +1,12 @@
 # ChangeLog
 
+### 1.4 - 2016-07-25
+
+* [#60][60] Support dynamic autocompletion
+* Fix ANSI parser on Windows
+* Fix wrong column width in complete mode on Windows
+* Remove dependent package "golang.org/x/crypto/ssh/terminal"
+
 ### 1.3 - 2016-05-09
 
 * [#38][38] add SetChildren for prefix completer interface
