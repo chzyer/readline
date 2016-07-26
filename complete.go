@@ -1,6 +1,7 @@
 package readline
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -186,11 +187,18 @@ func (o *opCompleter) CompleteRefresh() {
 			colWidth = w
 		}
 	}
-	colNum := o.width / (colWidth + o.candidateOff + 2)
-	o.candidateColNum = colNum
-	buf := bytes.NewBuffer(nil)
-	buf.Write(bytes.Repeat([]byte("\n"), lineCnt))
+	colWidth += o.candidateOff + 1
 	same := o.op.buf.RuneSlice(-o.candidateOff)
+
+	// -1 to avoid reach the end of line
+	width := o.width - 1
+	colNum := width / colWidth
+	colWidth += (width - (colWidth * colNum)) / colNum
+
+	o.candidateColNum = colNum
+	buf := bufio.NewWriter(o.w)
+	buf.Write(bytes.Repeat([]byte("\n"), lineCnt))
+
 	colIdx := 0
 	lines := 1
 	buf.WriteString("\033[J")
@@ -202,11 +210,11 @@ func (o *opCompleter) CompleteRefresh() {
 		buf.WriteString(string(same))
 		buf.WriteString(string(c))
 		buf.Write(bytes.Repeat([]byte(" "), colWidth-len(c)))
+
 		if inSelect {
 			buf.WriteString("\033[0m")
 		}
 
-		buf.WriteString("  ")
 		colIdx++
 		if colIdx == colNum {
 			buf.WriteString("\n")
@@ -218,7 +226,7 @@ func (o *opCompleter) CompleteRefresh() {
 	// move back
 	fmt.Fprintf(buf, "\033[%dA\r", lineCnt-1+lines)
 	fmt.Fprintf(buf, "\033[%dC", o.op.buf.idx+o.op.buf.PromptLen())
-	o.w.Write(buf.Bytes())
+	buf.Flush()
 }
 
 func (o *opCompleter) aggCandidate(candidate [][]rune) int {
