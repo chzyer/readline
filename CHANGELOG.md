@@ -55,3 +55,4 @@
 [48]: https://github.com/chzyer/readline/pull/48
 [49]: https://github.com/chzyer/readline/pull/49
 [53]: https://github.com/chzyer/readline/pull/53
+[60]: https://github.com/chzyer/readline/pull/60
