@@ -5,6 +5,7 @@ import (
 	"container/list"
 	"fmt"
 	"os"
+	"sync"
 	"strings"
 )
 
@@ -25,6 +26,7 @@ type opHistory struct {
 	historyVer int64
 	current    *list.Element
 	fd         *os.File
+	fdLock	   sync.Mutex
 }
 
 func newOpHistory(cfg *Config) (o *opHistory) {
@@ -41,6 +43,8 @@ func (o *opHistory) Reset() {
 }
 
 func (o *opHistory) IsHistoryClosed() bool {
+	o.fdLock.Lock()
+	defer o.fdLock.Unlock()
 	return o.fd.Fd() == ^(uintptr(0))
 }
 
@@ -58,6 +62,8 @@ func (o *opHistory) initHistory() {
 
 // only called by newOpHistory
 func (o *opHistory) historyUpdatePath(path string) {
+	o.fdLock.Lock()
+	defer o.fdLock.Unlock()
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		return
@@ -93,6 +99,8 @@ func (o *opHistory) Compact() {
 }
 
 func (o *opHistory) Rewrite() {
+	o.fdLock.Lock()
+	defer o.fdLock.Unlock()
 	if o.cfg.HistoryFile == "" {
 		return
 	}
@@ -123,6 +131,8 @@ func (o *opHistory) Rewrite() {
 }
 
 func (o *opHistory) Close() {
+	o.fdLock.Lock()
+	defer o.fdLock.Unlock()
 	if o.fd != nil {
 		o.fd.Close()
 	}
@@ -267,6 +277,8 @@ func (o *opHistory) Revert() {
 }
 
 func (o *opHistory) Update(s []rune, commit bool) (err error) {
+	o.fdLock.Lock()
+	defer o.fdLock.Unlock()
 	s = runes.Copy(s)
 	if o.current == nil {
 		o.Push(s)
