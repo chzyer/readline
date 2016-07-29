@@ -217,6 +217,7 @@ If you test it otherwhere, whether it works fine or not, please let me know!
 ## Who is using Readline
 
 * [cockroachdb/cockroach](https://github.com/cockroachdb/cockroach)
+* [remind101/empire](https://github.com/remind101/empire)
 * [youtube/doorman](https://github.com/youtube/doorman)
 * [bom-d-van/harp](https://github.com/bom-d-van/harp)
 * [abiosoft/ishell](https://github.com/abiosoft/ishell)
