@@ -5,8 +5,8 @@ import (
 	"container/list"
 	"fmt"
 	"os"
-	"sync"
 	"strings"
+	"sync"
 )
 
 type hisItem struct {
@@ -26,7 +26,7 @@ type opHistory struct {
 	historyVer int64
 	current    *list.Element
 	fd         *os.File
-	fdLock	   sync.Mutex
+	fdLock     sync.Mutex
 }
 
 func newOpHistory(cfg *Config) (o *opHistory) {
@@ -85,7 +85,7 @@ func (o *opHistory) historyUpdatePath(path string) {
 		o.Compact()
 	}
 	if total > o.cfg.HistoryLimit {
-		o.Rewrite()
+		o.rewriteLocked()
 	}
 	o.historyVer++
 	o.Push(nil)
@@ -101,6 +101,10 @@ func (o *opHistory) Compact() {
 func (o *opHistory) Rewrite() {
 	o.fdLock.Lock()
 	defer o.fdLock.Unlock()
+	o.rewriteLocked()
+}
+
+func (o *opHistory) rewriteLocked() {
 	if o.cfg.HistoryFile == "" {
 		return
 	}
