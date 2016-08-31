@@ -411,9 +411,7 @@ func (r *RuneBuffer) SetOffset(offset string) {
 }
 
 func (r *RuneBuffer) print() {
-	if r.offset != "" {
-		r.w.Write(r.output())
-	}
+	r.w.Write(r.output())
 	r.hadClean = false
 }
 
