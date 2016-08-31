@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
 )
 
 var (
@@ -54,8 +56,9 @@ func IsPrintable(key rune) bool {
 }
 
 // translate Esc[X
-func escapeExKey(r rune, reader *bufio.Reader) rune {
-	switch r {
+func escapeExKey(key *escapeKeyPair) rune {
+	var r rune
+	switch key.typ {
 	case 'D':
 		r = CharBackward
 	case 'C':
@@ -68,17 +71,51 @@ func escapeExKey(r rune, reader *bufio.Reader) rune {
 		r = CharLineStart
 	case 'F':
 		r = CharLineEnd
-	default:
-		if r == '3' && reader != nil {
-			d, _, _ := reader.ReadRune()
-			if d == '~' {
-				r = CharDelete
-			} else {
-				reader.UnreadRune()
-			}
+	case '~':
+		if key.attr == "3" {
+			r = CharDelete
 		}
+	default:
 	}
 	return r
+}
+
+type escapeKeyPair struct {
+	attr string
+	typ  rune
+}
+
+func (e *escapeKeyPair) Get2() (int, int, bool) {
+	sp := strings.Split(e.attr, ";")
+	if len(sp) < 2 {
+		return -1, -1, false
+	}
+	s1, err := strconv.Atoi(sp[0])
+	if err != nil {
+		return -1, -1, false
+	}
+	s2, err := strconv.Atoi(sp[1])
+	if err != nil {
+		return -1, -1, false
+	}
+	return s1, s2, true
+}
+
+func readEscKey(r rune, reader *bufio.Reader) *escapeKeyPair {
+	p := escapeKeyPair{}
+	buf := bytes.NewBuffer(nil)
+	for {
+		if r == ';' {
+		} else if unicode.IsNumber(r) {
+		} else {
+			p.typ = r
+			break
+		}
+		buf.WriteRune(r)
+		r, _, _ = reader.ReadRune()
+	}
+	p.attr = buf.String()
+	return &p
 }
 
 // translate EscX to Meta+X

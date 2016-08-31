@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"io"
 	"strings"
+	"sync"
 )
 
 type runeBufferBck struct {
@@ -25,6 +26,10 @@ type RuneBuffer struct {
 	width int
 
 	bck *runeBufferBck
+
+	offset string
+
+	sync.Mutex
 }
 
 func (r *RuneBuffer) OnWidthChange(newWidth int) {
@@ -370,6 +375,9 @@ func (r *RuneBuffer) getSplitByLine(rs []rune) []string {
 }
 
 func (r *RuneBuffer) IdxLine(width int) int {
+	if width == 0 {
+		return 0
+	}
 	sp := r.getSplitByLine(r.buf[:r.idx])
 	return len(sp) - 1
 }
@@ -379,17 +387,27 @@ func (r *RuneBuffer) CursorLineCount() int {
 }
 
 func (r *RuneBuffer) Refresh(f func()) {
+	r.Lock()
+	defer r.Unlock()
+
 	if !r.interactive {
 		if f != nil {
 			f()
 		}
 		return
 	}
+
 	r.Clean()
 	if f != nil {
 		f()
 	}
 	r.print()
+}
+
+func (r *RuneBuffer) SetOffset(offset string) {
+	r.Lock()
+	r.offset = offset
+	r.Unlock()
 }
 
 func (r *RuneBuffer) print() {
@@ -473,15 +491,21 @@ func (r *RuneBuffer) SetPrompt(prompt string) {
 
 func (r *RuneBuffer) cleanOutput(w io.Writer, idxLine int) {
 	buf := bufio.NewWriter(w)
-	buf.Write([]byte("\033[J")) // just like ^k :)
 
-	if idxLine == 0 {
-		io.WriteString(buf, "\033[2K\r")
+	if r.width == 0 {
+		buf.WriteString(strings.Repeat("\r\b", len(r.buf)+r.PromptLen()))
+		buf.Write([]byte("\033[J"))
 	} else {
-		for i := 0; i < idxLine; i++ {
-			io.WriteString(buf, "\033[2K\r\033[A")
+		buf.Write([]byte("\033[J")) // just like ^k :)
+		if idxLine == 0 {
+			buf.WriteString("\033[2K")
+			buf.WriteString("\r")
+		} else {
+			for i := 0; i < idxLine; i++ {
+				io.WriteString(buf, "\033[2K\r\033[A")
+			}
+			io.WriteString(buf, "\033[2K\r")
 		}
-		io.WriteString(buf, "\033[2K\r")
 	}
 	buf.Flush()
 	return
