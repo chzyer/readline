@@ -17,6 +17,8 @@ type Terminal struct {
 	wg        sync.WaitGroup
 	isReading int32
 	sleeping  int32
+
+	sizeChan chan string
 }
 
 func NewTerminal(cfg *Config) (*Terminal, error) {
@@ -28,6 +30,7 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 		kickChan: make(chan struct{}, 1),
 		outchan:  make(chan rune),
 		stopChan: make(chan struct{}, 1),
+		sizeChan: make(chan string, 1),
 	}
 
 	go t.ioloop()
@@ -58,6 +61,18 @@ func (t *Terminal) ExitRawMode() (err error) {
 
 func (t *Terminal) Write(b []byte) (int, error) {
 	return t.cfg.Stdout.Write(b)
+}
+
+type termSize struct {
+	left int
+	top  int
+}
+
+func (t *Terminal) GetOffset(f func(offset string)) {
+	go func() {
+		f(<-t.sizeChan)
+	}()
+	t.Write([]byte("\033[6n"))
 }
 
 func (t *Terminal) Print(s string) {
@@ -132,7 +147,24 @@ func (t *Terminal) ioloop() {
 			r = escapeKey(r, buf)
 		} else if isEscapeEx {
 			isEscapeEx = false
-			r = escapeExKey(r, buf)
+			if key := readEscKey(r, buf); key != nil {
+				r = escapeExKey(key)
+				// offset
+				if key.typ == 'R' {
+					if _, _, ok := key.Get2(); ok {
+						select {
+						case t.sizeChan <- key.attr:
+						default:
+						}
+					}
+					expectNextChar = true
+					continue
+				}
+			}
+			if r == 0 {
+				expectNextChar = true
+				continue
+			}
 		}
 
 		expectNextChar = true

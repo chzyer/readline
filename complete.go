@@ -58,10 +58,13 @@ func (o *opCompleter) nextCandidate(i int) {
 	}
 }
 
-func (o *opCompleter) OnComplete() {
+func (o *opCompleter) OnComplete() bool {
+	if o.width == 0 {
+		return false
+	}
 	if o.IsInCompleteSelectMode() {
 		o.doSelect()
-		return
+		return true
 	}
 
 	buf := o.op.buf
@@ -70,7 +73,7 @@ func (o *opCompleter) OnComplete() {
 	if o.IsInCompleteMode() && o.candidateSource != nil && runes.Equal(rs, o.candidateSource) {
 		o.EnterCompleteSelectMode()
 		o.doSelect()
-		return
+		return true
 	}
 
 	o.ExitCompleteSelectMode()
@@ -78,7 +81,7 @@ func (o *opCompleter) OnComplete() {
 	newLines, offset := o.op.cfg.AutoComplete.Do(rs, buf.idx)
 	if len(newLines) == 0 {
 		o.ExitCompleteMode(false)
-		return
+		return true
 	}
 
 	// only Aggregate candidates in non-complete mode
@@ -86,18 +89,19 @@ func (o *opCompleter) OnComplete() {
 		if len(newLines) == 1 {
 			buf.WriteRunes(newLines[0])
 			o.ExitCompleteMode(false)
-			return
+			return true
 		}
 
 		same, size := runes.Aggregate(newLines)
 		if size > 0 {
 			buf.WriteRunes(same)
 			o.ExitCompleteMode(false)
-			return
+			return true
 		}
 	}
 
 	o.EnterCompleteMode(offset, newLines)
+	return true
 }
 
 func (o *opCompleter) IsInCompleteSelectMode() bool {

@@ -153,15 +153,26 @@ func (o *Operation) ioloop() {
 				o.t.Bell()
 				break
 			}
-			o.OnComplete()
-			keepInCompleteMode = true
+			if o.OnComplete() {
+				keepInCompleteMode = true
+			} else {
+				o.t.Bell()
+				break
+			}
+
 		case CharBckSearch:
-			o.SearchMode(S_DIR_BCK)
+			if !o.SearchMode(S_DIR_BCK) {
+				o.t.Bell()
+				break
+			}
 			keepInSearchMode = true
 		case CharCtrlU:
 			o.buf.KillFront()
 		case CharFwdSearch:
-			o.SearchMode(S_DIR_FWD)
+			if !o.SearchMode(S_DIR_FWD) {
+				o.t.Bell()
+				break
+			}
 			keepInSearchMode = true
 		case CharKill:
 			o.buf.Kill()
@@ -345,6 +356,7 @@ func (o *Operation) Runes() ([]rune, error) {
 	if o.cfg.Listener != nil {
 		o.cfg.Listener.OnChange(nil, 0, 0)
 	}
+
 	o.buf.Refresh(nil) // print prompt
 	o.t.KickRead()
 	select {
