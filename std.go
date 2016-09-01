@@ -89,7 +89,7 @@ loop:
 		select {
 		case <-c.notify:
 			c.read, c.err = os.Stdin.Read(c.data)
-			<-c.notify
+			c.notify <- struct{}{}
 		case <-c.stop:
 			break loop
 		}
