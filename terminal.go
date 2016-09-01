@@ -3,6 +3,7 @@ package readline
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -109,7 +110,11 @@ func (t *Terminal) KickRead() {
 
 func (t *Terminal) ioloop() {
 	t.wg.Add(1)
-	defer t.wg.Done()
+	defer func() {
+		t.wg.Done()
+		close(t.outchan)
+	}()
+
 	var (
 		isEscape       bool
 		isEscapeEx     bool
@@ -182,7 +187,7 @@ func (t *Terminal) ioloop() {
 			t.outchan <- r
 		}
 	}
-	close(t.outchan)
+
 }
 
 func (t *Terminal) Bell() {
@@ -193,7 +198,10 @@ func (t *Terminal) Close() error {
 	if atomic.SwapInt32(&t.closed, 1) != 0 {
 		return nil
 	}
-	t.stopChan <- struct{}{}
+	if closer, ok := t.cfg.Stdin.(io.Closer); ok {
+		closer.Close()
+	}
+	close(t.stopChan)
 	t.wg.Wait()
 	return t.ExitRawMode()
 }
