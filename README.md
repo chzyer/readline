@@ -1,7 +1,5 @@
 <p align="center">
-
-[![Readline](http://0xdf.com:39178/logo.png)](hello)
-
+<img src="http://0xdf.com:39178/logo.png" />
 </p>
 
 ----
