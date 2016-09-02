@@ -19,7 +19,7 @@
 	align="middle" height="50" /></a>
 <a href="https://github.com/remind101/empire">
 	<img src="https://github.com/remind101/empire/blob/master/empire.png"
-    align="middle" height="50" /></a>
+    align="middle" height="50" /> empire</a>
 
 
 
