@@ -1,15 +1,18 @@
+[![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
+[![Version](https://img.shields.io/github/tag/chzyer/readline.svg)](https://github.com/chzyer/readline/releases)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
+[![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)
+[![OpenCollective](https://opencollective.com/readline/badge/backers.svg)](#backers)
+[![OpenCollective](https://opencollective.com/readline/badge/sponsors.svg)](#sponsors)
+
+
 <p align="center">
 <img src="http://0xdf.com:39178/logo.png" />
 </p>
 
 ----
 
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
-[![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
-[![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/chzyer/readline?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) 
-[![OpenCollective](https://opencollective.com/readline/badge/backers.svg)](#backers)
-[![OpenCollective](https://opencollective.com/readline/badge/sponsors.svg)](#sponsors)
+
 
 Readline is A Pure Go Implementation of a libreadline-style Library.  
 The goal is to be a powerful alternater for GNU-Readline.
