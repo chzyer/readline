@@ -6,7 +6,7 @@
 [![OpenCollective](https://opencollective.com/readline/badge/sponsors.svg)](#sponsors)
 
 <p align="center">
-<img src="http://0xdf.com:39178/logo.png" />
+<img src="http://0xdf.com:39178/logo.png?1" />
 </p>
 
 
