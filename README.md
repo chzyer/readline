@@ -1,7 +1,7 @@
-<p style="float:right">
+<div align="right">
 <a href="#backers"><img src="https://opencollective.com/readline/badge/backers.svg"></a>
 <a href="#sponsors"><img src="https://opencollective.com/readline/badge/sponsors.svg"></a>
-</p>
+</div>
 
 [![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
