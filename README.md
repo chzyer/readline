@@ -5,11 +5,6 @@
 [![OpenCollective](https://opencollective.com/readline/badge/backers.svg)](#backers)
 [![OpenCollective](https://opencollective.com/readline/badge/sponsors.svg)](#sponsors)
 
-<p align="right">
-<a href="#backers"><img src="https://opencollective.com/readline/badge/backers.svg"></a>
-<a href="#sponsors"><img src="https://opencollective.com/readline/badge/sponsors.svg"></a>
-</p>
-
 <p align="center">
 <img src="http://0xdf.com:39178/logo.png" />
 </p>
