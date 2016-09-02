@@ -16,7 +16,13 @@
 	
 [![cockroachdb](https://img.shields.io/github/stars/cockroachdb/cockroach.svg?label=cockroachdb/cockroach)](https://github.com/cockroachdb/cockroach)
 [![empire](https://img.shields.io/github/stars/remind101/empire.svg?label=remind101/empire)](https://github.com/remind101/empire)
-
+[![youtube/doorman](https://img.shields.io/github/stars/youtube/doorman.svg?label=youtube/doorman)](https://github.com/youtube/doorman)
+[![bom-d-van/harp](https://img.shields.io/github/stars/bom-d-van/harp.svg?label=bom-d-van/harp)](https://github.com/bom-d-van/harp)
+[![abiosoft/ishell](https://img.shields.io/github/stars/abiosoft/ishell.svg?label=abiosoft/ishell)](https://github.com/abiosoft/ishell)
+[![robertkrimen/otto](https://img.shields.io/github/stars/robertkrimen/otto.svg?label=robertkrimen/otto)](https://github.com/robertkrimen/otto)
+[![Netflix/hal-9001](https://img.shields.io/github/stars/Netflix/hal-9001.svg?label=Netflix/hal-9001)](https://github.com/Netflix/hal-9001)
+[![docker/go-p9p](https://img.shields.io/github/stars/docker/go-p9p.svg?label=docker/go-p9p)](https://github.com/docker/go-p9p)
+[![mehrdadrad/mylg](https://img.shields.io/github/stars/mehrdadrad/mylg.svg?label=mehrdadrad/mylg)](https://github.com/mehrdadrad/mylg)
 
 
 
