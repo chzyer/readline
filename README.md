@@ -8,17 +8,6 @@
 <p align="center">
 <img src="http://0xdf.com:39178/logo.png?1" />
 </p>
-
-
-Readline is A Pure Go Implementation of a libreadline-style Library.  
-The goal is to be a powerful alternater for GNU-Readline.
-
-
-**WHY:**
-Readline will support most of features which GNU Readline is supported, and provide a pure go environment and a MIT license.
-
-It can also provides shell-like interactives by using [flagly](https://github.com/chzyer/flagly) (demo: [flagly-shell](https://github.com/chzyer/flagly/blob/master/demo/flagly-shell/flagly-shell.go))
-
 [![asciicast](https://asciinema.org/a/32oseof9mkilg7t7d4780qt4m.png)](https://asciinema.org/a/32oseof9mkilg7t7d4780qt4m)
 
 
