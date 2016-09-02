@@ -9,10 +9,9 @@
 <img src="http://0xdf.com:39178/logo.png?1" />
 <a href="https://asciinema.org/a/32oseof9mkilg7t7d4780qt4m" target="_blank"><img src="https://asciinema.org/a/32oseof9mkilg7t7d4780qt4m.png" width="654"/></a>
 <img src="http://0xdf.com:39178/logo_foot.png?1" />
-<br>
-Linux/macos/Windows
 </p>
 
+Linux/macOS/Windows
 
 ## Repos using readline
 	
