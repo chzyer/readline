@@ -14,8 +14,9 @@
 
 ## In Production
 	
-![cockroachdb](https://img.shields.io/badge/cockroachdb-cockroach-blue.svg)	
-![empire](https://img.shields.io/badge/remind101-empire-blue.svg)
+* [![cockroachdb](https://img.shields.io/badge/cockroachdb-cockroach-blue.svg)](https://github.com/cockroachdb/cockroach) ![](https://img.shields.io/github/stars/cockroachdb/cockroach.svg)
+[![empire](https://img.shields.io/badge/remind101-empire-blue.svg)](https://github.com/remind101/empire) ![](https://img.shields.io/github/stars/remind101/empire.svg)
+
 
 
 
