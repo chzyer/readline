@@ -9,6 +9,9 @@
 <img src="http://0xdf.com:39178/logo.png?1" />
 </p>
 [![asciicast](https://asciinema.org/a/32oseof9mkilg7t7d4780qt4m.png)](https://asciinema.org/a/32oseof9mkilg7t7d4780qt4m)
+<p align="center">
+<img src="http://0xdf.com:39178/logo_foot.png?1" />
+</p>
 
 
 * [example/readline-demo](https://github.com/chzyer/readline/blob/master/example/readline-demo/readline-demo.go) The source code about the demo above
