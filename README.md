@@ -1,20 +1,18 @@
-<div align="right">
-<a href="#backers"><img src="https://opencollective.com/readline/badge/backers.svg"></a>
-<a href="#sponsors"><img src="https://opencollective.com/readline/badge/sponsors.svg"></a>
-</div>
-
 [![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
 [![Version](https://img.shields.io/github/tag/chzyer/readline.svg)](https://github.com/chzyer/readline/releases)
 [![GoDoc](https://godoc.org/github.com/chzyer/readline?status.svg)](https://godoc.org/github.com/chzyer/readline)
+[![OpenCollective](https://opencollective.com/readline/badge/backers.svg)](#backers)
+[![OpenCollective](https://opencollective.com/readline/badge/sponsors.svg)](#sponsors)
 
+<p align="right">
+<a href="#backers"><img src="https://opencollective.com/readline/badge/backers.svg"></a>
+<a href="#sponsors"><img src="https://opencollective.com/readline/badge/sponsors.svg"></a>
+</p>
 
 <p align="center">
 <img src="http://0xdf.com:39178/logo.png" />
 </p>
-
-----
-
 
 
 Readline is A Pure Go Implementation of a libreadline-style Library.  
