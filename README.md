@@ -19,13 +19,7 @@ Readline will support most of features which GNU Readline is supported, and prov
 
 It can also provides shell-like interactives by using [flagly](https://github.com/chzyer/flagly) (demo: [flagly-shell](https://github.com/chzyer/flagly/blob/master/demo/flagly-shell/flagly-shell.go))
 
-# Demo
-
-![demo](https://raw.githubusercontent.com/chzyer/readline/assets/demo.gif)
-
-Also works fine in windows
-
-![demo windows](https://raw.githubusercontent.com/chzyer/readline/assets/windows.gif)
+[![asciicast](https://asciinema.org/a/32oseof9mkilg7t7d4780qt4m.png)](https://asciinema.org/a/32oseof9mkilg7t7d4780qt4m)
 
 
 * [example/readline-demo](https://github.com/chzyer/readline/blob/master/example/readline-demo/readline-demo.go) The source code about the demo above
