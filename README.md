@@ -18,7 +18,7 @@
 	<img src="https://raw.githubusercontent.com/cockroachdb/cockroach/develop/resource/doc/cockroach_db.png" 
 	align="middle" height="50" /></a>
 	
-<a href="https://github.com/remind101/empire">
+<a href="https://github.com/remind101/empire" valign="bottom">
 	<img src="https://github.com/remind101/empire/blob/master/empire.png"
     align="middle" height="50" /> empire</a>
 
