@@ -1,4 +1,4 @@
-<p align="right">
+<p style="float:right">
 <a href="#backers"><img src="https://opencollective.com/readline/badge/backers.svg"></a>
 <a href="#sponsors"><img src="https://opencollective.com/readline/badge/sponsors.svg"></a>
 </p>
