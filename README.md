@@ -14,7 +14,7 @@
 
 ## In Production
 
-<a href="/cockroachdb/cockroach"><img src="https://raw.githubusercontent.com/cockroachdb/cockroach/develop/resource/doc/cockroach_db.png" align="middle" width="100"></a>
+<a href="/cockroachdb/cockroach"><img src="https://raw.githubusercontent.com/cockroachdb/cockroach/develop/resource/doc/cockroach_db.png" align="middle" height="50"></a>
 
 
 
