@@ -13,14 +13,9 @@
 
 
 ## In Production
-
-<a href="https://github.com/cockroachdb/cockroach">
-	<img src="https://raw.githubusercontent.com/cockroachdb/cockroach/develop/resource/doc/cockroach_db.png" 
-	align="middle" height="50" /></a>
 	
-<a href="https://github.com/remind101/empire" valign="bottom">
-	<img src="https://github.com/remind101/empire/blob/master/empire.png"
-    align="middle" height="50" /> empire</a>
+![cockroachdb](https://img.shields.io/badge/cockroachdb-cockroach-blue.svg)	
+![empire](https://img.shields.io/badge/remind101-empire-blue.svg)
 
 
 
