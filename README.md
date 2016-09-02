@@ -1,8 +1,10 @@
+<p align="center">
 
 ![Readline](http://0xdf.com:39178/logo.png)
 
+</p>
 
-# 
+----
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/chzyer/readline.svg?branch=master)](https://travis-ci.org/chzyer/readline)
