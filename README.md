@@ -12,17 +12,9 @@
 </p>
 
 
-* [example/readline-demo](https://github.com/chzyer/readline/blob/master/example/readline-demo/readline-demo.go) The source code about the demo above
-
-* [example/readline-im](https://github.com/chzyer/readline/blob/master/example/readline-im/readline-im.go) Example for how to write a IM program.
-
-* [example/readline-multiline](https://github.com/chzyer/readline/blob/master/example/readline-multiline/readline-multiline.go) Example for how to parse command which can submit by multiple time.
-
-* [example/readline-pass-strength](https://github.com/chzyer/readline/blob/master/example/readline-pass-strength/readline-pass-strength.go) A example about checking password strength, written by [@sahib](https://github.com/sahib)
-
 ## In Production
 
-![Cockroach](https://raw.githubusercontent.com/cockroachdb/cockroach/develop/resource/doc/cockroach_db.png)
+<a href="/cockroachdb/cockroach"><img src="https://raw.githubusercontent.com/cockroachdb/cockroach/develop/resource/doc/cockroach_db.png" align="middle" width="100"></a>
 
 
 
