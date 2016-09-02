@@ -11,7 +11,7 @@
 <img src="http://0xdf.com:39178/logo_foot.png?1" />
 </p>
 
-Linux/macOS/Windows
+A powerful readline library in `Linux` `macOS` `Windows`
 
 ## Repos using readline
 	
