@@ -6,6 +6,7 @@ import (
 )
 
 var runes = Runes{}
+var TabWidth = 4
 
 type Runes struct{}
 
@@ -98,6 +99,9 @@ var doubleWidth = []*unicode.RangeTable{
 }
 
 func (Runes) Width(r rune) int {
+	if r == '\t' {
+		return TabWidth
+	}
 	if unicode.IsOneOf(zeroWidth, r) {
 		return 0
 	}

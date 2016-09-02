@@ -430,7 +430,13 @@ func (r *RuneBuffer) output() []byte {
 		}
 
 	} else {
-		buf.Write([]byte(string(r.buf)))
+		for idx := range r.buf {
+			if r.buf[idx] == '\t' {
+				buf.WriteString(strings.Repeat(" ", TabWidth))
+			} else {
+				buf.WriteRune(r.buf[idx])
+			}
+		}
 		if r.isInLineEdge() {
 			buf.Write([]byte(" \b"))
 		}
