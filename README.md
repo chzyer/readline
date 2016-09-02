@@ -13,6 +13,11 @@
 
 A powerful readline library in `Linux` `macOS` `Windows`
 
+## Guide
+
+* [Demo](example/readline-demo/readline-demo.go)
+* [Shortcut](doc/shortcut.md)
+
 ## Repos using readline
 	
 [![cockroachdb](https://img.shields.io/github/stars/cockroachdb/cockroach.svg?label=cockroachdb/cockroach)](https://github.com/cockroachdb/cockroach)
@@ -26,26 +31,7 @@ A powerful readline library in `Linux` `macOS` `Windows`
 [![mehrdadrad/mylg](https://img.shields.io/github/stars/mehrdadrad/mylg.svg?label=mehrdadrad/mylg)](https://github.com/mehrdadrad/mylg)
 
 
-
-# Tested with
-
-| Environment                   | $TERM  |
-| ----------------------------- | ------ |
-| Mac OS X iTerm2               | xterm  |
-| Mac OS X default Terminal.app | xterm  |
-| Mac OS X iTerm2 Screen        | screen |
-| Mac OS X iTerm2 Tmux          | screen |
-| Ubuntu Server 14.04 LTS       | linux  |
-| Centos 7                      | linux  |
-| Windows 10                    | -      |
-
-### Notice:
-* `Ctrl`+`A` is not working in `screen` because it used as a control command by default
-
-If you test it otherwhere, whether it works fine or not, please let me know!
-
-
-# Feedback
+## Feedback
 
 If you have any questions, please submit a github issue and any pull requests is welcomed :)
 
@@ -53,7 +39,7 @@ If you have any questions, please submit a github issue and any pull requests is
 * [http://weibo.com/2145262190](http://weibo.com/2145262190)  
 
 
-# Backers
+## Backers
 
 Love Readline? Help me keep it alive by donating funds to cover project expenses!<br />
 [[Become a backer](https://opencollective.com/readline#backer)]
@@ -90,7 +76,7 @@ Love Readline? Help me keep it alive by donating funds to cover project expenses
 <a href="https://opencollective.com/readline/backer/29/website" target="_blank"><img src="https://opencollective.com/readline/backer/29/avatar.svg"></a>
 
 
-# Sponsors
+## Sponsors
 
 Become a sponsor and get your logo here on our Github page. [[Become a sponsor](https://opencollective.com/readline#sponsor)]
 
