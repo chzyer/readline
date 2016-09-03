@@ -3,6 +3,9 @@ package readline
 import (
 	"bufio"
 	"bytes"
+	"container/list"
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -12,6 +15,41 @@ import (
 
 var (
 	isWindows = false
+)
+
+const (
+	CharLineStart = 1
+	CharBackward  = 2
+	CharInterrupt = 3
+	CharDelete    = 4
+	CharLineEnd   = 5
+	CharForward   = 6
+	CharBell      = 7
+	CharCtrlH     = 8
+	CharTab       = 9
+	CharCtrlJ     = 10
+	CharKill      = 11
+	CharCtrlL     = 12
+	CharEnter     = 13
+	CharNext      = 14
+	CharPrev      = 16
+	CharBckSearch = 18
+	CharFwdSearch = 19
+	CharTranspose = 20
+	CharCtrlU     = 21
+	CharCtrlW     = 23
+	CharCtrlZ     = 26
+	CharEsc       = 27
+	CharEscapeEx  = 91
+	CharBackspace = 127
+)
+
+const (
+	MetaBackward rune = -iota - 1
+	MetaForward
+	MetaDelete
+	MetaBackspace
+	MetaTranspose
 )
 
 // WaitForResume need to call before current process got suspend.
@@ -210,4 +248,27 @@ func (r *RawMode) Exit() error {
 		return nil
 	}
 	return Restore(GetStdin(), r.state)
+}
+
+// -----------------------------------------------------------------------------
+
+func sleep(n int) {
+	Debug(n)
+	time.Sleep(2000 * time.Millisecond)
+}
+
+// print a linked list to Debug()
+func debugList(l *list.List) {
+	idx := 0
+	for e := l.Front(); e != nil; e = e.Next() {
+		Debug(idx, fmt.Sprintf("%+v", e.Value))
+		idx++
+	}
+}
+
+// append log info to another file
+func Debug(o ...interface{}) {
+	f, _ := os.OpenFile("debug.tmp", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	fmt.Fprintln(f, o...)
+	f.Close()
 }
