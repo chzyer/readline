@@ -66,12 +66,13 @@ func Line(prompt string) (string, error) {
 }
 
 type CancelableStdin struct {
-	mutex  sync.Mutex
-	stop   chan struct{}
-	notify chan struct{}
-	data   []byte
-	read   int
-	err    error
+	mutex       sync.Mutex
+	stop        chan struct{}
+	notify      chan struct{}
+	data        []byte
+	read        int
+	err         error
+	ioloopFired bool
 }
 
 func NewCancelableStdin() *CancelableStdin {
@@ -79,7 +80,6 @@ func NewCancelableStdin() *CancelableStdin {
 		notify: make(chan struct{}),
 		stop:   make(chan struct{}),
 	}
-	go c.ioloop()
 	return c
 }
 
@@ -99,6 +99,10 @@ loop:
 func (c *CancelableStdin) Read(b []byte) (n int, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	if !c.ioloopFired {
+		c.ioloopFired = true
+		go c.ioloop()
+	}
 
 	c.data = b
 	c.notify <- struct{}{}
