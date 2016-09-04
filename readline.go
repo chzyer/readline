@@ -87,7 +87,7 @@ func (c *Config) Init() error {
 	}
 	c.inited = true
 	if c.Stdin == nil {
-		c.Stdin = Stdin
+		c.Stdin = NewCancelableStdin(Stdin)
 	}
 	if c.Stdout == nil {
 		c.Stdout = Stdout
