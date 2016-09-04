@@ -66,14 +66,13 @@ func Line(prompt string) (string, error) {
 }
 
 type CancelableStdin struct {
-	r           io.Reader
-	mutex       sync.Mutex
-	stop        chan struct{}
-	notify      chan struct{}
-	data        []byte
-	read        int
-	err         error
-	ioloopFired bool
+	r      io.Reader
+	mutex  sync.Mutex
+	stop   chan struct{}
+	notify chan struct{}
+	data   []byte
+	read   int
+	err    error
 }
 
 func NewCancelableStdin(r io.Reader) *CancelableStdin {
