@@ -75,6 +75,13 @@ func (r *RuneBuffer) CurrentWidth(x int) int {
 }
 
 func (r *RuneBuffer) PromptLen() int {
+	r.Lock()
+	width := r.promptLen()
+	r.Unlock()
+	return width
+}
+
+func (r *RuneBuffer) promptLen() int {
 	return runes.WidthAll(runes.ColorFilter(r.prompt))
 }
 
@@ -371,7 +378,7 @@ func (r *RuneBuffer) isInLineEdge() bool {
 }
 
 func (r *RuneBuffer) getSplitByLine(rs []rune) []string {
-	return SplitByLine(r.PromptLen(), r.width, rs)
+	return SplitByLine(r.promptLen(), r.width, rs)
 }
 
 func (r *RuneBuffer) IdxLine(width int) int {
@@ -492,14 +499,16 @@ func (r *RuneBuffer) Set(buf []rune) {
 }
 
 func (r *RuneBuffer) SetPrompt(prompt string) {
+	r.Lock()
 	r.prompt = []rune(prompt)
+	r.Unlock()
 }
 
 func (r *RuneBuffer) cleanOutput(w io.Writer, idxLine int) {
 	buf := bufio.NewWriter(w)
 
 	if r.width == 0 {
-		buf.WriteString(strings.Repeat("\r\b", len(r.buf)+r.PromptLen()))
+		buf.WriteString(strings.Repeat("\r\b", len(r.buf)+r.promptLen()))
 		buf.Write([]byte("\033[J"))
 	} else {
 		buf.Write([]byte("\033[J")) // just like ^k :)
