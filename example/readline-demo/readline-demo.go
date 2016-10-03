@@ -68,6 +68,8 @@ func main() {
 		AutoComplete:    completer,
 		InterruptPrompt: "^C",
 		EOFPrompt:       "exit",
+
+		HistorySearchFold: true,
 	})
 	if err != nil {
 		panic(err)
