@@ -153,7 +153,7 @@ func (o *opHistory) FindBck(isNewSearch bool, rs []rune, start int) (int, *list.
 				item = item[:start]
 			}
 		}
-		idx := runes.IndexAllBck(item, rs)
+		idx := runes.IndexAllBckEx(item, rs, o.cfg.HistoryFoldSearch)
 		if idx < 0 {
 			continue
 		}
@@ -178,7 +178,7 @@ func (o *opHistory) FindFwd(isNewSearch bool, rs []rune, start int) (int, *list.
 				continue
 			}
 		}
-		idx := runes.IndexAll(item, rs)
+		idx := runes.IndexAllEx(item, rs, o.cfg.HistoryFoldSearch)
 		if idx < 0 {
 			continue
 		}
