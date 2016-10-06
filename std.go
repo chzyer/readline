@@ -93,7 +93,11 @@ loop:
 		select {
 		case <-c.notify:
 			c.read, c.err = c.r.Read(c.data)
-			c.notify <- struct{}{}
+			select {
+			case c.notify <- struct{}{}:
+			case <-c.stop:
+				break loop
+			}
 		case <-c.stop:
 			break loop
 		}
