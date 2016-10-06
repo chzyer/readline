@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 )
 
 var (
@@ -69,6 +70,7 @@ type CancelableStdin struct {
 	r      io.Reader
 	mutex  sync.Mutex
 	stop   chan struct{}
+	closed int32
 	notify chan struct{}
 	data   []byte
 	read   int
@@ -101,6 +103,9 @@ loop:
 func (c *CancelableStdin) Read(b []byte) (n int, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	if atomic.LoadInt32(&c.closed) == 1 {
+		return 0, io.EOF
+	}
 
 	c.data = b
 	c.notify <- struct{}{}
@@ -113,6 +118,8 @@ func (c *CancelableStdin) Read(b []byte) (n int, err error) {
 }
 
 func (c *CancelableStdin) Close() error {
-	close(c.stop)
+	if atomic.CompareAndSwapInt32(&c.closed, 0, 1) {
+		close(c.stop)
+	}
 	return nil
 }
