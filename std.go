@@ -112,7 +112,11 @@ func (c *CancelableStdin) Read(b []byte) (n int, err error) {
 	}
 
 	c.data = b
-	c.notify <- struct{}{}
+	select {
+	case c.notify <- struct{}{}:
+	case <-c.stop:
+		return 0, io.EOF
+	}
 	select {
 	case <-c.notify:
 		return c.read, c.err
