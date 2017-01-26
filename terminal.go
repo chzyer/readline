@@ -65,6 +65,10 @@ func (t *Terminal) Write(b []byte) (int, error) {
 	return t.cfg.Stdout.Write(b)
 }
 
+func (t *Terminal) WriteStdin(b []byte) (int, error) {
+	return t.cfg.StdinWriter.Write(b)
+}
+
 type termSize struct {
 	left int
 	top  int
