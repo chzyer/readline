@@ -277,3 +277,13 @@ func (i *Instance) SetConfig(cfg *Config) *Config {
 func (i *Instance) Refresh() {
 	i.Operation.Refresh()
 }
+
+// HistoryDisable the save of the commands into the history
+func (i *Instance) HistoryDisable() {
+	i.Operation.history.Disable()
+}
+
+// HistoryEnable the save of the commands into the history (default on)
+func (i *Instance) HistoryEnable() {
+	i.Operation.history.Enable()
+}
