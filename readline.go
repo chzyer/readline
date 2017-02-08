@@ -267,6 +267,20 @@ func (i *Instance) Write(b []byte) (int, error) {
 	return i.Stdout().Write(b)
 }
 
+// WriteStdin prefill the next Stdin fetch
+// Next time you call ReadLine() this value will be writen before the user input
+// ie :
+//  i := readline.New()
+//  i.WriteStdin([]byte("test"))
+//  _, _= i.Readline()
+//
+// gives
+//
+// > test[cursor]
+func (i *Instance) WriteStdin(val []byte) (int, error) {
+	return i.Terminal.WriteStdin(val)
+}
+
 func (i *Instance) SetConfig(cfg *Config) *Config {
 	if i.Config == cfg {
 		return cfg
