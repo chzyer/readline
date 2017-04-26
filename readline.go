@@ -44,6 +44,8 @@ type Config struct {
 	// NOTE: Listener will be triggered by (nil, 0, 0) immediately
 	Listener Listener
 
+	Painter Painter
+
 	// If VimMode is true, readline will in vim.insert mode by default
 	VimMode bool
 
@@ -147,6 +149,10 @@ func (c Config) Clone() *Config {
 
 func (c *Config) SetListener(f func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool)) {
 	c.Listener = FuncListener(f)
+}
+
+func (c *Config) SetPainter(p Painter) {
+	c.Painter = p
 }
 
 func NewEx(cfg *Config) (*Instance, error) {

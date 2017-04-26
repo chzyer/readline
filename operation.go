@@ -502,3 +502,13 @@ func (d *DumpListener) OnChange(line []rune, pos int, key rune) (newLine []rune,
 type Listener interface {
 	OnChange(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool)
 }
+
+type Painter interface {
+	Paint(line []rune, pos int) []rune
+}
+
+type defaultPainter struct{}
+
+func (p *defaultPainter) Paint(line []rune, _ int) []rune {
+	return line
+}
