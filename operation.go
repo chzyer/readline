@@ -226,6 +226,8 @@ func (o *Operation) ioloop() {
 			o.Refresh()
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
+		case CharCtrlY:
+			o.buf.Yank()
 		case CharEnter, CharCtrlJ:
 			if o.IsSearchMode() {
 				o.ExitSearchMode(false)
