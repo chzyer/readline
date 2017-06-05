@@ -117,7 +117,7 @@ func (o *opHistory) rewriteLocked() {
 
 	buf := bufio.NewWriter(fd)
 	for elem := o.history.Front(); elem != nil; elem = elem.Next() {
-		buf.WriteString(string(elem.Value.(*hisItem).Source))
+		buf.WriteString(string(elem.Value.(*hisItem).Source) + "\n")
 	}
 	buf.Flush()
 
