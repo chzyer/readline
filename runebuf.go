@@ -445,7 +445,7 @@ func (r *RuneBuffer) SetOffset(offset string) {
 }
 
 func (r *RuneBuffer) print() {
-	r.w.Write(r.output())
+	r.w.Write([]byte(r.output()))
 	r.hadClean = false
 }
 
@@ -464,15 +464,24 @@ func (r *RuneBuffer) output() []byte {
 		}
 
 	} else {
+		//XXX: output display here
+		tbuf := bytes.NewBuffer(nil)
 		for idx := range r.buf {
 			if r.buf[idx] == '\t' {
-				buf.WriteString(strings.Repeat(" ", TabWidth))
+				tbuf.WriteString(strings.Repeat(" ", TabWidth))
 			} else {
-				buf.WriteRune(r.buf[idx])
+				tbuf.WriteRune(r.buf[idx])
 			}
 		}
 		if r.isInLineEdge() {
-			buf.Write([]byte(" \b"))
+			tbuf.Write([]byte(" \b"))
+		}
+		if r.cfg.Output != nil {
+			// Transform buffer here
+			buf.WriteString(r.cfg.Output(tbuf.String()))
+		} else {
+			buf.WriteString(tbuf.String())
+
 		}
 	}
 
