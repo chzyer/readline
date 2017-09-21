@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -51,7 +50,6 @@ const (
 	MetaDelete
 	MetaBackspace
 	MetaTranspose
-	MetaHome
 )
 
 // WaitForResume need to call before current process got suspend.
@@ -99,7 +97,6 @@ func IsPrintable(key rune) bool {
 
 // translate Esc[X
 func escapeExKey(key *escapeKeyPair) rune {
-	log.Println("Escape", key)
 	var r rune
 	switch key.typ {
 	case 'D':
@@ -122,7 +119,6 @@ func escapeExKey(key *escapeKeyPair) rune {
 			r = CharLineStart
 		case "4":
 			r = CharLineEnd
-
 		}
 	default:
 	}
