@@ -97,8 +97,11 @@ func IsPrintable(key rune) bool {
 
 // translate Esc[X
 func escapeExKey(key *escapeKeyPair) rune {
+	fmt.Println("Escape key:", key)
 	var r rune
 	switch key.typ {
+	case 'Z':
+		fmt.Println("Backward??")
 	case 'D':
 		r = CharBackward
 	case 'C':
