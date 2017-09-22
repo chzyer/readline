@@ -50,6 +50,7 @@ const (
 	MetaDelete
 	MetaBackspace
 	MetaTranspose
+	MetaShiftTab
 )
 
 // WaitForResume need to call before current process got suspend.
@@ -97,11 +98,10 @@ func IsPrintable(key rune) bool {
 
 // translate Esc[X
 func escapeExKey(key *escapeKeyPair) rune {
-	fmt.Println("Escape key:", key)
 	var r rune
 	switch key.typ {
 	case 'Z':
-		fmt.Println("Backward??")
+		r = MetaShiftTab
 	case 'D':
 		r = CharBackward
 	case 'C':
