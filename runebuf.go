@@ -3,6 +3,7 @@ package readline
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -459,8 +460,8 @@ func (r *RuneBuffer) output() []byte {
 		} else {
 			buf.Write([]byte(string(r.cfg.MaskRune)))
 		}
-		if len(r.buf) > r.idx {
-			buf.Write(runes.Backspace(r.buf[r.idx:]))
+		if len(r.buf) > r.idx { // Goes back but
+			buf.Write(r.cursorPosition())
 		}
 
 	} else {
@@ -484,11 +485,35 @@ func (r *RuneBuffer) output() []byte {
 
 		}
 	}
-
 	if len(r.buf) > r.idx {
-		buf.Write(runes.Backspace(r.buf[r.idx:]))
+		buf.Write(r.cursorPosition())
 	}
 	return buf.Bytes()
+}
+
+func (r *RuneBuffer) cursorPosition() []byte {
+
+	fullWidth := runes.WidthAll(r.buf) + r.promptLen()             // full line Width
+	lineCount := LineCount(r.width-1, fullWidth) - 1               // Total line count
+	cursorWidth := (runes.WidthAll(r.buf[:r.idx])) + r.promptLen() // cursor line Width
+	desiredLine := (cursorWidth / r.width)                         // get Line position starting from prompt
+	desiredCol := cursorWidth % r.width                            // get column position starting from prompt
+	tbuf := bytes.NewBuffer(nil)
+
+	if lineCount > 0 || fullWidth == r.width {
+		tbuf.WriteString(fmt.Sprintf("\033[%dA", lineCount))
+	}
+	tbuf.WriteString("\r") // go back anyway
+	// Position cursor
+	if desiredLine > 0 {
+		tbuf.WriteString(fmt.Sprintf("\033[%dB", desiredLine)) // Reset
+	}
+	if desiredCol > 0 {
+		tbuf.WriteString(fmt.Sprintf("\033[%dC", desiredCol)) // Reset
+	}
+
+	return tbuf.Bytes()
+
 }
 
 func (r *RuneBuffer) Reset() []rune {
@@ -520,7 +545,6 @@ func (r *RuneBuffer) SetStyle(start, end int, style string) {
 	r.w.Write([]byte("\033[" + style + "m"))
 	r.w.Write([]byte(string(r.buf[start:end])))
 	r.w.Write([]byte("\033[0m"))
-	// TODO: move back
 }
 
 func (r *RuneBuffer) SetWithIdx(idx int, buf []rune) {

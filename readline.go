@@ -40,7 +40,7 @@ type Config struct {
 	// AutoCompleter will called once user press TAB
 	AutoComplete AutoCompleter
 
-	// Output transform will transform the input buffer for display i.e (highlighting)
+	// Output will transform the input buffer for display i.e (highlighting)
 	Output func(string) string
 
 	// Any key press will pass to Listener
