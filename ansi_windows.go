@@ -147,7 +147,7 @@ func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) 
 	case 'K':
 		eraseLine()
 	case 'm':
-		color := word(0)
+		color := word(0x7)
 		for _, item := range arg {
 			var c int
 			c, err = strconv.Atoi(item)
@@ -155,16 +155,21 @@ func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) 
 				w.WriteString("[" + strings.Join(arg, ";") + "m")
 				break
 			}
-			if c >= 30 && c < 40 {
-				color ^= COLOR_FINTENSITY
-				color |= ColorTableFg[c-30]
-			} else if c >= 40 && c < 50 {
-				color ^= COLOR_BINTENSITY
-				color |= ColorTableBg[c-40]
-			} else if c == 4 {
-				color |= COMMON_LVB_UNDERSCORE | ColorTableFg[7]
-			} else { // unknown code treat as reset
-				color = ColorTableFg[7]
+			switch {
+			case c == 1:
+				color |= COLOR_FINTENSITY // Add on 01
+			case c >= 30 && c < 37:
+				c -= 30
+				bits := ((c & 0x1) << 2) | c&0x2 | ((c & 0x4) >> 2) // swap bit 1 and 3, Invert red blue
+				color = color&0xFFF8 | word(bits)
+			case c >= 40 && c < 47:
+				c -= 40
+				bits := ((c & 0x1) << 2) | c&0x2 | ((c & 0x4) >> 2) // swap bit 1 and 3, Invert red blue
+				color = color&0xFF8F | (word(bits << 4))
+			case c == 4:
+				color |= COMMON_LVB_UNDERSCORE | 0x7
+			default:
+				color = 0x07
 			}
 		}
 		if err != nil {
