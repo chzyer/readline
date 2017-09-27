@@ -158,11 +158,11 @@ func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) 
 			switch {
 			case c == 1:
 				color |= COLOR_FINTENSITY // Add on 01
-			case c >= 30 && c < 37:
+			case c >= 30 && c <= 37:
 				c -= 30
 				bits := ((c & 0x1) << 2) | c&0x2 | ((c & 0x4) >> 2) // swap bit 1 and 3, Invert red blue
 				color = color&0xFFF8 | word(bits)
-			case c >= 40 && c < 47:
+			case c >= 40 && c <= 47:
 				c -= 40
 				bits := ((c & 0x1) << 2) | c&0x2 | ((c & 0x4) >> 2) // swap bit 1 and 3, Invert red blue
 				color = color&0xFF8F | (word(bits << 4))
