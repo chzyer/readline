@@ -209,10 +209,29 @@ func (o *opCompleter) CompleteRefresh() {
 	buf := bufio.NewWriter(o.w)
 	buf.Write(bytes.Repeat([]byte("\n"), lineCnt))
 
-	colIdx := 0
-	lines := 1
+	// Line skipper // Page behaviour
+	lineSkip := 0
+	if o.IsInCompleteSelectMode() {
+		targetPage := (o.candidateChoise / colNum) / o.op.cfg.MaxCompleteLines
+		lineSkip = targetPage * o.op.cfg.MaxCompleteLines
+	}
+
+	lines := 1 // do not count first line
+	realLines := 0
 	buf.WriteString("\033[J")
 	for idx, c := range o.candidate {
+		colIdx := idx % colNum // currentLine Index
+		realLines = idx/colNum + 1
+		if colIdx == 0 && idx != 0 && realLines > lineSkip+1 { // If its not the first char we increase a line
+			buf.WriteString("\n") // Print the line
+			lines++               // Increase the display line
+		}
+		if lines > o.op.cfg.MaxCompleteLines { // If lines greater than max, we exit
+			break
+		}
+		if realLines <= lineSkip { // Ignore content for the first lines
+			continue
+		}
 		inSelect := idx == o.candidateChoise && o.IsInCompleteSelectMode()
 		if inSelect {
 			buf.WriteString("\033[30;47m")
@@ -223,16 +242,6 @@ func (o *opCompleter) CompleteRefresh() {
 
 		if inSelect {
 			buf.WriteString("\033[0m")
-		}
-
-		colIdx++
-		if colIdx == colNum {
-			buf.WriteString("\n")
-			lines++
-			colIdx = 0
-		}
-		if lines > o.op.cfg.MaxCompleteLines {
-			break
 		}
 	}
 
