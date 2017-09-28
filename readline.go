@@ -39,6 +39,8 @@ type Config struct {
 
 	// AutoCompleter will called once user press TAB
 	AutoComplete AutoCompleter
+	// Complete line limit
+	MaxCompleteLines int
 
 	// Output will transform the input buffer for display i.e (highlighting)
 	Output func(string) string
@@ -117,6 +119,10 @@ func (c *Config) Init() error {
 		c.EOFPrompt = "^D"
 	} else if c.EOFPrompt == "\n" {
 		c.EOFPrompt = ""
+	}
+
+	if c.MaxCompleteLines <= 0 {
+		c.MaxCompleteLines = 9999 // Big
 	}
 
 	if c.AutoComplete == nil {

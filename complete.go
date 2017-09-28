@@ -231,6 +231,9 @@ func (o *opCompleter) CompleteRefresh() {
 			lines++
 			colIdx = 0
 		}
+		if lines > o.op.cfg.MaxCompleteLines {
+			break
+		}
 	}
 
 	// move back
