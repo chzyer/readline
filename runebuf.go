@@ -181,6 +181,9 @@ func (r *RuneBuffer) IsCursorInEnd() bool {
 
 func (r *RuneBuffer) Replace(ch rune) {
 	r.Refresh(func() {
+		if r.idx == len(r.buf) {
+			return
+		}
 		r.buf[r.idx] = ch
 	})
 }
