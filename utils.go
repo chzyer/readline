@@ -46,7 +46,7 @@ const (
 
 //Extra virtual keys
 const (
-	MetaBackward rune = -iota - 1
+	MetaBackward rune = 0xE000 + iota /*-iota - 1*/ // private unicode space?
 	MetaForward
 	MetaDelete
 	MetaBackspace

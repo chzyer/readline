@@ -2,7 +2,9 @@
 
 package readline
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 const (
 	VK_CANCEL   = 0x03
@@ -81,6 +83,8 @@ next:
 			target = CharPrev
 		case VK_DOWN:
 			target = CharNext
+		case VK_DELETE:
+			target = CharDelete
 		}
 		if target != 0 {
 			return r.write(buf, target)
