@@ -161,6 +161,9 @@ func NewEx(cfg *Config) (*Instance, error) {
 		return nil, err
 	}
 	rl := t.Readline()
+	if cfg.Painter == nil {
+		cfg.Painter = &defaultPainter{}
+	}
 	return &Instance{
 		Config:    cfg,
 		Terminal:  t,
