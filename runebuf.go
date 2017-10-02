@@ -490,11 +490,11 @@ func (r *RuneBuffer) output() []byte {
 		}
 
 	} else {
-		for idx := range r.buf {
-			if r.buf[idx] == '\t' {
+		for _, e := range r.cfg.Painter.Paint(r.buf, r.idx) {
+			if e == '\t' {
 				buf.WriteString(strings.Repeat(" ", TabWidth))
 			} else {
-				buf.WriteRune(r.buf[idx])
+				buf.WriteRune(e)
 			}
 		}
 		if r.isInLineEdge() {
