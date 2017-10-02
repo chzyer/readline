@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -486,7 +487,7 @@ func (r *RuneBuffer) output() []byte {
 			buf.Write([]byte(string(r.cfg.MaskRune)))
 		}
 		if len(r.buf) > r.idx {
-			buf.Write(runes.Backspace(r.buf[r.idx:]))
+			buf.Write(r.getBackspaceSequence())
 		}
 
 	} else {
@@ -501,11 +502,41 @@ func (r *RuneBuffer) output() []byte {
 			buf.Write([]byte(" \b"))
 		}
 	}
-
+	// cursor position
 	if len(r.buf) > r.idx {
-		buf.Write(runes.Backspace(r.buf[r.idx:]))
+		buf.Write(r.getBackspaceSequence())
 	}
 	return buf.Bytes()
+}
+
+func (r *RuneBuffer) getBackspaceSequence() []byte {
+	var sep = map[int]bool{}
+
+	var i int
+	for {
+		if i >= runes.WidthAll(r.buf) {
+			break
+		}
+
+		if i == 0 {
+			i -= r.promptLen()
+		}
+		i += r.width
+
+		sep[i] = true
+	}
+	var buf []byte
+	for i := len(r.buf); i > r.idx; i-- {
+		// move input to the left of one
+		buf = append(buf, '\b')
+		if sep[i] {
+			// up one line, go to the start of the line and move cursor right to the end (r.width)
+			buf = append(buf, "\033[A\r"+"\033["+strconv.Itoa(r.width)+"C"...)
+		}
+	}
+
+	return buf
+
 }
 
 func (r *RuneBuffer) Reset() []rune {
