@@ -22,7 +22,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gohxs/readline"
+	"github.com/chzyer/readline"
 	zxcvbn "github.com/nbutton23/zxcvbn-go"
 )
 

@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gohxs/readline"
+	"github.com/chzyer/readline"
 )
 import "log"
 

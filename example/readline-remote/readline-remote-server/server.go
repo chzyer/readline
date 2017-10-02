@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gohxs/readline"
+	"github.com/chzyer/readline"
 )
 
 func main() {
