@@ -72,7 +72,7 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 		t:       t,
 		buf:     NewRuneBuffer(t, cfg.Prompt, cfg, width),
 		outchan: make(chan []rune),
-		errchan: make(chan error),
+		errchan: make(chan error, 1),
 	}
 	op.w = op.buf.w
 	op.SetConfig(cfg)

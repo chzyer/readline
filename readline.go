@@ -54,7 +54,7 @@ type Config struct {
 
 	FuncGetWidth func() int
 
-	Stdin       io.Reader
+	Stdin       io.ReadCloser
 	StdinWriter io.Writer
 	Stdout      io.Writer
 	Stderr      io.Writer
@@ -274,6 +274,7 @@ func (i *Instance) Close() error {
 	if err := i.Terminal.Close(); err != nil {
 		return err
 	}
+	i.Config.Stdin.Close()
 	i.Operation.Close()
 	return nil
 }
