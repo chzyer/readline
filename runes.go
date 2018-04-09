@@ -141,6 +141,7 @@ var doubleWidth = []*unicode.RangeTable{
 	unicode.Hangul,
 	unicode.Hiragana,
 	unicode.Katakana,
+	unicode.So,
 }
 
 func (Runes) Width(r rune) int {
