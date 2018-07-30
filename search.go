@@ -114,8 +114,12 @@ func (o *opSearch) SearchMode(dir int) bool {
 
 func (o *opSearch) ExitSearchMode(revert bool) {
 	if revert {
-		o.history.current = o.source
-		o.buf.Set(o.history.showItem(o.history.current.Value))
+		if o.source != nil {
+			o.history.current = o.source
+			o.buf.Set(o.history.showItem(o.history.current.Value))
+		} else {
+			o.buf.Set(make([]rune, 0))
+		}
 	}
 	o.markStart, o.markEnd = 0, 0
 	o.state = S_STATE_FOUND
