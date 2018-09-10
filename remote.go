@@ -182,7 +182,7 @@ loop:
 				break
 			}
 			n, err := ctx.msg.WriteTo(r.conn)
-			ctx.reply <- &writeReply{n, err}
+			ctx.reply <- &writeReply{int(n), err}
 		case <-r.stopChan:
 			break loop
 		}
@@ -273,13 +273,12 @@ func NewMessage(t MsgType, data []byte) *Message {
 	return &Message{t, data}
 }
 
-func (m *Message) WriteTo(w io.Writer) (int, error) {
+func (m *Message) WriteTo(w io.Writer) (int64, error) {
 	buf := bytes.NewBuffer(make([]byte, 0, len(m.Data)+2+4))
 	binary.Write(buf, binary.BigEndian, int32(len(m.Data)+2))
 	binary.Write(buf, binary.BigEndian, m.Type)
 	buf.Write(m.Data)
-	n, err := buf.WriteTo(w)
-	return int(n), err
+	return buf.WriteTo(w)
 }
 
 // -----------------------------------------------------------------------------

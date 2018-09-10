@@ -108,7 +108,7 @@ func (o *Operation) ioloop() {
 	for {
 		keepInSearchMode := false
 		keepInCompleteMode := false
-		r := o.t.ReadRune()
+		r, _, _ := o.t.ReadRune()
 		if o.GetConfig().FuncFilterInputRune != nil {
 			var process bool
 			r, process = o.GetConfig().FuncFilterInputRune(r)
@@ -154,7 +154,10 @@ func (o *Operation) ioloop() {
 		}
 
 		if o.IsEnableVimMode() {
-			r = o.HandleVim(r, o.t.ReadRune)
+			r = o.HandleVim(r, func() rune {
+				c, _, _ := o.t.ReadRune()
+				return c
+			})
 			if r == 0 {
 				continue
 			}
