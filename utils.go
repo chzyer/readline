@@ -101,9 +101,17 @@ func escapeExKey(key *escapeKeyPair) rune {
 	var r rune
 	switch key.typ {
 	case 'D':
-		r = CharBackward
+		if key.attr == "1;5" {
+			r = MetaBackward
+		} else {
+			r = CharBackward
+		}
 	case 'C':
-		r = CharForward
+		if key.attr == "1;5" {
+			r = MetaForward
+		} else {
+			r = CharForward
+		}
 	case 'A':
 		r = CharPrev
 	case 'B':
