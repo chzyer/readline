@@ -6,7 +6,9 @@ import (
 )
 
 func TestRace(t *testing.T) {
-	rl, err := NewEx(&Config{})
+	rl, err := NewEx(&Config{
+		Prompt: StaticPrompt(""),
+	})
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -14,7 +16,7 @@ func TestRace(t *testing.T) {
 
 	go func() {
 		for range time.Tick(time.Millisecond) {
-			rl.SetPrompt("hello")
+			rl.SetPrompt(StaticPrompt("hello"))
 		}
 	}()
 
