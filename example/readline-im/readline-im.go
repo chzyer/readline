@@ -18,7 +18,7 @@ func main() {
 	}
 	defer rl.Close()
 
-	rl.SetPrompt("username: ")
+	rl.SetPrompt(readline.StaticPrompt("username: "))
 	username, err := rl.Readline()
 	if err != nil {
 		return
@@ -27,7 +27,7 @@ func main() {
 	log.SetOutput(rl.Stderr())
 
 	fmt.Fprintln(rl, "Hi,", username+"! My name is Dave.")
-	rl.SetPrompt(username + "> ")
+	rl.SetPrompt(readline.StaticPrompt(username + "> "))
 
 	done := make(chan struct{})
 	go func() {

@@ -80,7 +80,7 @@ func createStrengthPrompt(password []rune) string {
 }
 
 func main() {
-	rl, err := readline.New("")
+	rl, err := readline.New(readline.StaticPrompt(""))
 	if err != nil {
 		return
 	}
@@ -88,7 +88,7 @@ func main() {
 
 	setPasswordCfg := rl.GenPasswordConfig()
 	setPasswordCfg.SetListener(func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool) {
-		rl.SetPrompt(createStrengthPrompt(line))
+		rl.SetPrompt(readline.StaticPrompt(createStrengthPrompt(line)))
 		rl.Refresh()
 		return nil, 0, false
 	})

@@ -8,7 +8,7 @@ import (
 
 func main() {
 	rl, err := readline.NewEx(&readline.Config{
-		Prompt:                 "> ",
+		Prompt:                 readline.StaticPrompt("> "),
 		HistoryFile:            "/tmp/readline-multiline",
 		DisableAutoSaveHistory: true,
 	})
@@ -29,12 +29,12 @@ func main() {
 		}
 		cmds = append(cmds, line)
 		if !strings.HasSuffix(line, ";") {
-			rl.SetPrompt(">>> ")
+			rl.SetPrompt(readline.StaticPrompt(">>> "))
 			continue
 		}
 		cmd := strings.Join(cmds, " ")
 		cmds = cmds[:0]
-		rl.SetPrompt("> ")
+		rl.SetPrompt(readline.StaticPrompt("> "))
 		rl.SaveHistory(cmd)
 		println(cmd)
 	}
