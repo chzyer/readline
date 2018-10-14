@@ -1,7 +1,7 @@
 // Readline is a pure go implementation for GNU-Readline kind library.
 //
 // example:
-// 	rl, err := readline.New("> ")
+// 	rl, err := readline.New(readline.StaticPrompt("> "))
 // 	if err != nil {
 // 		panic(err)
 // 	}
