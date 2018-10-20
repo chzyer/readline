@@ -97,6 +97,7 @@ func (c *Config) Init() error {
 	if c.inited {
 		return nil
 	}
+	c.Prompt = StaticPrompt("")
 	c.inited = true
 	if c.Stdin == nil {
 		c.Stdin = NewCancelableStdin(Stdin)
