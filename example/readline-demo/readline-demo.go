@@ -72,7 +72,7 @@ func filterInput(r rune) (rune, bool) {
 
 func main() {
 	l, err := readline.NewEx(&readline.Config{
-		Prompt:          "\033[31m»\033[0m ",
+		Prompt:          readline.StaticPrompt("\033[31m»\033[0m "),
 		HistoryFile:     "/tmp/readline.tmp",
 		AutoComplete:    completer,
 		InterruptPrompt: "^C",
@@ -88,7 +88,7 @@ func main() {
 
 	setPasswordCfg := l.GenPasswordConfig()
 	setPasswordCfg.SetListener(func(line []rune, pos int, key rune) (newLine []rune, newPos int, ok bool) {
-		l.SetPrompt(fmt.Sprintf("Enter password(%v): ", len(line)))
+		l.SetPrompt(readline.StaticPrompt(fmt.Sprintf("Enter password(%v): ", len(line))))
 		l.Refresh()
 		return nil, 0, false
 	})
@@ -124,7 +124,7 @@ func main() {
 				println("current mode: emacs")
 			}
 		case line == "login":
-			pswd, err := l.ReadPassword("please enter your password: ")
+			pswd, err := l.ReadPassword(readline.StaticPrompt("please enter your password: "))
 			if err != nil {
 				break
 			}
@@ -141,7 +141,7 @@ func main() {
 				log.Println("setprompt <prompt>")
 				break
 			}
-			l.SetPrompt(line[10:])
+			l.SetPrompt(readline.StaticPrompt(line[10:]))
 		case strings.HasPrefix(line, "say"):
 			line := strings.TrimSpace(line[3:])
 			if len(line) == 0 {

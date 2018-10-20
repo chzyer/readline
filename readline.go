@@ -1,7 +1,7 @@
 // Readline is a pure go implementation for GNU-Readline kind library.
 //
 // example:
-// 	rl, err := readline.New("> ")
+// 	rl, err := readline.New(readline.StaticPrompt("> "))
 // 	if err != nil {
 // 		panic(err)
 // 	}
@@ -17,7 +17,10 @@
 //
 package readline
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 type Instance struct {
 	Config    *Config
@@ -27,7 +30,7 @@ type Instance struct {
 
 type Config struct {
 	// prompt supports ANSI escape sequence, so we can color some characters even in windows
-	Prompt string
+	Prompt fmt.Stringer
 
 	// readline will persist historys to file where HistoryFile specified
 	HistoryFile string
@@ -94,6 +97,7 @@ func (c *Config) Init() error {
 	if c.inited {
 		return nil
 	}
+	c.Prompt = StaticPrompt("")
 	c.inited = true
 	if c.Stdin == nil {
 		c.Stdin = NewCancelableStdin(Stdin)
@@ -175,7 +179,11 @@ func NewEx(cfg *Config) (*Instance, error) {
 	}, nil
 }
 
-func New(prompt string) (*Instance, error) {
+type Prompter interface {
+	String() string
+}
+
+func New(prompt fmt.Stringer) (*Instance, error) {
 	return NewEx(&Config{Prompt: prompt})
 }
 
@@ -183,7 +191,7 @@ func (i *Instance) ResetHistory() {
 	i.Operation.ResetHistory()
 }
 
-func (i *Instance) SetPrompt(s string) {
+func (i *Instance) SetPrompt(s fmt.Stringer) {
 	i.Operation.SetPrompt(s)
 }
 
@@ -224,11 +232,11 @@ func (i *Instance) ReadPasswordWithConfig(cfg *Config) ([]byte, error) {
 	return i.Operation.PasswordWithConfig(cfg)
 }
 
-func (i *Instance) ReadPasswordEx(prompt string, l Listener) ([]byte, error) {
+func (i *Instance) ReadPasswordEx(prompt fmt.Stringer, l Listener) ([]byte, error) {
 	return i.Operation.PasswordEx(prompt, l)
 }
 
-func (i *Instance) ReadPassword(prompt string) ([]byte, error) {
+func (i *Instance) ReadPassword(prompt fmt.Stringer) ([]byte, error) {
 	return i.Operation.Password(prompt)
 }
 

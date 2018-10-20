@@ -8,7 +8,7 @@ import (
 
 func main() {
 	cfg := &readline.Config{
-		Prompt: "readline-remote: ",
+		Prompt: readline.StaticPrompt("readline-remote: "),
 	}
 	handleFunc := func(rl *readline.Instance) {
 		for {

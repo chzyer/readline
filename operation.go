@@ -2,6 +2,7 @@ package readline
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"sync"
 )
@@ -89,7 +90,7 @@ func NewOperation(t *Terminal, cfg *Config) *Operation {
 	return op
 }
 
-func (o *Operation) SetPrompt(s string) {
+func (o *Operation) SetPrompt(s fmt.Stringer) {
 	o.buf.SetPrompt(s)
 }
 
@@ -398,7 +399,7 @@ func (o *Operation) Runes() ([]rune, error) {
 	}
 }
 
-func (o *Operation) PasswordEx(prompt string, l Listener) ([]byte, error) {
+func (o *Operation) PasswordEx(prompt fmt.Stringer, l Listener) ([]byte, error) {
 	cfg := o.GenPasswordConfig()
 	cfg.Prompt = prompt
 	cfg.Listener = l
@@ -417,7 +418,7 @@ func (o *Operation) PasswordWithConfig(cfg *Config) ([]byte, error) {
 	return o.Slice()
 }
 
-func (o *Operation) Password(prompt string) ([]byte, error) {
+func (o *Operation) Password(prompt fmt.Stringer) ([]byte, error) {
 	return o.PasswordEx(prompt, nil)
 }
 

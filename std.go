@@ -1,6 +1,7 @@
 package readline
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -54,13 +55,13 @@ func AddHistory(content string) error {
 	return ins.SaveHistory(content)
 }
 
-func Password(prompt string) ([]byte, error) {
+func Password(prompt fmt.Stringer) ([]byte, error) {
 	ins := getInstance()
 	return ins.ReadPassword(prompt)
 }
 
 // readline with global configs
-func Line(prompt string) (string, error) {
+func Line(prompt fmt.Stringer) (string, error) {
 	ins := getInstance()
 	ins.SetPrompt(prompt)
 	return ins.Readline()
