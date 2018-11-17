@@ -71,16 +71,28 @@ func (a *ANSIWriter) Close() error {
 }
 
 type ANSIWriterCtx struct {
-	isEsc     bool
-	isEscSeq  bool
-	arg       []string
-	target    *bufio.Writer
-	wantFlush bool
+	isEsc             bool
+	isEscSeq          bool
+	arg               []string
+	target            *bufio.Writer
+	wantFlush         bool
+	defaultAttributes word
+}
+
+func getTextAttributes() word {
+	sbi, err := GetConsoleScreenBufferInfo()
+	if err != nil {
+		// Hopefully sane default
+		return ColorTableFg[7] | ColorTableBg[0]
+	}
+
+	return sbi.wAttributes
 }
 
 func NewANSIWriterCtx(target io.Writer) *ANSIWriterCtx {
 	return &ANSIWriterCtx{
-		target: bufio.NewWriter(target),
+		target:            bufio.NewWriter(target),
+		defaultAttributes: getTextAttributes(),
 	}
 }
 
@@ -148,7 +160,7 @@ func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) 
 	case 'K':
 		eraseLine()
 	case 'm':
-		color := word(0)
+		color := getTextAttributes()
 		for _, item := range arg {
 			var c int
 			c, err = strconv.Atoi(item)
@@ -156,13 +168,16 @@ func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) 
 				w.WriteString("[" + strings.Join(arg, ";") + "m")
 				break
 			}
-			if c >= 30 && c < 40 {
+			if c >= 30 && c < 38 {
+				color &= ^word(COLOR_FRED | COLOR_FGREEN | COLOR_FBLUE | COLOR_FINTENSITY)
 				color ^= COLOR_FINTENSITY
 				color |= ColorTableFg[c-30]
-			} else if c >= 40 && c < 50 {
+			} else if c >= 40 && c < 48 {
+				color &= ^word(COLOR_BRED | COLOR_BGREEN | COLOR_BBLUE | COLOR_BINTENSITY)
 				color ^= COLOR_BINTENSITY
 				color |= ColorTableBg[c-40]
 			} else if c == 4 {
+				color &= ^word(COLOR_FRED | COLOR_FGREEN | COLOR_FBLUE | COLOR_FINTENSITY)
 				color |= COMMON_LVB_UNDERSCORE | ColorTableFg[7]
 			} else if c == 1 {
 				color |= COMMON_LVB_BOLD | COLOR_FINTENSITY
@@ -220,7 +235,7 @@ func killLines() error {
 	size += sbi.dwCursorPosition.x
 
 	var written int
-	kernel.FillConsoleOutputAttribute(stdout, uintptr(ColorTableFg[7]),
+	kernel.FillConsoleOutputAttribute(stdout, uintptr(sbi.wAttributes),
 		uintptr(size),
 		sbi.dwCursorPosition.ptr(),
 		uintptr(unsafe.Pointer(&written)),
