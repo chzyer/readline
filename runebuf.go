@@ -471,6 +471,12 @@ func (r *RuneBuffer) SetOffset(offset string) {
 	r.Unlock()
 }
 
+func (r *RuneBuffer) PrintPrompt() {
+	r.Lock()
+	r.print()
+	r.Unlock()
+}
+
 func (r *RuneBuffer) print() {
 	r.w.Write(r.output())
 	r.hadClean = false
