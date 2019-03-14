@@ -471,6 +471,12 @@ func (r *RuneBuffer) SetOffset(offset string) {
 	r.Unlock()
 }
 
+func (r *RuneBuffer) Print() {
+	r.Lock()
+	r.print()
+	r.Unlock()
+}
+
 func (r *RuneBuffer) print() {
 	r.w.Write(r.output())
 	r.hadClean = false
@@ -597,8 +603,9 @@ func (r *RuneBuffer) cleanOutput(w io.Writer, idxLine int) {
 	} else {
 		buf.Write([]byte("\033[J")) // just like ^k :)
 		if idxLine == 0 {
-			buf.WriteString("\033[2K")
-			buf.WriteString("\r")
+			num := strconv.Itoa(r.idx + r.promptLen())
+			buf.WriteString("\033[" + num + "D")
+			buf.Write([]byte("\033[J"))
 		} else {
 			for i := 0; i < idxLine; i++ {
 				io.WriteString(buf, "\033[2K\r\033[A")
