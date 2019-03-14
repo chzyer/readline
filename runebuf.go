@@ -603,7 +603,8 @@ func (r *RuneBuffer) cleanOutput(w io.Writer, idxLine int) {
 	} else {
 		buf.Write([]byte("\033[J")) // just like ^k :)
 		if idxLine == 0 {
-			buf.WriteString(strings.Repeat("\033[D", r.idx + r.promptLen()))
+			num := strconv.Itoa(r.idx + r.promptLen())
+			buf.WriteString("\033[" + num + "D")
 			buf.Write([]byte("\033[J"))
 		} else {
 			for i := 0; i < idxLine; i++ {
