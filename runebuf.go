@@ -471,7 +471,7 @@ func (r *RuneBuffer) SetOffset(offset string) {
 	r.Unlock()
 }
 
-func (r *RuneBuffer) PrintPrompt() {
+func (r *RuneBuffer) Print() {
 	r.Lock()
 	r.print()
 	r.Unlock()
