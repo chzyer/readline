@@ -123,6 +123,12 @@ func escapeExKey(key *escapeKeyPair) rune {
 	case '~':
 		if key.attr == "3" {
 			r = CharDelete
+		} else if key.attr == "1" {
+			// If pressed "Home" go to line start
+			r = CharLineStart
+		} else if key.attr == "4" {
+			// If pressed "End" go to line end
+			r = CharLineEnd
 		}
 	default:
 	}
