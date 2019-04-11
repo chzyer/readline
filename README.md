@@ -13,10 +13,12 @@
 
 A powerful readline library in `Linux` `macOS` `Windows` `Solaris`
 
+
 ## Guide
 
 * [Demo](example/readline-demo/readline-demo.go)
 * [Shortcut](doc/shortcut.md)
+
 
 ## Repos using readline
 
@@ -30,6 +32,7 @@ A powerful readline library in `Linux` `macOS` `Windows` `Solaris`
 [![abiosoft/ishell](https://img.shields.io/github/stars/abiosoft/ishell.svg?label=abiosoft/ishell)](https://github.com/abiosoft/ishell)
 [![Netflix/hal-9001](https://img.shields.io/github/stars/Netflix/hal-9001.svg?label=Netflix/hal-9001)](https://github.com/Netflix/hal-9001)
 [![docker/go-p9p](https://img.shields.io/github/stars/docker/go-p9p.svg?label=docker/go-p9p)](https://github.com/docker/go-p9p)
+[![algernon](https://img.shields.io/github/stars/xyproto/algernon.svg?label=xyproto/algernon)](https://github.com/xyproto/algernon)
 
 
 ## Feedback
