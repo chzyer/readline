@@ -43,6 +43,7 @@ const (
 	CharCtrlY     = 25
 	CharCtrlZ     = 26
 	CharEsc       = 27
+	CharO         = 79
 	CharEscapeEx  = 91
 	CharBackspace = 127
 )
@@ -118,6 +119,27 @@ func escapeExKey(key *escapeKeyPair) rune {
 		if key.attr == "3" {
 			r = CharDelete
 		}
+	default:
+	}
+	return r
+}
+
+// translate EscOX SS3 codes for up/down/etc.
+func escapeSS3Key(key *escapeKeyPair) rune {
+	var r rune
+	switch key.typ {
+	case 'D':
+		r = CharBackward
+	case 'C':
+		r = CharForward
+	case 'A':
+		r = CharPrev
+	case 'B':
+		r = CharNext
+	case 'H':
+		r = CharLineStart
+	case 'F':
+		r = CharLineEnd
 	default:
 	}
 	return r
