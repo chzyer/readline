@@ -146,12 +146,12 @@ func (r *RuneBuffer) MoveToLineStart() {
 }
 
 func (r *RuneBuffer) MoveBackward() {
-	r.Refresh(func() {
-		if r.idx == 0 {
-			return
-		}
-		r.idx--
-	})
+	if r.idx == 0 {
+		return
+	}
+	r.idx--
+
+	r.w.Write([]byte("\033[1D"))
 }
 
 func (r *RuneBuffer) WriteString(s string) {
@@ -159,7 +159,17 @@ func (r *RuneBuffer) WriteString(s string) {
 }
 
 func (r *RuneBuffer) WriteRune(s rune) {
-	r.WriteRunes([]rune{s})
+	tail := append([]rune{s}, r.buf[r.idx:]...)
+	r.buf = append(r.buf[:r.idx], tail...)
+	r.idx++
+
+	// Write tail
+	r.w.Write([]byte(string(tail)))
+
+	// Set correct cursor position
+	if r.idx < len(r.buf) {
+		r.w.Write([]byte("\033[" + strconv.Itoa(len(tail)-1) + "D"))
+	}
 }
 
 func (r *RuneBuffer) WriteRunes(s []rune) {
@@ -171,12 +181,13 @@ func (r *RuneBuffer) WriteRunes(s []rune) {
 }
 
 func (r *RuneBuffer) MoveForward() {
-	r.Refresh(func() {
-		if r.idx == len(r.buf) {
-			return
-		}
-		r.idx++
-	})
+	if r.idx == len(r.buf) {
+		return
+	}
+	r.idx++
+
+	// move cursor to right
+	r.w.Write([]byte("\033[1C"))
 }
 
 func (r *RuneBuffer) IsCursorInEnd() bool {
@@ -200,14 +211,20 @@ func (r *RuneBuffer) Erase() {
 }
 
 func (r *RuneBuffer) Delete() (success bool) {
-	r.Refresh(func() {
-		if r.idx == len(r.buf) {
-			return
-		}
-		r.pushKill(r.buf[r.idx : r.idx+1])
-		r.buf = append(r.buf[:r.idx], r.buf[r.idx+1:]...)
-		success = true
-	})
+	if r.idx == len(r.buf) {
+		return
+	}
+	r.pushKill(r.buf[r.idx : r.idx+1])
+	r.buf = append(r.buf[:r.idx], r.buf[r.idx+1:]...)
+	success = true
+
+	r.w.Write([]byte("\033[J"))
+	arr := r.buf[r.idx:]
+	r.w.Write([]byte(string(arr)))
+	if len(arr) > 0 {
+		r.w.Write([]byte("\033[" + strconv.Itoa(len(arr)) + "D"))
+	}
+
 	return
 }
 
@@ -360,14 +377,32 @@ func (r *RuneBuffer) Yank() {
 }
 
 func (r *RuneBuffer) Backspace() {
-	r.Refresh(func() {
-		if r.idx == 0 {
-			return
-		}
+	if r.idx == 0 {
+		return
+	}
 
-		r.idx--
-		r.buf = append(r.buf[:r.idx], r.buf[r.idx+1:]...)
-	})
+	r.idx--
+	r.buf = append(r.buf[:r.idx], r.buf[r.idx+1:]...)
+
+	plen := r.promptLen()
+	allWidth := runes.WidthAll(r.buf) + plen + 1
+
+	// If at the start of line move up and to the end
+	if allWidth%r.width == 0 {
+		r.w.Write([]byte("\033[A\r\033[" + strconv.Itoa(r.width) + "C"))
+	} else {
+		r.w.Write([]byte{'\b'}) // else move back by one pos
+	}
+	r.w.Write([]byte("\033[J")) // clear remaining screen
+
+	// write tail
+	arr := r.buf[r.idx:]
+	r.w.Write([]byte(string(arr)))
+
+	// move cursor to correct pos when not at the end of line
+	if len(arr) > 0 {
+		r.w.Write([]byte("\033[" + strconv.Itoa(len(arr)) + "D"))
+	}
 }
 
 func (r *RuneBuffer) MoveToLineEnd() {
