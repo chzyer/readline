@@ -80,6 +80,7 @@ func main() {
 
 		HistorySearchFold:   true,
 		FuncFilterInputRune: filterInput,
+		ExitRawOnInterrupt:  true,
 	})
 	if err != nil {
 		panic(err)

@@ -17,7 +17,13 @@
 //
 package readline
 
-import "io"
+import (
+	"fmt"
+	"io"
+	"os"
+	"os/signal"
+	"syscall"
+)
 
 type Instance struct {
 	Config    *Config
@@ -76,6 +82,10 @@ type Config struct {
 	FuncExitRaw         func() error
 	FuncOnWidthChanged  func(func())
 	ForceUseInteractive bool
+
+	// ExitRawOnInterrupt, if set, forces a return to previous terminal settings
+	// after receiving Interrupt and TERM signals.
+	ExitRawOnInterrupt bool
 
 	// private fields
 	inited    bool
@@ -168,6 +178,21 @@ func NewEx(cfg *Config) (*Instance, error) {
 	if cfg.Painter == nil {
 		cfg.Painter = &defaultPainter{}
 	}
+
+	// just restore the terminal before quitting.
+	if cfg.ExitRawOnInterrupt && cfg.FuncIsTerminal() {
+		cSignal := make(chan os.Signal, 1)
+		signal.Notify(cSignal, os.Interrupt, syscall.SIGTERM)
+
+		go func() {
+			for range cSignal {
+				_ = t.ExitRawMode()
+				fmt.Println()
+				os.Exit(1)
+			}
+		}()
+	}
+
 	return &Instance{
 		Config:    cfg,
 		Terminal:  t,
