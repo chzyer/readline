@@ -1,3 +1,4 @@
+//go:build darwin || dragonfly || freebsd || (linux && !appengine) || netbsd || openbsd || solaris
 // +build darwin dragonfly freebsd linux,!appengine netbsd openbsd solaris
 
 package readline
@@ -60,11 +61,14 @@ func GetStdin() int {
 // -----------------------------------------------------------------------------
 
 var (
+	widthChangeMutex    sync.Mutex
 	widthChange         sync.Once
 	widthChangeCallback func()
 )
 
 func DefaultOnWidthChanged(f func()) {
+	widthChangeMutex.Lock()
+	defer widthChangeMutex.Unlock()
 	widthChangeCallback = f
 	widthChange.Do(func() {
 		ch := make(chan os.Signal, 1)
