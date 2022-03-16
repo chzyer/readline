@@ -472,9 +472,12 @@ func (r *RuneBuffer) SetOffset(offset string) {
 }
 
 func (r *RuneBuffer) Print() {
+	if !r.interactive {
+		return
+	}
 	r.Lock()
+	defer r.Unlock()
 	r.print()
-	r.Unlock()
 }
 
 func (r *RuneBuffer) print() {
