@@ -434,6 +434,10 @@ func (o *Operation) Slice() ([]byte, error) {
 }
 
 func (o *Operation) Close() {
+	select {
+	case o.errchan <- io.EOF:
+	default:
+	}
 	o.history.Close()
 }
 
