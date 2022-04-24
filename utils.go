@@ -6,9 +6,11 @@ import (
 	"container/list"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 	"unicode"
 )
@@ -274,4 +276,14 @@ func Debug(o ...interface{}) {
 	f, _ := os.OpenFile("debug.tmp", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	fmt.Fprintln(f, o...)
 	f.Close()
+}
+
+func CaptureExitSignal(f func()) {
+	cSignal := make(chan os.Signal, 1)
+	signal.Notify(cSignal, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		for range cSignal {
+			f()
+		}
+	}()
 }
