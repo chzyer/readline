@@ -3,8 +3,8 @@ package readline
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -20,7 +20,6 @@ type RuneBuffer struct {
 	prompt []rune
 	w      io.Writer
 
-	hadClean    bool
 	interactive bool
 	cfg         *Config
 
@@ -28,7 +27,8 @@ type RuneBuffer struct {
 
 	bck *runeBufferBck
 
-	offset string
+	offset string          // is offset useful? scrolling means row varies
+	ppos   int             // prompt start position (0 == column 1)
 
 	lastKill []rune
 
@@ -163,11 +163,25 @@ func (r *RuneBuffer) WriteRune(s rune) {
 }
 
 func (r *RuneBuffer) WriteRunes(s []rune) {
-	r.Refresh(func() {
-		tail := append(s, r.buf[r.idx:]...)
-		r.buf = append(r.buf[:r.idx], tail...)
+	r.Lock()
+	defer r.Unlock()
+
+	if r.idx == len(r.buf) {
+		// cursor is already at end of buf data so just call
+		// append instead of refesh to save redrawing.
+		r.buf = append(r.buf, s...)
 		r.idx += len(s)
-	})
+		if r.interactive {
+			r.append(s)
+		}
+	} else {
+		// writing into the data somewhere so do a refresh
+		r.refresh(func() {
+			tail := append(s, r.buf[r.idx:]...)
+			r.buf = append(r.buf[:r.idx], tail...)
+			r.idx += len(s)
+		})
+	}
 }
 
 func (r *RuneBuffer) MoveForward() {
@@ -371,11 +385,12 @@ func (r *RuneBuffer) Backspace() {
 }
 
 func (r *RuneBuffer) MoveToLineEnd() {
-	r.Refresh(func() {
-		if r.idx == len(r.buf) {
-			return
-		}
-
+	r.Lock()
+	defer r.Unlock()
+	if r.idx == len(r.buf) {
+		return
+	}
+	r.refresh(func() {
 		r.idx = len(r.buf)
 	})
 }
@@ -421,12 +436,18 @@ func (r *RuneBuffer) isInLineEdge() bool {
 	if isWindows {
 		return false
 	}
-	sp := r.getSplitByLine(r.buf)
-	return len(sp[len(sp)-1]) == 0
+	sp := r.getSplitByLine(r.buf, 1)
+	return len(sp[len(sp)-1]) == 0  // last line is 0 len
 }
 
-func (r *RuneBuffer) getSplitByLine(rs []rune) []string {
-	return SplitByLine(r.promptLen(), r.width, rs)
+func (r *RuneBuffer) getSplitByLine(rs []rune, nextWidth int) [][]rune {
+	if r.cfg.EnableMask {
+		w := runes.Width(r.cfg.MaskRune)
+		masked := []rune(strings.Repeat(string(r.cfg.MaskRune), len(rs)))
+		return SplitByLine(runes.ColorFilter(r.prompt), masked, r.ppos, r.width, w)
+	} else {
+		return SplitByLine(runes.ColorFilter(r.prompt), rs, r.ppos, r.width, nextWidth)
+	}
 }
 
 func (r *RuneBuffer) IdxLine(width int) int {
@@ -439,7 +460,11 @@ func (r *RuneBuffer) idxLine(width int) int {
 	if width == 0 {
 		return 0
 	}
-	sp := r.getSplitByLine(r.buf[:r.idx])
+	nextWidth := 1
+	if r.idx < len(r.buf) {
+		nextWidth = runes.Width(r.buf[r.idx])
+	}
+	sp := r.getSplitByLine(r.buf[:r.idx], nextWidth)
 	return len(sp) - 1
 }
 
@@ -450,7 +475,10 @@ func (r *RuneBuffer) CursorLineCount() int {
 func (r *RuneBuffer) Refresh(f func()) {
 	r.Lock()
 	defer r.Unlock()
+	r.refresh(f)
+}
 
+func (r *RuneBuffer) refresh(f func()) {
 	if !r.interactive {
 		if f != nil {
 			f()
@@ -465,31 +493,100 @@ func (r *RuneBuffer) Refresh(f func()) {
 	r.print()
 }
 
+// getAndSetOffset queries the terminal for the current cursor position by
+// writing a control sequence to the terminal. This call is asynchronous
+// and it returns before any offset has actually been set as the terminal
+// will write the offset back to us via stdin and there may already be 
+// other data in the stdin buffer ahead of it.
+// This function is called at the start of readline each time.
+func (r *RuneBuffer) getAndSetOffset(t *Terminal) {
+	if !r.interactive {
+		return
+	}
+	if !isWindows {
+		// Handle lineedge cases where existing text before before
+		// the prompt is printed would leave us at the right edge of
+		// the screen but the next character would actually be printed
+		// at the beginning of the next line.
+		r.w.Write([]byte(" \b"))
+	}
+	t.GetOffset(r.setOffset)
+}
+
 func (r *RuneBuffer) SetOffset(offset string) {
 	r.Lock()
+	defer r.Unlock()
+	r.setOffset(offset)
+}
+
+func (r *RuneBuffer) setOffset(offset string) {
 	r.offset = offset
-	r.Unlock()
+	if _, c, ok := (&escapeKeyPair{attr:offset}).Get2(); ok && c > 0 && c < r.width {
+		r.ppos = c - 1  // c should be 1..width
+	} else {
+		r.ppos = 0
+	}
+}
+
+// append s to the end of the current output. append is called in
+// place of print() when clean() was avoided. As output is appended on
+// the end, the cursor also needs no extra adjustment.
+// NOTE: assumes len(s) >= 1 which should always be true for append.
+func (r *RuneBuffer) append(s []rune) {
+	buf := bytes.NewBuffer(nil)
+	slen := len(s)
+	if r.cfg.EnableMask {
+		if slen > 1 && r.cfg.MaskRune != 0 {
+			// write a mask character for all runes except the last rune
+			buf.WriteString(strings.Repeat(string(r.cfg.MaskRune), slen-1))
+		}
+		// for the last rune, write \n or mask it otherwise.
+		if s[slen-1] == '\n' {
+			buf.WriteRune('\n')
+		} else if r.cfg.MaskRune != 0 {
+			buf.WriteRune(r.cfg.MaskRune)
+		}
+	} else {
+		for _, e := range r.cfg.Painter.Paint(s, slen) {
+			if e == '\t' {
+				buf.WriteString(strings.Repeat(" ", TabWidth))
+			} else {
+				buf.WriteRune(e)
+			}
+		}
+	}
+	if r.isInLineEdge() {
+		buf.WriteString(" \b")
+	}
+	r.w.Write(buf.Bytes())
+}
+
+// Print writes out the prompt and buffer contents at the current cursor position
+func (r *RuneBuffer) Print() {
+	r.Lock()
+	defer r.Unlock()
+	if !r.interactive {
+		return
+	}
+	r.print()
 }
 
 func (r *RuneBuffer) print() {
 	r.w.Write(r.output())
-	r.hadClean = false
 }
 
 func (r *RuneBuffer) output() []byte {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString(string(r.prompt))
 	if r.cfg.EnableMask && len(r.buf) > 0 {
-		buf.Write([]byte(strings.Repeat(string(r.cfg.MaskRune), len(r.buf)-1)))
+		if r.cfg.MaskRune != 0 {
+			buf.WriteString(strings.Repeat(string(r.cfg.MaskRune), len(r.buf)-1))
+		}
 		if r.buf[len(r.buf)-1] == '\n' {
-			buf.Write([]byte{'\n'})
-		} else {
-			buf.Write([]byte(string(r.cfg.MaskRune)))
+			buf.WriteRune('\n')
+		} else if r.cfg.MaskRune != 0 {
+			buf.WriteRune(r.cfg.MaskRune)
 		}
-		if len(r.buf) > r.idx {
-			buf.Write(r.getBackspaceSequence())
-		}
-
 	} else {
 		for _, e := range r.cfg.Painter.Paint(r.buf, r.idx) {
 			if e == '\t' {
@@ -498,9 +595,9 @@ func (r *RuneBuffer) output() []byte {
 				buf.WriteRune(e)
 			}
 		}
-		if r.isInLineEdge() {
-			buf.Write([]byte(" \b"))
-		}
+	}
+	if r.isInLineEdge() {
+		buf.WriteString(" \b")
 	}
 	// cursor position
 	if len(r.buf) > r.idx {
@@ -510,33 +607,41 @@ func (r *RuneBuffer) output() []byte {
 }
 
 func (r *RuneBuffer) getBackspaceSequence() []byte {
-	var sep = map[int]bool{}
+	bcnt := len(r.buf) - r.idx  // backwards count to index
+	sp := r.getSplitByLine(r.buf, 1)
 
-	var i int
-	for {
-		if i >= runes.WidthAll(r.buf) {
+	// Calculate how many lines up to the index line
+	up := 0
+	spi := len(sp) - 1
+	for spi >= 0 {
+		bcnt -= len(sp[spi])
+		if bcnt <= 0 {
 			break
 		}
-
-		if i == 0 {
-			i -= r.promptLen()
-		}
-		i += r.width
-
-		sep[i] = true
-	}
-	var buf []byte
-	for i := len(r.buf); i > r.idx; i-- {
-		// move input to the left of one
-		buf = append(buf, '\b')
-		if sep[i] {
-			// up one line, go to the start of the line and move cursor right to the end (r.width)
-			buf = append(buf, "\033[A\r"+"\033["+strconv.Itoa(r.width)+"C"...)
-		}
+		up++
+		spi--
 	}
 
-	return buf
+	// Calculate what column the index should be set to
+	column := 1
+	if spi == 0 {
+		column += r.ppos
+	}
+	for _, rune := range sp[spi] {
+		if bcnt >= 0 {
+			break
+		}
+		column += runes.Width(rune)
+		bcnt++
+	}
 
+	buf := bytes.NewBuffer(nil)
+	if up > 0 {
+		fmt.Fprintf(buf, "\033[%dA", up) // move cursor up to index line
+	}
+	fmt.Fprintf(buf, "\033[%dG", column) // move cursor to column
+
+	return buf.Bytes()
 }
 
 func (r *RuneBuffer) Reset() []rune {
@@ -595,16 +700,11 @@ func (r *RuneBuffer) cleanOutput(w io.Writer, idxLine int) {
 		buf.WriteString(strings.Repeat("\r\b", len(r.buf)+r.promptLen()))
 		buf.Write([]byte("\033[J"))
 	} else {
-		buf.Write([]byte("\033[J")) // just like ^k :)
-		if idxLine == 0 {
-			buf.WriteString("\033[2K")
-			buf.WriteString("\r")
-		} else {
-			for i := 0; i < idxLine; i++ {
-				io.WriteString(buf, "\033[2K\r\033[A")
-			}
-			io.WriteString(buf, "\033[2K\r")
+		if idxLine > 0 {
+			fmt.Fprintf(buf, "\033[%dA", idxLine) // move cursor up by idxLine
 		}
+		fmt.Fprintf(buf, "\033[%dG", r.ppos + 1) // move cursor back to initial ppos position
+		buf.Write([]byte("\033[J"))  // clear from cursor to end of screen
 	}
 	buf.Flush()
 	return
@@ -621,9 +721,8 @@ func (r *RuneBuffer) clean() {
 }
 
 func (r *RuneBuffer) cleanWithIdxLine(idxLine int) {
-	if r.hadClean || !r.interactive {
+	if !r.interactive {
 		return
 	}
-	r.hadClean = true
 	r.cleanOutput(r.w, idxLine)
 }

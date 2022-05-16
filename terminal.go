@@ -80,7 +80,7 @@ func (t *Terminal) GetOffset(f func(offset string)) {
 	go func() {
 		f(<-t.sizeChan)
 	}()
-	t.Write([]byte("\033[6n"))
+	SendCursorPosition(t)
 }
 
 func (t *Terminal) Print(s string) {

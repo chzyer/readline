@@ -234,6 +234,7 @@ func (o *Operation) ioloop() {
 			o.Refresh()
 		case CharCtrlL:
 			ClearScreen(o.w)
+			o.buf.SetOffset("1;1")
 			o.Refresh()
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
@@ -387,8 +388,14 @@ func (o *Operation) Runes() ([]rune, error) {
 		listener.OnChange(nil, 0, 0)
 	}
 
-	o.buf.Refresh(nil) // print prompt
+	// Query cursor position before printing the prompt as there
+	// maybe existing text on the same line that ideally we don't
+	// want to overwrite and cause prompt to jump left. Note that
+	// this is not perfect but works the majority of the time.
+	o.buf.getAndSetOffset(o.t)
+	o.buf.Print() // print prompt & buffer contents
 	o.t.KickRead()
+
 	select {
 	case r := <-o.outchan:
 		return r, nil
