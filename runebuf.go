@@ -23,7 +23,8 @@ type RuneBuffer struct {
 	interactive bool
 	cfg         *Config
 
-	width int
+	width  int
+	height int
 
 	bck *runeBufferBck
 
@@ -45,6 +46,13 @@ func (r *RuneBuffer) OnWidthChange(newWidth int) {
 	r.Unlock()
 }
 
+func (r *RuneBuffer) OnSizeChange(newWidth, newHeight int) {
+	r.Lock()
+	r.width = newWidth
+	r.height = newHeight
+	r.Unlock()
+}
+
 func (r *RuneBuffer) Backup() {
 	r.Lock()
 	r.bck = &runeBufferBck{r.buf, r.idx}
@@ -61,12 +69,13 @@ func (r *RuneBuffer) Restore() {
 	})
 }
 
-func NewRuneBuffer(w io.Writer, prompt string, cfg *Config, width int) *RuneBuffer {
+func NewRuneBuffer(w io.Writer, prompt string, cfg *Config, width int, height int) *RuneBuffer {
 	rb := &RuneBuffer{
 		w:           w,
 		interactive: cfg.useInteractive(),
 		cfg:         cfg,
 		width:       width,
+		height:      height,
 	}
 	rb.SetPrompt(prompt)
 	return rb
@@ -395,12 +404,10 @@ func (r *RuneBuffer) MoveToLineEnd() {
 	})
 }
 
-func (r *RuneBuffer) LineCount(width int) int {
-	if width == -1 {
-		width = r.width
-	}
-	return LineCount(width,
-		runes.WidthAll(r.buf)+r.PromptLen())
+// LineCount returns number of lines the buffer takes as it appears in the terminal.
+func (r *RuneBuffer) LineCount() int {
+	sp := r.getSplitByLine(r.buf, 1)
+	return len(sp)
 }
 
 func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
@@ -469,7 +476,7 @@ func (r *RuneBuffer) idxLine(width int) int {
 }
 
 func (r *RuneBuffer) CursorLineCount() int {
-	return r.LineCount(r.width) - r.IdxLine(r.width)
+	return r.LineCount() - r.IdxLine(r.width)
 }
 
 func (r *RuneBuffer) Refresh(f func()) {

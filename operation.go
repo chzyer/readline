@@ -83,23 +83,23 @@ func (o *Operation) write(target io.Writer, b []byte) (int, error) {
 }
 
 func NewOperation(t *Terminal, cfg *Config) *Operation {
-	width := cfg.FuncGetWidth()
+	width, height := cfg.FuncGetSize()
 	op := &Operation{
 		t:       t,
-		buf:     NewRuneBuffer(t, cfg.Prompt, cfg, width),
+		buf:     NewRuneBuffer(t, cfg.Prompt, cfg, width, height),
 		outchan: make(chan []rune),
 		errchan: make(chan error, 1),
 	}
 	op.w = op.buf.w
 	op.SetConfig(cfg)
 	op.opVim = newVimMode(op)
-	op.opCompleter = newOpCompleter(op.buf.w, op, width)
+	op.opCompleter = newOpCompleter(op.buf.w, op, width, height)
 	op.opPassword = newOpPassword(op)
 	op.cfg.FuncOnWidthChanged(func() {
-		newWidth := cfg.FuncGetWidth()
-		op.opCompleter.OnWidthChange(newWidth)
-		op.opSearch.OnWidthChange(newWidth)
-		op.buf.OnWidthChange(newWidth)
+		newWidth, newHeight := cfg.FuncGetSize()
+		op.opCompleter.OnSizeChange(newWidth, newHeight)
+		op.opSearch.OnSizeChange(newWidth, newHeight)
+		op.buf.OnSizeChange(newWidth, newHeight)
 	})
 	go op.ioloop()
 	return op
@@ -152,6 +152,17 @@ func (o *Operation) ioloop() {
 		}
 		isUpdateHistory := true
 
+		if o.IsInPagerMode() {
+			keepInCompleteMode = o.HandlePagerMode(r)
+			if r == CharEnter || r == CharCtrlJ || r == CharInterrupt {
+				o.t.KickRead()
+			}
+			if !keepInCompleteMode {
+				o.buf.Refresh(nil)
+			}
+			continue
+		}
+
 		if o.IsInCompleteSelectMode() {
 			keepInCompleteMode = o.HandleCompleteSelect(r)
 			if keepInCompleteMode {
@@ -194,12 +205,14 @@ func (o *Operation) ioloop() {
 				break
 			}
 			if o.OnComplete() {
-				keepInCompleteMode = true
+				if o.IsInCompleteMode() {
+					keepInCompleteMode = true
+					continue // redraw is done, loop
+				}
 			} else {
 				o.t.Bell()
-				break
 			}
-
+			o.buf.Refresh(nil)
 		case CharBckSearch:
 			if !o.SearchMode(S_DIR_BCK) {
 				o.t.Bell()
@@ -241,9 +254,6 @@ func (o *Operation) ioloop() {
 				break
 			}
 			o.buf.Backspace()
-			if o.IsInCompleteMode() {
-				o.OnComplete()
-			}
 		case CharCtrlZ:
 			o.buf.Clean()
 			o.t.SleepToResume()
@@ -349,7 +359,11 @@ func (o *Operation) ioloop() {
 			o.buf.WriteRune(r)
 			if o.IsInCompleteMode() {
 				o.OnComplete()
-				keepInCompleteMode = true
+				if o.IsInCompleteMode() {
+					keepInCompleteMode = true
+				} else {
+					o.buf.Refresh(nil)
+				}
 			}
 		}
 
@@ -507,12 +521,12 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	op.SetPrompt(cfg.Prompt)
 	op.SetMaskRune(cfg.MaskRune)
 	op.buf.SetConfig(cfg)
-	width := op.cfg.FuncGetWidth()
+	width, height := op.cfg.FuncGetSize()
 
 	if cfg.opHistory == nil {
 		op.SetHistoryPath(cfg.HistoryFile)
 		cfg.opHistory = op.history
-		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg, width)
+		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg, width, height)
 	}
 	op.history = cfg.opHistory
 
@@ -521,7 +535,7 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	op.history.Init()
 
 	if op.cfg.AutoComplete != nil {
-		op.opCompleter = newOpCompleter(op.buf.w, op, width)
+		op.opCompleter = newOpCompleter(op.buf.w, op, width, height)
 	}
 
 	op.opSearch = cfg.opSearch

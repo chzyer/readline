@@ -28,6 +28,17 @@ func GetScreenWidth() int {
 	return int(info.dwSize.x)
 }
 
+// GetScreenSize returns the width, height of the terminal or -1,-1
+func GetScreenSize() (width int, height int) {
+	info, _ := GetConsoleScreenBufferInfo()
+	if info == nil {
+		return -1, -1
+	}
+	height = int(info.srWindow.bottom) - int(info.srWindow.top) + 1
+	width = int(info.srWindow.right) - int(info.srWindow.left) + 1
+	return
+}
+
 // Send the Current cursor position to t.sizeChan.
 func SendCursorPosition(t *Terminal) {
 	info, err := GetConsoleScreenBufferInfo()
@@ -47,6 +58,10 @@ func DefaultIsTerminal() bool {
 	return true
 }
 
-func DefaultOnWidthChanged(func()) {
+func DefaultOnWidthChanged(f func()) {
+	DefaultOnSizeChanged(f)
+}
+
+func DefaultOnSizeChanged(f func()) {
 
 }

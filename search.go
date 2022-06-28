@@ -30,20 +30,26 @@ type opSearch struct {
 	markStart int
 	markEnd   int
 	width     int
+	height    int
 }
 
-func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory, cfg *Config, width int) *opSearch {
+func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory, cfg *Config, width int, height int) *opSearch {
 	return &opSearch{
 		w:       w,
 		buf:     buf,
 		cfg:     cfg,
 		history: history,
 		width:   width,
+		height:  height,
 	}
 }
 
 func (o *opSearch) OnWidthChange(newWidth int) {
 	o.width = newWidth
+}
+func (o *opSearch) OnSizeChange(newWidth, newHeight int) {
+	o.width = newWidth
+	o.height = newHeight
 }
 
 func (o *opSearch) IsSearchMode() bool {
