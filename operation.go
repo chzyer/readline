@@ -270,6 +270,10 @@ func (o *Operation) ioloop() {
 			if o.IsSearchMode() {
 				o.ExitSearchMode(false)
 			}
+			if o.IsInCompleteMode() {
+				o.ExitCompleteMode(true)
+				o.buf.Refresh(nil)
+			}
 			o.buf.MoveToLineEnd()
 			var data []rune
 			if !o.GetConfig().UniqueEditLine {
