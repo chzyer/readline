@@ -486,9 +486,6 @@ func (r *RuneBuffer) output() []byte {
 		} else {
 			buf.Write([]byte(string(r.cfg.MaskRune)))
 		}
-		if len(r.buf) > r.idx {
-			buf.Write(r.getBackspaceSequence())
-		}
 
 	} else {
 		for _, e := range r.cfg.Painter.Paint(r.buf, r.idx) {
