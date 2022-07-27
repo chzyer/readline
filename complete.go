@@ -209,7 +209,7 @@ func (o *opCompleter) CompleteRefresh() {
 
 	o.candidateColNum = colNum
 	buf := bufio.NewWriter(o.w)
-	buf.Write(bytes.Repeat([]byte("\n"), lineCnt))
+	buf.Write(bytes.Repeat([]byte("\n\r"), lineCnt))
 
 	colIdx := 0
 	lines := 1
