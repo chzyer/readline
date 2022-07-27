@@ -1,6 +1,12 @@
 language: go
-go:
-  - 1.x
+matrix:
+   include:
+      - go: 1.x
+      - arch: ppc64le
+        go: 1.x
+        script:
+           - GOOS=linux go install github.com/chzyer/readline/example/...
+           - go test -race -v
 script:
   - GOOS=windows go install github.com/chzyer/readline/example/...
   - GOOS=linux go install github.com/chzyer/readline/example/...
