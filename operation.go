@@ -45,10 +45,6 @@ type wrapWriter struct {
 }
 
 func (w *wrapWriter) Write(b []byte) (int, error) {
-	if !w.t.IsReading() {
-		return w.target.Write(b)
-	}
-
 	var (
 		n   int
 		err error
@@ -501,9 +497,7 @@ func (o *Operation) SaveHistory(content string) error {
 }
 
 func (o *Operation) Refresh() {
-	if o.t.IsReading() {
-		o.buf.Refresh(nil)
-	}
+	o.buf.Refresh(nil)
 }
 
 func (o *Operation) Clean() {
