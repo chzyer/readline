@@ -387,7 +387,7 @@ func (o *Operation) Runes() ([]rune, error) {
 		listener.OnChange(nil, 0, 0)
 	}
 
-	o.buf.Refresh(nil) // print prompt
+	o.buf.Print() // print prompt
 	o.t.KickRead()
 	select {
 	case r := <-o.outchan:
