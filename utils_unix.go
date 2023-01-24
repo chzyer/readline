@@ -1,4 +1,4 @@
-// +build aix darwin dragonfly freebsd linux,!appengine netbsd openbsd os400 solaris
+// +build aix darwin dragonfly freebsd linux,!appengine netbsd openbsd os400 solaris zos
 
 package readline
 
