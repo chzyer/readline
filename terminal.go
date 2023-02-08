@@ -2,6 +2,7 @@ package readline
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -26,6 +27,11 @@ type Terminal struct {
 func NewTerminal(cfg *Config) (*Terminal, error) {
 	if err := cfg.Init(); err != nil {
 		return nil, err
+	}
+	if cfg.useInteractive() {
+		if !enableANSI() {
+			return nil, errors.New("Could not enable ANSI escapes")
+		}
 	}
 	t := &Terminal{
 		cfg:      cfg,
