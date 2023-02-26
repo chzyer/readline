@@ -47,7 +47,15 @@ func enableANSI() bool {
 
 // this is `enableColor` from https://github.com/jwalton/go-supportscolor
 func realEnableANSI() bool {
-	handle, err := windows.GetStdHandle(windows.STD_OUTPUT_HANDLE)
+	// we want to enable the following modes, if they are not already set:
+	// ENABLE_VIRTUAL_TERMINAL_PROCESSING on stdout (color support)
+	// ENABLE_VIRTUAL_TERMINAL_INPUT on stdin (ansi input sequences)
+	return windowsSetMode(windows.STD_OUTPUT_HANDLE, windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING) &&
+		windowsSetMode(windows.STD_INPUT_HANDLE, windows.ENABLE_VIRTUAL_TERMINAL_INPUT)
+}
+
+func windowsSetMode(stdhandle uint32, modeFlag uint32) (success bool) {
+	handle, err := windows.GetStdHandle(stdhandle)
 	if err != nil {
 		return false
 	}
@@ -59,12 +67,10 @@ func realEnableANSI() bool {
 		return false
 	}
 
-	// If ENABLE_VIRTUAL_TERMINAL_PROCESSING is not set, then set it.  This will
-	// enable native ANSI color support from Windows.
-	if mode&windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING != windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING {
+	if mode&modeFlag != modeFlag {
 		// Enable color.
 		// See https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences.
-		mode = mode | windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING
+		mode = mode | modeFlag
 		err = windows.SetConsoleMode(handle, mode)
 		if err != nil {
 			return false
