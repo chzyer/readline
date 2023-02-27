@@ -27,6 +27,11 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 	if err := cfg.Init(); err != nil {
 		return nil, err
 	}
+	if cfg.useInteractive() {
+		if ansiErr := enableANSI(); ansiErr != nil  {
+			return nil, fmt.Errorf("Could not enable ANSI escapes: %w", ansiErr)
+		}
+	}
 	t := &Terminal{
 		cfg:      cfg,
 		kickChan: make(chan struct{}, 1),
