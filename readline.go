@@ -318,6 +318,9 @@ func (i *Instance) SetConfig(cfg *Config) *Config {
 	}
 	old := i.Config
 	i.Config = cfg
+	if cfg.Painter == nil {
+		cfg.Painter = &defaultPainter{}
+	}
 	i.Operation.SetConfig(cfg)
 	i.Terminal.SetConfig(cfg)
 	return old
