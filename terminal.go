@@ -2,7 +2,6 @@ package readline
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -29,8 +28,8 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 		return nil, err
 	}
 	if cfg.useInteractive() {
-		if !enableANSI() {
-			return nil, errors.New("Could not enable ANSI escapes")
+		if ansiErr := enableANSI(); ansiErr != nil  {
+			return nil, fmt.Errorf("Could not enable ANSI escapes: %w", ansiErr)
 		}
 	}
 	t := &Terminal{

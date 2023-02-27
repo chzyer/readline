@@ -2,6 +2,6 @@
 
 package readline
 
-func enableANSI() bool {
-	return true
+func enableANSI() error {
+	return nil
 }

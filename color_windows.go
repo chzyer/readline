@@ -34,48 +34,52 @@ import (
 )
 
 var (
-	ansiSuccess bool
+	ansiErr     error
 	ansiOnce    sync.Once
 )
 
-func enableANSI() bool {
+func enableANSI() error {
 	ansiOnce.Do(func() {
-		ansiSuccess = realEnableANSI()
+		ansiErr = realEnableANSI()
 	})
-	return ansiSuccess
+	return ansiErr
 }
 
-// this is `enableColor` from https://github.com/jwalton/go-supportscolor
-func realEnableANSI() bool {
-	// we want to enable the following modes, if they are not already set:
+func realEnableANSI() error {
+	// We want to enable the following modes, if they are not already set:
 	// ENABLE_VIRTUAL_TERMINAL_PROCESSING on stdout (color support)
 	// ENABLE_VIRTUAL_TERMINAL_INPUT on stdin (ansi input sequences)
-	return windowsSetMode(windows.STD_OUTPUT_HANDLE, windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING) &&
-		windowsSetMode(windows.STD_INPUT_HANDLE, windows.ENABLE_VIRTUAL_TERMINAL_INPUT)
+	// See https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+	if err := windowsSetMode(windows.STD_OUTPUT_HANDLE, windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING); err != nil {
+		return err
+	}
+	if err := windowsSetMode(windows.STD_INPUT_HANDLE, windows.ENABLE_VIRTUAL_TERMINAL_INPUT); err != nil {
+		return err
+	}
+	return nil
 }
 
-func windowsSetMode(stdhandle uint32, modeFlag uint32) (success bool) {
+func windowsSetMode(stdhandle uint32, modeFlag uint32) (err error) {
 	handle, err := windows.GetStdHandle(stdhandle)
 	if err != nil {
-		return false
+		return err
 	}
 
 	// Get the existing console mode.
 	var mode uint32
 	err = windows.GetConsoleMode(handle, &mode)
 	if err != nil {
-		return false
+		return err
 	}
 
+	// Enable the mode if it is not currently set
 	if mode&modeFlag != modeFlag {
-		// Enable color.
-		// See https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences.
 		mode = mode | modeFlag
 		err = windows.SetConsoleMode(handle, mode)
 		if err != nil {
-			return false
+			return err
 		}
 	}
 
-	return true
+	return nil
 }
