@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
-	"io"
 )
 
 const (
@@ -22,34 +21,22 @@ type opSearch struct {
 	state     int
 	dir       int
 	source    *list.Element
-	w         io.Writer
+	w         *Terminal
 	buf       *RuneBuffer
 	data      []rune
 	history   *opHistory
 	cfg       *Config
 	markStart int
 	markEnd   int
-	width     int
-	height    int
 }
 
-func newOpSearch(w io.Writer, buf *RuneBuffer, history *opHistory, cfg *Config, width int, height int) *opSearch {
+func newOpSearch(w *Terminal, buf *RuneBuffer, history *opHistory, cfg *Config) *opSearch {
 	return &opSearch{
 		w:       w,
 		buf:     buf,
 		cfg:     cfg,
 		history: history,
-		width:   width,
-		height:  height,
 	}
-}
-
-func (o *opSearch) OnWidthChange(newWidth int) {
-	o.width = newWidth
-}
-func (o *opSearch) OnSizeChange(newWidth, newHeight int) {
-	o.width = newWidth
-	o.height = newHeight
 }
 
 func (o *opSearch) IsSearchMode() bool {
@@ -103,7 +90,8 @@ func (o *opSearch) SearchChar(r rune) {
 }
 
 func (o *opSearch) SearchMode(dir int) bool {
-	if o.width == 0 {
+	tWidth, _ := o.w.GetWidthHeight()
+	if tWidth == 0 {
 		return false
 	}
 	alreadyInMode := o.inMode
@@ -131,6 +119,7 @@ func (o *opSearch) ExitSearchMode(revert bool) {
 }
 
 func (o *opSearch) SearchRefresh(x int) {
+	tWidth, _ := o.w.GetWidthHeight()
 	if x == -2 {
 		o.state = S_STATE_FAILING
 	} else if x >= 0 {
@@ -141,7 +130,7 @@ func (o *opSearch) SearchRefresh(x int) {
 	}
 	x = o.buf.CurrentWidth(x)
 	x += o.buf.PromptLen()
-	x = x % o.width
+	x = x % tWidth
 
 	if o.markStart > 0 {
 		o.buf.SetStyle(o.markStart, o.markEnd, "4")

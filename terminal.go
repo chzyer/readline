@@ -19,7 +19,9 @@ type Terminal struct {
 	wg        sync.WaitGroup
 	sleeping  int32
 
-	sizeChan chan string
+	width     int                 // terminal width
+	height    int                 // terminal height
+	sizeChan  chan string
 }
 
 func NewTerminal(cfg *Config) (*Terminal, error) {
@@ -33,6 +35,8 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 		stopChan: make(chan struct{}, 1),
 		sizeChan: make(chan string, 1),
 	}
+	// Get and cache the current terminal size.
+	t.OnSizeChange()
 
 	go t.ioloop()
 	return t, nil
@@ -243,4 +247,18 @@ func (t *Terminal) SetConfig(c *Config) error {
 	t.cfg = c
 	t.m.Unlock()
 	return nil
+}
+
+// OnSizeChange gets the current terminal size and caches it
+func (t *Terminal) OnSizeChange() {
+	t.m.Lock()
+	defer t.m.Unlock()
+	t.width, t.height = t.cfg.FuncGetSize()
+}
+
+// GetWidthHeight returns the cached width, height values from the terminal
+func (t *Terminal) GetWidthHeight() (width, height int) {
+	t.m.Lock()
+	defer t.m.Unlock()
+	return t.width, t.height
 }

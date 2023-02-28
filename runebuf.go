@@ -18,13 +18,10 @@ type RuneBuffer struct {
 	buf    []rune
 	idx    int
 	prompt []rune
-	w      io.Writer
+	w      *Terminal
 
 	interactive bool
 	cfg         *Config
-
-	width  int
-	height int
 
 	bck *runeBufferBck
 
@@ -38,19 +35,6 @@ type RuneBuffer struct {
 
 func (r *RuneBuffer) pushKill(text []rune) {
 	r.lastKill = append([]rune{}, text...)
-}
-
-func (r *RuneBuffer) OnWidthChange(newWidth int) {
-	r.Lock()
-	r.width = newWidth
-	r.Unlock()
-}
-
-func (r *RuneBuffer) OnSizeChange(newWidth, newHeight int) {
-	r.Lock()
-	r.width = newWidth
-	r.height = newHeight
-	r.Unlock()
 }
 
 func (r *RuneBuffer) Backup() {
@@ -69,13 +53,11 @@ func (r *RuneBuffer) Restore() {
 	})
 }
 
-func NewRuneBuffer(w io.Writer, prompt string, cfg *Config, width int, height int) *RuneBuffer {
+func NewRuneBuffer(w *Terminal, prompt string, cfg *Config) *RuneBuffer {
 	rb := &RuneBuffer{
 		w:           w,
 		interactive: cfg.useInteractive(),
 		cfg:         cfg,
-		width:       width,
-		height:      height,
 	}
 	rb.SetPrompt(prompt)
 	return rb
@@ -102,9 +84,8 @@ func (r *RuneBuffer) CurrentWidth(x int) int {
 
 func (r *RuneBuffer) PromptLen() int {
 	r.Lock()
-	width := r.promptLen()
-	r.Unlock()
-	return width
+	defer r.Unlock()
+	return r.promptLen()
 }
 
 func (r *RuneBuffer) promptLen() int {
@@ -448,12 +429,13 @@ func (r *RuneBuffer) isInLineEdge() bool {
 }
 
 func (r *RuneBuffer) getSplitByLine(rs []rune, nextWidth int) [][]rune {
+	tWidth, _ := r.w.GetWidthHeight()
 	if r.cfg.EnableMask {
 		w := runes.Width(r.cfg.MaskRune)
 		masked := []rune(strings.Repeat(string(r.cfg.MaskRune), len(rs)))
-		return SplitByLine(runes.ColorFilter(r.prompt), masked, r.ppos, r.width, w)
+		return SplitByLine(runes.ColorFilter(r.prompt), masked, r.ppos, tWidth, w)
 	} else {
-		return SplitByLine(runes.ColorFilter(r.prompt), rs, r.ppos, r.width, nextWidth)
+		return SplitByLine(runes.ColorFilter(r.prompt), rs, r.ppos, tWidth, nextWidth)
 	}
 }
 
@@ -476,7 +458,8 @@ func (r *RuneBuffer) idxLine(width int) int {
 }
 
 func (r *RuneBuffer) CursorLineCount() int {
-	return r.LineCount() - r.IdxLine(r.width)
+	tWidth, _ := r.w.GetWidthHeight()
+	return r.LineCount() - r.IdxLine(tWidth)
 }
 
 func (r *RuneBuffer) Refresh(f func()) {
@@ -506,7 +489,7 @@ func (r *RuneBuffer) refresh(f func()) {
 // will write the offset back to us via stdin and there may already be 
 // other data in the stdin buffer ahead of it.
 // This function is called at the start of readline each time.
-func (r *RuneBuffer) getAndSetOffset(t *Terminal) {
+func (r *RuneBuffer) getAndSetOffset() {
 	if !r.interactive {
 		return
 	}
@@ -517,7 +500,7 @@ func (r *RuneBuffer) getAndSetOffset(t *Terminal) {
 		// at the beginning of the next line.
 		r.w.Write([]byte(" \b"))
 	}
-	t.GetOffset(r.SetOffset)
+	r.w.GetOffset(r.SetOffset)
 }
 
 func (r *RuneBuffer) SetOffset(offset string) {
@@ -528,8 +511,9 @@ func (r *RuneBuffer) SetOffset(offset string) {
 
 func (r *RuneBuffer) setOffset(offset string) {
 	r.offset = offset
-	if _, c, ok := (&escapeKeyPair{attr:offset}).Get2(); ok && c > 0 && c < r.width {
-		r.ppos = c - 1  // c should be 1..width
+	tWidth, _ := r.w.GetWidthHeight()
+	if _, c, ok := (&escapeKeyPair{attr:offset}).Get2(); ok && c > 0 && c < tWidth {
+		r.ppos = c - 1  // c should be 1..tWidth
 	} else {
 		r.ppos = 0
 	}
@@ -703,7 +687,8 @@ func (r *RuneBuffer) SetPrompt(prompt string) {
 func (r *RuneBuffer) cleanOutput(w io.Writer, idxLine int) {
 	buf := bufio.NewWriter(w)
 
-	if r.width == 0 {
+	tWidth, _ := r.w.GetWidthHeight()
+	if tWidth == 0 {
 		buf.WriteString(strings.Repeat("\r\b", len(r.buf)+r.promptLen()))
 		buf.Write([]byte("\033[J"))
 	} else {
@@ -724,7 +709,8 @@ func (r *RuneBuffer) Clean() {
 }
 
 func (r *RuneBuffer) clean() {
-	r.cleanWithIdxLine(r.idxLine(r.width))
+	tWidth, _ := r.w.GetWidthHeight()
+	r.cleanWithIdxLine(r.idxLine(tWidth))
 }
 
 func (r *RuneBuffer) cleanWithIdxLine(idxLine int) {

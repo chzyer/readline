@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io"
 )
 
 type AutoCompleter interface {
@@ -25,10 +24,8 @@ func (t *TabCompleter) Do([]rune, int) ([][]rune, int) {
 }
 
 type opCompleter struct {
-	w               io.Writer
+	w               *Terminal
 	op              *Operation
-	width           int
-	height          int
 
 	inCompleteMode  bool
 	inSelectMode    bool
@@ -42,12 +39,10 @@ type opCompleter struct {
 	candidateColWidth  int           // width of candidate columns
 }
 
-func newOpCompleter(w io.Writer, op *Operation, width, height int) *opCompleter {
+func newOpCompleter(w *Terminal, op *Operation) *opCompleter {
 	return &opCompleter{
 		w:      w,
 		op:     op,
-		width:  width,
-		height: height,
 	}
 }
 
@@ -73,7 +68,8 @@ func (o *opCompleter) nextCandidate(i int) {
 // when tab pressed if cannot do complete for reason such as width unknown
 // or no candidates available.
 func (o *opCompleter) OnComplete() (ringBell bool) {
-	if o.width == 0 || o.height < 3 {
+	tWidth, tHeight := o.w.GetWidthHeight()
+	if tWidth == 0 || tHeight < 3 {
 		return false
 	}
 	if o.IsInCompleteSelectMode() {
@@ -103,7 +99,7 @@ func (o *opCompleter) OnComplete() (ringBell bool) {
 	if len(newLines) == 0 || (len(newLines) == 1 && len(newLines[0]) == 0) {
 		o.ExitCompleteMode(false)
 		return false // will ring bell on initial tab press
-	} 
+	}
 	if o.candidateOff > offset {
 		// part of buffer we are completing has changed. Example might be that we were completing "ls" and
 		// user typed space so we are no longer completing "ls" but now we are completing an argument of
@@ -246,15 +242,6 @@ func (o *opCompleter) getMatrixSize() int {
 	return line * colNum
 }
 
-func (o *opCompleter) OnWidthChange(newWidth int) {
-	o.width = newWidth
-}
-
-func (o *opCompleter) OnSizeChange(newWidth, newHeight int) {
-	o.width = newWidth
-	o.height = newHeight
-}
-
 // setColumnInfo calculates column width and number of columns required
 // to present the list of candidates on the terminal.
 func (o *opCompleter) setColumnInfo() {
@@ -270,8 +257,10 @@ func (o *opCompleter) setColumnInfo() {
 	}
 	colWidth++ // whitespace between cols
 
+	tWidth, _ := o.w.GetWidthHeight()
+
 	// -1 to avoid end of line issues
-	width := o.width - 1
+	width := tWidth - 1
 	colNum := width / colWidth
 	if colNum != 0 {
 		colWidth += (width - (colWidth * colNum)) / colNum
@@ -283,8 +272,9 @@ func (o *opCompleter) setColumnInfo() {
 
 // needPagerMode returns true if number of candidates would go off the page
 func (o *opCompleter) needPagerMode() bool {
+	tWidth, tHeight := o.w.GetWidthHeight()
 	buflineCnt := o.op.buf.LineCount()           // lines taken by buffer content
-	linesAvail := o.height - buflineCnt          // lines available without scrolling buffer off screen
+	linesAvail := tHeight - buflineCnt           // lines available without scrolling buffer off screen
 	if o.candidateColNum > 0 {
 		// Normal case where each candidate at least fits on a line
 		maxOrPage := linesAvail * o.candidateColNum  // max candiates without needing to page
@@ -299,9 +289,9 @@ func (o *opCompleter) needPagerMode() bool {
 	for _, c := range o.candidate {
 		cWidth := sameWidth + runes.WidthAll(c)
 		cLines := 1
-		if o.width > 0 {
-			cLines = cWidth / o.width
-			if cWidth % o.width > 0 {
+		if tWidth > 0 {
+			cLines = cWidth / tWidth
+			if cWidth % tWidth > 0 {
 				cLines++
 			}
 		}
@@ -326,6 +316,7 @@ func (o *opCompleter) CompleteRefresh() {
 	buf.WriteString("\033[J")
 
 	same := o.op.buf.RuneSlice(-o.candidateOff)
+	tWidth, _ := o.w.GetWidthHeight()
 
 	colIdx := 0
 	lines := 0
@@ -334,13 +325,13 @@ func (o *opCompleter) CompleteRefresh() {
 		inSelect := idx == o.candidateChoise && o.IsInCompleteSelectMode()
 		cWidth := sameWidth + runes.WidthAll(c)
 		cLines := 1
-		if o.width > 0 {
+		if tWidth > 0 {
 			sWidth := 0
 			if isWindows && inSelect {
 				sWidth = 1 // adjust for hightlighting on Windows
 			}
-			cLines = (cWidth + sWidth) / o.width
-			if (cWidth + sWidth) % o.width > 0 {
+			cLines = (cWidth + sWidth) / tWidth
+			if (cWidth + sWidth) % tWidth > 0 {
 				cLines++
 			}
 		}
@@ -403,11 +394,12 @@ func (o *opCompleter) pagerRefresh() (stayInMode bool) {
 	} else {
 		// after first page, redraw over --More--
 		buf.WriteString("\r")
-	}		
+	}
 	buf.WriteString("\033[J")   // clear anything below
 
 	same := o.op.buf.RuneSlice(-o.candidateOff)
 	sameWidth := runes.WidthAll(same)
+	tWidth, tHeight := o.w.GetWidthHeight()
 
 	colIdx := 0
 	lines := 1
@@ -415,13 +407,13 @@ func (o *opCompleter) pagerRefresh() (stayInMode bool) {
 		c := o.candidate[o.candidateChoise]
 		cWidth := sameWidth + runes.WidthAll(c)
 		cLines := 1
-		if o.width > 0 {
-			cLines = cWidth / o.width
-			if cWidth % o.width > 0 {
+		if tWidth > 0 {
+			cLines = cWidth / tWidth
+			if cWidth % tWidth > 0 {
 				cLines++
 			}
 		}
-		if lines > 1 && lines + cLines > o.height {
+		if lines > 1 && lines + cLines > tHeight {
 			break // won't fit on page, stop early.
 		}
 		buf.WriteString(string(same))
@@ -460,7 +452,8 @@ func (o *opCompleter) pagerRefresh() (stayInMode bool) {
 // we rewrite the prompt it does not over write the page content. The code to rewrite
 // the prompt assumes the cursor is at the index line, so we add enough blank lines.
 func (o *opCompleter) scrollOutOfPagerMode() {
-	lineCnt := o.op.buf.IdxLine(o.width)
+	tWidth, _ := o.w.GetWidthHeight()
+	lineCnt := o.op.buf.IdxLine(tWidth)
 	if lineCnt > 0 {
 		buf := bufio.NewWriter(o.w)
 		buf.Write(bytes.Repeat([]byte("\n"), lineCnt))

@@ -65,7 +65,8 @@ func (o *Operation) write(target io.Writer, b []byte) (int, error) {
 		n, err = target.Write(b)
 		// Adjust the prompt start position by b
 		rout := runes.ColorFilter([]rune(string(b[:])))
-		sp := SplitByLine(rout, []rune{}, o.buf.ppos, o.buf.width, 1)
+		tWidth, _ := o.t.GetWidthHeight()
+		sp := SplitByLine(rout, []rune{}, o.buf.ppos, tWidth, 1)
 		if len(sp) > 1 {
 			o.buf.ppos = len(sp[len(sp)-1])
 		} else {
@@ -83,24 +84,18 @@ func (o *Operation) write(target io.Writer, b []byte) (int, error) {
 }
 
 func NewOperation(t *Terminal, cfg *Config) *Operation {
-	width, height := cfg.FuncGetSize()
 	op := &Operation{
 		t:       t,
-		buf:     NewRuneBuffer(t, cfg.Prompt, cfg, width, height),
+		buf:     NewRuneBuffer(t, cfg.Prompt, cfg),
 		outchan: make(chan []rune),
 		errchan: make(chan error, 1),
 	}
 	op.w = op.buf.w
 	op.SetConfig(cfg)
 	op.opVim = newVimMode(op)
-	op.opCompleter = newOpCompleter(op.buf.w, op, width, height)
+	op.opCompleter = newOpCompleter(op.buf.w, op)
 	op.opPassword = newOpPassword(op)
-	op.cfg.FuncOnWidthChanged(func() {
-		newWidth, newHeight := cfg.FuncGetSize()
-		op.opCompleter.OnSizeChange(newWidth, newHeight)
-		op.opSearch.OnSizeChange(newWidth, newHeight)
-		op.buf.OnSizeChange(newWidth, newHeight)
-	})
+	op.cfg.FuncOnWidthChanged(t.OnSizeChange)
 	go op.ioloop()
 	return op
 }
@@ -431,7 +426,7 @@ func (o *Operation) Runes() ([]rune, error) {
 	// maybe existing text on the same line that ideally we don't
 	// want to overwrite and cause prompt to jump left. Note that
 	// this is not perfect but works the majority of the time.
-	o.buf.getAndSetOffset(o.t)
+	o.buf.getAndSetOffset()
 	o.buf.Print() // print prompt & buffer contents
 	o.t.KickRead()
 
@@ -525,12 +520,11 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	op.SetPrompt(cfg.Prompt)
 	op.SetMaskRune(cfg.MaskRune)
 	op.buf.SetConfig(cfg)
-	width, height := op.cfg.FuncGetSize()
 
 	if cfg.opHistory == nil {
 		op.SetHistoryPath(cfg.HistoryFile)
 		cfg.opHistory = op.history
-		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg, width, height)
+		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg)
 	}
 	op.history = cfg.opHistory
 
@@ -538,8 +532,8 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	// so if we use it next time, we need to reopen it by `InitHistory()`
 	op.history.Init()
 
-	if op.cfg.AutoComplete != nil {
-		op.opCompleter = newOpCompleter(op.buf.w, op, width, height)
+	if op.cfg.AutoComplete != nil && op.opCompleter == nil {
+		op.opCompleter = newOpCompleter(op.buf.w, op)
 	}
 
 	op.opSearch = cfg.opSearch
