@@ -510,7 +510,7 @@ func (r *RuneBuffer) getAndSetOffset(t *Terminal) {
 		// at the beginning of the next line.
 		r.w.Write([]byte(" \b"))
 	}
-	t.GetOffset(r.setOffset)
+	t.GetOffset(r.SetOffset)
 }
 
 func (r *RuneBuffer) SetOffset(offset string) {
