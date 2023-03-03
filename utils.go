@@ -224,7 +224,11 @@ func SplitByLine(prompt, rs []rune, offset, screenWidth, nextWidth int) [][]rune
 	currentWidth := offset
 	for i, r := range prs {
 		w := runes.Width(r)
-		if currentWidth + w > screenWidth {
+		if r == '\n' {
+			ret = append(ret, prs[si:i+1])
+			si = i + 1
+			currentWidth = 0
+		} else if currentWidth + w > screenWidth {
 			ret = append(ret, prs[si:i])
 			si = i
 			currentWidth = 0

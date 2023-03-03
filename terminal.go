@@ -17,7 +17,6 @@ type Terminal struct {
 	stopChan  chan struct{}
 	kickChan  chan struct{}
 	wg        sync.WaitGroup
-	isReading int32
 	sleeping  int32
 
 	sizeChan chan string
@@ -104,10 +103,6 @@ func (t *Terminal) ReadRune() rune {
 	return ch
 }
 
-func (t *Terminal) IsReading() bool {
-	return atomic.LoadInt32(&t.isReading) == 1
-}
-
 func (t *Terminal) KickRead() {
 	select {
 	case t.kickChan <- struct{}{}:
@@ -132,10 +127,8 @@ func (t *Terminal) ioloop() {
 	buf := bufio.NewReader(t.getStdin())
 	for {
 		if !expectNextChar {
-			atomic.StoreInt32(&t.isReading, 0)
 			select {
 			case <-t.kickChan:
-				atomic.StoreInt32(&t.isReading, 1)
 			case <-t.stopChan:
 				return
 			}
@@ -210,7 +203,6 @@ func (t *Terminal) ioloop() {
 			t.outchan <- r
 		}
 	}
-
 }
 
 func (t *Terminal) Bell() {
