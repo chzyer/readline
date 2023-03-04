@@ -122,7 +122,7 @@ func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) 
 	arg := *argptr
 	var err error
 
-	if r >= 'A' && r <= 'D' {
+	if (r >= 'A' && r <= 'D') || r == 'G' {
 		count := short(GetInt(arg, 1))
 		info, err := GetConsoleScreenBufferInfo()
 		if err != nil {
@@ -137,6 +137,8 @@ func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) 
 			info.dwCursorPosition.x += count
 		case 'D': // left
 			info.dwCursorPosition.x -= count
+		case 'G': // Absolute horizontal position
+			info.dwCursorPosition.x = count - 1 // windows origin is 0, unix is 1
 		}
 		SetConsoleCursorPosition(&info.dwCursorPosition)
 		return false
