@@ -197,6 +197,13 @@ func (t *Terminal) ioloop() {
 
 		expectNextChar = true
 		switch r {
+		case 0:
+			// If ctrl-D is pressed at the beginning of a line before rl.Readline() is
+			// called, then the terminal won't be in raw mode and will translate the
+			// ctrl-D to 0. If we return the 0, the operation ioloop will exit and
+			// the next call to rl.Readline() will hang as nothing will read t.outchan.
+			// Instead, we can safely ignore this and continue.
+			continue
 		case CharEsc:
 			if t.cfg.VimMode {
 				t.outchan <- r
