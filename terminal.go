@@ -214,7 +214,9 @@ func (t *Terminal) ioloop() {
 }
 
 func (t *Terminal) Bell() {
-	fmt.Fprintf(t, "%c", CharBell)
+	if !t.cfg.DisableBell {
+		fmt.Fprintf(t, "%c", CharBell)
+	}
 }
 
 func (t *Terminal) Close() error {
