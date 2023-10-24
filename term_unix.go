@@ -2,23 +2,24 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build darwin || dragonfly || freebsd || (linux && !appengine) || netbsd || openbsd
 // +build darwin dragonfly freebsd linux,!appengine netbsd openbsd
 
 package readline
 
 import (
 	"syscall"
-	"unsafe"
+
+	"golang.org/x/sys/unix"
 )
 
 type Termios syscall.Termios
 
 // GetSize returns the dimensions of the given terminal.
 func GetSize(fd int) (int, int, error) {
-	var dimensions [4]uint16
-	_, _, err := syscall.Syscall6(syscall.SYS_IOCTL, uintptr(fd), uintptr(syscall.TIOCGWINSZ), uintptr(unsafe.Pointer(&dimensions)), 0, 0, 0)
-	if err != 0 {
+	winsize, err := unix.IoctlGetWinsize(fd, unix.TIOCGWINSZ)
+	if err != nil {
 		return 0, 0, err
 	}
-	return int(dimensions[1]), int(dimensions[0]), nil
+	return int(winsize.Col), int(winsize.Row), nil
 }
