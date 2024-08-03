@@ -1,6 +1,6 @@
 module github.com/chzyer/readline
 
-go 1.15
+go 1.22
 
 require (
 	github.com/chzyer/test v1.0.0

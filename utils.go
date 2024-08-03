@@ -46,6 +46,8 @@ const (
 	CharO         = 79
 	CharEscapeEx  = 91
 	CharBackspace = 127
+	CharK         = 107
+	CharJ         = 106
 )
 
 const (
