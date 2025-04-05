@@ -27,6 +27,7 @@ func (t *TabCompleter) Do([]rune, int) ([][]rune, int) {
 type opCompleter struct {
 	w     io.Writer
 	op    *Operation
+	mu    sync.RWMutex
 	width int
 
 	inCompleteMode  bool
@@ -182,10 +183,15 @@ func (o *opCompleter) getMatrixSize() int {
 }
 
 func (o *opCompleter) OnWidthChange(newWidth int) {
+	o.mu.Lock()
+    	defer o.mu.Unlock()
 	o.width = newWidth
 }
 
 func (o *opCompleter) CompleteRefresh() {
+	o.mu.RLock()
+    	width := o.width
+    	o.mu.RUnlock()
 	if !o.inCompleteMode {
 		return
 	}
