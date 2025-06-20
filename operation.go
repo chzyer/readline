@@ -424,7 +424,7 @@ func (o *Operation) Password(prompt string) ([]byte, error) {
 }
 
 func (o *Operation) SetTitle(t string) {
-	o.w.Write([]byte("\033[2;" + t + "\007"))
+	o.w.Write([]byte("\033]2;" + t + "\007"))
 }
 
 func (o *Operation) Slice() ([]byte, error) {
