@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/MarekStancik/readline"
+	"github.com/precla/readline"
 )
 
 func usage(w io.Writer) {

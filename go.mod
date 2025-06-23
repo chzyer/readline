@@ -1,10 +1,12 @@
-module github.com/chzyer/readline
+module github.com/precla/readline
 
-go 1.15
+go 1.23.0
+
+toolchain go1.24.4
 
 require (
 	github.com/chzyer/test v1.0.0
-	golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5
+	golang.org/x/sys v0.33.0
 )
 
-require github.com/chzyer/logex v1.2.1
+require github.com/chzyer/logex v1.2.1 // indirect

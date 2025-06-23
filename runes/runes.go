@@ -1,6 +1,6 @@
 // deprecated.
-// see https://github.com/MarekStancik/readline/issues/43
-// use github.com/MarekStancik/readline/runes.go
+// see https://github.com/precla/readline/issues/43
+// use github.com/precla/readline/runes.go
 package runes
 
 import (
