@@ -388,7 +388,7 @@ func (r *RuneBuffer) Backspace() {
 	allWidth := runes.WidthAll(r.buf) + plen + 1
 
 	// If at the start of line move up and to the end
-	if allWidth%r.width == 0 {
+	if (r.width > 0) && (allWidth % r.width == 0) {
 		r.w.Write([]byte("\033[A\r\033[" + strconv.Itoa(r.width) + "C"))
 	} else {
 		r.w.Write([]byte{'\b'}) // else move back by one pos
