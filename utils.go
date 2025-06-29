@@ -116,8 +116,13 @@ func escapeExKey(key *escapeKeyPair) rune {
 	case 'F':
 		r = CharLineEnd
 	case '~':
-		if key.attr == "3" {
+		switch key.attr {
+		case "1":
+			r = CharLineStart
+		case "3":
 			r = CharDelete
+		case "4":
+			r = CharLineEnd
 		}
 	default:
 	}
