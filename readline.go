@@ -54,7 +54,9 @@ type Config struct {
 	InterruptPrompt string
 	EOFPrompt       string
 
-	FuncGetWidth func() int
+	FuncGetWidth    func() int
+	// Function that returns width, height of the terminal or -1,-1 if unknown
+	FuncGetSize     func() (width int, height int)
 
 	Stdin       io.ReadCloser
 	StdinWriter io.Writer
@@ -130,6 +132,9 @@ func (c *Config) Init() error {
 	if c.FuncGetWidth == nil {
 		c.FuncGetWidth = GetScreenWidth
 	}
+	if c.FuncGetSize == nil {
+		c.FuncGetSize = GetScreenSize
+	}
 	if c.FuncIsTerminal == nil {
 		c.FuncIsTerminal = DefaultIsTerminal
 	}
@@ -141,7 +146,7 @@ func (c *Config) Init() error {
 		c.FuncExitRaw = rm.Exit
 	}
 	if c.FuncOnWidthChanged == nil {
-		c.FuncOnWidthChanged = DefaultOnWidthChanged
+		c.FuncOnWidthChanged = DefaultOnSizeChanged
 	}
 
 	return nil

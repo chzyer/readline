@@ -27,6 +27,8 @@ type Operation struct {
 	errchan chan error
 	w       io.Writer
 
+	isPrompting bool       // true when prompt written and waiting for input
+
 	history *opHistory
 	*opSearch
 	*opCompleter
@@ -39,52 +41,61 @@ func (o *Operation) SetBuffer(what string) {
 }
 
 type wrapWriter struct {
-	r      *Operation
-	t      *Terminal
+	o      *Operation
 	target io.Writer
 }
 
 func (w *wrapWriter) Write(b []byte) (int, error) {
-	if !w.t.IsReading() {
-		return w.target.Write(b)
+	return w.o.write(w.target, b)
+}
+
+func (o *Operation) write(target io.Writer, b []byte) (int, error) {
+	o.m.Lock()
+	defer o.m.Unlock()
+
+	if !o.isPrompting {
+		return target.Write(b)
 	}
 
 	var (
 		n   int
 		err error
 	)
-	w.r.buf.Refresh(func() {
-		n, err = w.target.Write(b)
+	o.buf.Refresh(func() {
+		n, err = target.Write(b)
+		// Adjust the prompt start position by b
+		rout := runes.ColorFilter([]rune(string(b[:])))
+		tWidth, _ := o.t.GetWidthHeight()
+		sp := SplitByLine(rout, []rune{}, o.buf.ppos, tWidth, 1)
+		if len(sp) > 1 {
+			o.buf.ppos = len(sp[len(sp)-1])
+		} else {
+			o.buf.ppos += len(rout)
+		}
 	})
 
-	if w.r.IsSearchMode() {
-		w.r.SearchRefresh(-1)
+	if o.IsSearchMode() {
+		o.SearchRefresh(-1)
 	}
-	if w.r.IsInCompleteMode() {
-		w.r.CompleteRefresh()
+	if o.IsInCompleteMode() {
+		o.CompleteRefresh()
 	}
 	return n, err
 }
 
 func NewOperation(t *Terminal, cfg *Config) *Operation {
-	width := cfg.FuncGetWidth()
 	op := &Operation{
 		t:       t,
-		buf:     NewRuneBuffer(t, cfg.Prompt, cfg, width),
+		buf:     NewRuneBuffer(t, cfg.Prompt, cfg),
 		outchan: make(chan []rune),
 		errchan: make(chan error, 1),
 	}
 	op.w = op.buf.w
 	op.SetConfig(cfg)
 	op.opVim = newVimMode(op)
-	op.opCompleter = newOpCompleter(op.buf.w, op, width)
+	op.opCompleter = newOpCompleter(op.buf.w, op)
 	op.opPassword = newOpPassword(op)
-	op.cfg.FuncOnWidthChanged(func() {
-		newWidth := cfg.FuncGetWidth()
-		op.opCompleter.OnWidthChange(newWidth)
-		op.opSearch.OnWidthChange(newWidth)
-		op.buf.OnWidthChange(newWidth)
-	})
+	op.cfg.FuncOnWidthChanged(t.OnSizeChange)
 	go op.ioloop()
 	return op
 }
@@ -136,6 +147,17 @@ func (o *Operation) ioloop() {
 		}
 		isUpdateHistory := true
 
+		if o.IsInPagerMode() {
+			keepInCompleteMode = o.HandlePagerMode(r)
+			if r == CharEnter || r == CharCtrlJ || r == CharInterrupt {
+				o.t.KickRead()
+			}
+			if !keepInCompleteMode {
+				o.buf.Refresh(nil)
+			}
+			continue
+		}
+
 		if o.IsInCompleteSelectMode() {
 			keepInCompleteMode = o.HandleCompleteSelect(r)
 			if keepInCompleteMode {
@@ -178,12 +200,14 @@ func (o *Operation) ioloop() {
 				break
 			}
 			if o.OnComplete() {
-				keepInCompleteMode = true
+				if o.IsInCompleteMode() {
+					keepInCompleteMode = true
+					continue // redraw is done, loop
+				}
 			} else {
 				o.t.Bell()
-				break
 			}
-
+			o.buf.Refresh(nil)
 		case CharBckSearch:
 			if !o.SearchMode(S_DIR_BCK) {
 				o.t.Bell()
@@ -225,15 +249,13 @@ func (o *Operation) ioloop() {
 				break
 			}
 			o.buf.Backspace()
-			if o.IsInCompleteMode() {
-				o.OnComplete()
-			}
 		case CharCtrlZ:
 			o.buf.Clean()
 			o.t.SleepToResume()
 			o.Refresh()
 		case CharCtrlL:
 			ClearScreen(o.w)
+			o.buf.SetOffset("1;1")
 			o.Refresh()
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
@@ -242,6 +264,10 @@ func (o *Operation) ioloop() {
 		case CharEnter, CharCtrlJ:
 			if o.IsSearchMode() {
 				o.ExitSearchMode(false)
+			}
+			if o.IsInCompleteMode() {
+				o.ExitCompleteMode(true)
+				o.buf.Refresh(nil)
 			}
 			o.buf.MoveToLineEnd()
 			var data []rune
@@ -332,7 +358,11 @@ func (o *Operation) ioloop() {
 			o.buf.WriteRune(r)
 			if o.IsInCompleteMode() {
 				o.OnComplete()
-				keepInCompleteMode = true
+				if o.IsInCompleteMode() {
+					keepInCompleteMode = true
+				} else {
+					o.buf.Refresh(nil)
+				}
 			}
 		}
 
@@ -351,7 +381,7 @@ func (o *Operation) ioloop() {
 		} else if o.IsInCompleteMode() {
 			if !keepInCompleteMode {
 				o.ExitCompleteMode(false)
-				o.Refresh()
+				o.refresh()
 			} else {
 				o.buf.Refresh(nil)
 				o.CompleteRefresh()
@@ -366,11 +396,11 @@ func (o *Operation) ioloop() {
 }
 
 func (o *Operation) Stderr() io.Writer {
-	return &wrapWriter{target: o.GetConfig().Stderr, r: o, t: o.t}
+	return &wrapWriter{target: o.GetConfig().Stderr, o: o}
 }
 
 func (o *Operation) Stdout() io.Writer {
-	return &wrapWriter{target: o.GetConfig().Stdout, r: o, t: o.t}
+	return &wrapWriter{target: o.GetConfig().Stdout, o: o}
 }
 
 func (o *Operation) String() (string, error) {
@@ -387,8 +417,29 @@ func (o *Operation) Runes() ([]rune, error) {
 		listener.OnChange(nil, 0, 0)
 	}
 
-	o.buf.Refresh(nil) // print prompt
+	// Before writing the prompt and starting to read, get a lock
+	// so we don't race with wrapWriter trying to write and refresh.
+	o.m.Lock()
+	o.isPrompting = true
+
+	// Query cursor position before printing the prompt as there
+	// maybe existing text on the same line that ideally we don't
+	// want to overwrite and cause prompt to jump left. Note that
+	// this is not perfect but works the majority of the time.
+	o.buf.getAndSetOffset()
+	o.buf.Print() // print prompt & buffer contents
 	o.t.KickRead()
+
+	// Prompt written safely, unlock until read completes and then
+	// lock again to unset.
+	o.m.Unlock()
+	defer func() {
+		o.m.Lock()
+		o.isPrompting = false
+		o.buf.SetOffset("1;1")
+		o.m.Unlock()
+	}()
+
 	select {
 	case r := <-o.outchan:
 		return r, nil
@@ -469,12 +520,11 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	op.SetPrompt(cfg.Prompt)
 	op.SetMaskRune(cfg.MaskRune)
 	op.buf.SetConfig(cfg)
-	width := op.cfg.FuncGetWidth()
 
 	if cfg.opHistory == nil {
 		op.SetHistoryPath(cfg.HistoryFile)
 		cfg.opHistory = op.history
-		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg, width)
+		cfg.opSearch = newOpSearch(op.buf.w, op.buf, op.history, cfg)
 	}
 	op.history = cfg.opHistory
 
@@ -482,8 +532,8 @@ func (op *Operation) SetConfig(cfg *Config) (*Config, error) {
 	// so if we use it next time, we need to reopen it by `InitHistory()`
 	op.history.Init()
 
-	if op.cfg.AutoComplete != nil {
-		op.opCompleter = newOpCompleter(op.buf.w, op, width)
+	if op.cfg.AutoComplete != nil && op.opCompleter == nil {
+		op.opCompleter = newOpCompleter(op.buf.w, op)
 	}
 
 	op.opSearch = cfg.opSearch
@@ -501,7 +551,13 @@ func (o *Operation) SaveHistory(content string) error {
 }
 
 func (o *Operation) Refresh() {
-	if o.t.IsReading() {
+	o.m.Lock()
+	defer o.m.Unlock()
+	o.refresh()
+}
+
+func (o *Operation) refresh() {
+	if o.isPrompting {
 		o.buf.Refresh(nil)
 	}
 }

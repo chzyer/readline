@@ -17,10 +17,11 @@ type Terminal struct {
 	stopChan  chan struct{}
 	kickChan  chan struct{}
 	wg        sync.WaitGroup
-	isReading int32
 	sleeping  int32
 
-	sizeChan chan string
+	width     int                 // terminal width
+	height    int                 // terminal height
+	sizeChan  chan string
 }
 
 func NewTerminal(cfg *Config) (*Terminal, error) {
@@ -34,6 +35,8 @@ func NewTerminal(cfg *Config) (*Terminal, error) {
 		stopChan: make(chan struct{}, 1),
 		sizeChan: make(chan string, 1),
 	}
+	// Get and cache the current terminal size.
+	t.OnSizeChange()
 
 	go t.ioloop()
 	return t, nil
@@ -80,7 +83,7 @@ func (t *Terminal) GetOffset(f func(offset string)) {
 	go func() {
 		f(<-t.sizeChan)
 	}()
-	t.Write([]byte("\033[6n"))
+	SendCursorPosition(t)
 }
 
 func (t *Terminal) Print(s string) {
@@ -102,10 +105,6 @@ func (t *Terminal) ReadRune() rune {
 		return rune(0)
 	}
 	return ch
-}
-
-func (t *Terminal) IsReading() bool {
-	return atomic.LoadInt32(&t.isReading) == 1
 }
 
 func (t *Terminal) KickRead() {
@@ -132,10 +131,8 @@ func (t *Terminal) ioloop() {
 	buf := bufio.NewReader(t.getStdin())
 	for {
 		if !expectNextChar {
-			atomic.StoreInt32(&t.isReading, 0)
 			select {
 			case <-t.kickChan:
-				atomic.StoreInt32(&t.isReading, 1)
 			case <-t.stopChan:
 				return
 			}
@@ -210,7 +207,6 @@ func (t *Terminal) ioloop() {
 			t.outchan <- r
 		}
 	}
-
 }
 
 func (t *Terminal) Bell() {
@@ -251,4 +247,18 @@ func (t *Terminal) SetConfig(c *Config) error {
 	t.cfg = c
 	t.m.Unlock()
 	return nil
+}
+
+// OnSizeChange gets the current terminal size and caches it
+func (t *Terminal) OnSizeChange() {
+	t.m.Lock()
+	defer t.m.Unlock()
+	t.width, t.height = t.cfg.FuncGetSize()
+}
+
+// GetWidthHeight returns the cached width, height values from the terminal
+func (t *Terminal) GetWidthHeight() (width, height int) {
+	t.m.Lock()
+	defer t.m.Unlock()
+	return t.width, t.height
 }
