@@ -527,8 +527,10 @@ func (r *RuneBuffer) getBackspaceSequence() []byte {
 	}
 	var buf []byte
 	for i := len(r.buf); i > r.idx; i-- {
-		// move input to the left of one
-		buf = append(buf, '\b')
+		// move input to the left of one, fix character where width > 1, such like chinese
+		for j:=0;j<runes.Width(r.buf[i-1]);j++ {
+			buf = append(buf, '\b')
+		}
 		if sep[i] {
 			// up one line, go to the start of the line and move cursor right to the end (r.width)
 			buf = append(buf, "\033[A\r"+"\033["+strconv.Itoa(r.width)+"C"...)
