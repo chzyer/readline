@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"unicode"
 	"unicode/utf8"
+	"golang.org/x/text/width"
 )
 
 var runes = Runes{}
@@ -150,10 +151,12 @@ func (Runes) Width(r rune) int {
 	if unicode.IsOneOf(zeroWidth, r) {
 		return 0
 	}
-	if unicode.IsOneOf(doubleWidth, r) {
+	switch width.LookupRune(r).Kind() {
+	case width.EastAsianWide, width.EastAsianFullwidth:
 		return 2
+	default:
+		return 1
 	}
-	return 1
 }
 
 func (Runes) WidthAll(r []rune) (length int) {

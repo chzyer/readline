@@ -27,6 +27,8 @@ type Operation struct {
 	errchan chan error
 	w       io.Writer
 
+	isPrompting bool       // true when prompt written and waiting for input
+
 	history *opHistory
 	*opSearch
 	*opCompleter
@@ -39,29 +41,43 @@ func (o *Operation) SetBuffer(what string) {
 }
 
 type wrapWriter struct {
-	r      *Operation
-	t      *Terminal
+	o      *Operation
 	target io.Writer
 }
 
 func (w *wrapWriter) Write(b []byte) (int, error) {
-	if !w.t.IsReading() {
-		return w.target.Write(b)
+	return w.o.write(w.target, b)
+}
+
+func (o *Operation) write(target io.Writer, b []byte) (int, error) {
+	o.m.Lock()
+	defer o.m.Unlock()
+
+	if !o.isPrompting {
+		return target.Write(b)
 	}
 
 	var (
 		n   int
 		err error
 	)
-	w.r.buf.Refresh(func() {
-		n, err = w.target.Write(b)
+	o.buf.Refresh(func() {
+		n, err = target.Write(b)
+		// Adjust the prompt start position by b
+		rout := runes.ColorFilter([]rune(string(b[:])))
+		sp := SplitByLine(rout, []rune{}, o.buf.ppos, o.buf.width, 1)
+		if len(sp) > 1 {
+			o.buf.ppos = len(sp[len(sp)-1])
+		} else {
+			o.buf.ppos += len(rout)
+		}
 	})
 
-	if w.r.IsSearchMode() {
-		w.r.SearchRefresh(-1)
+	if o.IsSearchMode() {
+		o.SearchRefresh(-1)
 	}
-	if w.r.IsInCompleteMode() {
-		w.r.CompleteRefresh()
+	if o.IsInCompleteMode() {
+		o.CompleteRefresh()
 	}
 	return n, err
 }
@@ -234,6 +250,7 @@ func (o *Operation) ioloop() {
 			o.Refresh()
 		case CharCtrlL:
 			ClearScreen(o.w)
+			o.buf.SetOffset("1;1")
 			o.Refresh()
 		case MetaBackspace, CharCtrlW:
 			o.buf.BackEscapeWord()
@@ -351,7 +368,7 @@ func (o *Operation) ioloop() {
 		} else if o.IsInCompleteMode() {
 			if !keepInCompleteMode {
 				o.ExitCompleteMode(false)
-				o.Refresh()
+				o.refresh()
 			} else {
 				o.buf.Refresh(nil)
 				o.CompleteRefresh()
@@ -366,11 +383,11 @@ func (o *Operation) ioloop() {
 }
 
 func (o *Operation) Stderr() io.Writer {
-	return &wrapWriter{target: o.GetConfig().Stderr, r: o, t: o.t}
+	return &wrapWriter{target: o.GetConfig().Stderr, o: o}
 }
 
 func (o *Operation) Stdout() io.Writer {
-	return &wrapWriter{target: o.GetConfig().Stdout, r: o, t: o.t}
+	return &wrapWriter{target: o.GetConfig().Stdout, o: o}
 }
 
 func (o *Operation) String() (string, error) {
@@ -387,8 +404,29 @@ func (o *Operation) Runes() ([]rune, error) {
 		listener.OnChange(nil, 0, 0)
 	}
 
-	o.buf.Refresh(nil) // print prompt
+	// Before writing the prompt and starting to read, get a lock
+	// so we don't race with wrapWriter trying to write and refresh.
+	o.m.Lock()
+	o.isPrompting = true
+
+	// Query cursor position before printing the prompt as there
+	// maybe existing text on the same line that ideally we don't
+	// want to overwrite and cause prompt to jump left. Note that
+	// this is not perfect but works the majority of the time.
+	o.buf.getAndSetOffset(o.t)
+	o.buf.Print() // print prompt & buffer contents
 	o.t.KickRead()
+
+	// Prompt written safely, unlock until read completes and then
+	// lock again to unset.
+	o.m.Unlock()
+	defer func() {
+		o.m.Lock()
+		o.isPrompting = false
+		o.buf.SetOffset("1;1")
+		o.m.Unlock()
+	}()
+
 	select {
 	case r := <-o.outchan:
 		return r, nil
@@ -501,7 +539,13 @@ func (o *Operation) SaveHistory(content string) error {
 }
 
 func (o *Operation) Refresh() {
-	if o.t.IsReading() {
+	o.m.Lock()
+	defer o.m.Unlock()
+	o.refresh()
+}
+
+func (o *Operation) refresh() {
+	if o.isPrompting {
 		o.buf.Refresh(nil)
 	}
 }
