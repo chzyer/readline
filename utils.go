@@ -199,6 +199,14 @@ func escapeKey(r rune, reader *bufio.Reader) rune {
 	case 'O':
 		d, _, _ := reader.ReadRune()
 		switch d {
+		case 'D':
+			r = CharBackward
+		case 'C':
+			r = CharForward
+		case 'A':
+			r = CharPrev
+		case 'B':
+			r = CharNext
 		case 'H':
 			r = CharLineStart
 		case 'F':
