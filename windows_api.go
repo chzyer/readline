@@ -23,6 +23,7 @@ type Kernel struct {
 	GetConsoleScreenBufferInfo,
 	GetConsoleCursorInfo,
 	GetStdHandle CallFunc
+	GetFileType CallFuncDword
 }
 
 type short int16
@@ -45,6 +46,7 @@ const (
 	EVENT_WINDOW_BUFFER_SIZE = 0x0004
 	EVENT_MENU               = 0x0008
 	EVENT_FOCUS              = 0x0010
+	FILE_TYPE_CHAR           = 0x0002
 )
 
 type _KEY_EVENT_RECORD struct {
@@ -88,6 +90,7 @@ type _CONSOLE_CURSOR_INFO struct {
 }
 
 type CallFunc func(u ...uintptr) error
+type CallFuncDword func(u ...uintptr) (uint32, error)
 
 func NewKernel() *Kernel {
 	k := &Kernel{}
@@ -95,39 +98,39 @@ func NewKernel() *Kernel {
 	v := reflect.ValueOf(k).Elem()
 	t := v.Type()
 	for i := 0; i < t.NumField(); i++ {
-		name := t.Field(i).Name
+		field := t.Field(i)
+		name := field.Name
 		f := kernel32.NewProc(name)
-		v.Field(i).Set(reflect.ValueOf(k.Wrap(f)))
+		v.Field(i).Set(reflect.ValueOf(k.Wrap(f, field.Type)))
 	}
 	return k
 }
 
-func (k *Kernel) Wrap(p *syscall.LazyProc) CallFunc {
-	return func(args ...uintptr) error {
-		var r0 uintptr
-		var e1 syscall.Errno
-		size := uintptr(len(args))
-		if len(args) <= 3 {
-			buf := make([]uintptr, 3)
-			copy(buf, args)
-			r0, _, e1 = syscall.Syscall(p.Addr(), size,
-				buf[0], buf[1], buf[2])
-		} else {
-			buf := make([]uintptr, 6)
-			copy(buf, args)
-			r0, _, e1 = syscall.Syscall6(p.Addr(), size,
-				buf[0], buf[1], buf[2], buf[3], buf[4], buf[5],
-			)
-		}
-
-		if int(r0) == 0 {
+func (k *Kernel) Wrap(p *syscall.LazyProc, fieldType reflect.Type) interface{} {
+	if fieldType == reflect.ValueOf(CallFuncDword(nil)).Type() {
+		return func(args ...uintptr) (uint32, error) {
+			var r0 uintptr
+			var e1 syscall.Errno
+			r0, _, e1 = syscall.SyscallN(p.Addr(), args...);
 			if e1 != 0 {
-				return error(e1)
-			} else {
-				return syscall.EINVAL
+				return 0, error(e1)
 			}
+			return uint32(r0), nil
 		}
-		return nil
+	} else {
+		return func(args ...uintptr) error {
+			var r0 uintptr
+			var e1 syscall.Errno
+			r0, _, e1 = syscall.SyscallN(p.Addr(), args...);
+			if int(r0) == 0 {
+				if e1 != 0 {
+					return error(e1)
+				} else {
+					return syscall.EINVAL
+				}
+			}
+			return nil
+		}
 	}
 
 }
