@@ -87,7 +87,7 @@ func (o *opCompleter) OnComplete() bool {
 	newLines, offset := o.op.cfg.AutoComplete.Do(rs, buf.idx)
 	if len(newLines) == 0 {
 		o.ExitCompleteMode(false)
-		return true
+		return false
 	}
 
 	// only Aggregate candidates in non-complete mode
