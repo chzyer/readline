@@ -21,6 +21,7 @@ type RuneBuffer struct {
 	w      io.Writer
 
 	hadClean    bool
+	printed     bool
 	interactive bool
 	cfg         *Config
 
@@ -331,17 +332,23 @@ func (r *RuneBuffer) BackEscapeWord() {
 		if r.idx == 0 {
 			return
 		}
-		for i := r.idx - 1; i > 0; i-- {
-			if !IsWordBreak(r.buf[i]) && IsWordBreak(r.buf[i-1]) {
-				r.pushKill(r.buf[i:r.idx])
-				r.buf = append(r.buf[:i], r.buf[r.idx:]...)
-				r.idx = i
-				return
-			}
+		// Kill one word to the left of the cursor: first skip any word-break
+		// characters immediately preceding the cursor, then consume the word
+		// characters before them. Only r.buf[start:r.idx] is removed so text to
+		// the right of the cursor (r.buf[r.idx:]) is preserved. The previous
+		// implementation fell back to clearing the whole buffer whenever the word
+		// began at index 0 or the cursor sat just after a break such as '*',
+		// which deleted everything after the cursor as well.
+		start := r.idx
+		for start > 0 && IsWordBreak(r.buf[start-1]) {
+			start--
 		}
-
-		r.buf = r.buf[:0]
-		r.idx = 0
+		for start > 0 && !IsWordBreak(r.buf[start-1]) {
+			start--
+		}
+		r.pushKill(r.buf[start:r.idx])
+		r.buf = append(r.buf[:start], r.buf[r.idx:]...)
+		r.idx = start
 	})
 }
 
@@ -474,6 +481,9 @@ func (r *RuneBuffer) SetOffset(offset string) {
 func (r *RuneBuffer) print() {
 	r.w.Write(r.output())
 	r.hadClean = false
+	// The prompt (and any wrapped rows) is now on screen, so subsequent clean()
+	// calls may move up over those rows to redraw in place.
+	r.printed = true
 }
 
 func (r *RuneBuffer) output() []byte {
@@ -525,24 +535,32 @@ func (r *RuneBuffer) getBackspaceSequence() []byte {
 
 		sep[i] = true
 	}
+
 	var buf []byte
 	for i := len(r.buf); i > r.idx; i-- {
-		// move input to the left of one
-		buf = append(buf, '\b')
 		if sep[i] {
-			// up one line, go to the start of the line and move cursor right to the end (r.width)
-			buf = append(buf, "\033[A\r"+"\033["+strconv.Itoa(r.width)+"C"...)
+			// At a line wrap point: moving from position i to i-1 crosses a line boundary
+			// Don't use \b here as its behavior at line start is undefined in some terminals
+			// Use ANSI escape sequences instead:
+			// - \033[A = move cursor up one line
+			// - \r = move to start of line
+			// - \033[nC = move cursor right n columns
+			buf = append(buf, "\033[A\r"+"\033["+strconv.Itoa(r.width-1)+"C"...)
+		} else {
+			buf = append(buf, '\b')
 		}
 	}
 
 	return buf
-
 }
 
 func (r *RuneBuffer) Reset() []rune {
 	ret := runes.Copy(r.buf)
 	r.buf = r.buf[:0]
 	r.idx = 0
+	// The committed line has scrolled away; the next prompt draws fresh, so the
+	// first clean() must not move the cursor up into unrelated output above.
+	r.printed = false
 	return ret
 }
 
@@ -625,5 +643,14 @@ func (r *RuneBuffer) cleanWithIdxLine(idxLine int) {
 		return
 	}
 	r.hadClean = true
+	// Before the first print of this input line, nothing has been drawn above the
+	// cursor yet, so clean must not move up. A prompt wider than the terminal makes
+	// idxLine > 0 even for an empty buffer; moving up would erase unrelated output
+	// printed before the prompt (e.g. a "No instances found" line above a narrow
+	// menu). Only rows previously drawn by print() may be reclaimed.
+	if !r.printed {
+		idxLine = 0
+	}
 	r.cleanOutput(r.w, idxLine)
 }
+

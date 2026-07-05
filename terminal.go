@@ -143,6 +143,7 @@ func (t *Terminal) ioloop() {
 		expectNextChar = false
 		r, _, err := buf.ReadRune()
 		if err != nil {
+
 			if strings.Contains(err.Error(), "interrupted system call") {
 				expectNextChar = true
 				continue
@@ -150,7 +151,13 @@ func (t *Terminal) ioloop() {
 			break
 		}
 
+		if r == 0 {
+			expectNextChar = true
+			continue
+		}
+
 		if isEscape {
+
 			isEscape = false
 			if r == CharEscapeEx {
 				// ^][
@@ -209,6 +216,7 @@ func (t *Terminal) ioloop() {
 		default:
 			t.outchan <- r
 		}
+
 	}
 
 }
@@ -252,3 +260,4 @@ func (t *Terminal) SetConfig(c *Config) error {
 	t.m.Unlock()
 	return nil
 }
+

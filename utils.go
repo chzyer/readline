@@ -216,6 +216,19 @@ func SplitByLine(start, screenWidth int, rs []rune) []string {
 	var ret []string
 	buf := bytes.NewBuffer(nil)
 	currentWidth := start
+	// The prompt occupies `start` columns before the first rune of rs. When the
+	// prompt is wider than the terminal (start >= screenWidth) it wraps across
+	// several terminal rows on its own. Emit one empty line per full screen the
+	// prompt spans so callers counting len(ret) (idxLine) see the real row the
+	// first rune sits on. Without this the prompt collapses to row 0, idxLine
+	// under-counts, and clean() erases too few rows on redraw, leaving stale
+	// wrapped prompt rows on screen (the prompt repeats on every keystroke in a
+	// narrow window). The `>=` boundary matches the rune loop below so idxLine
+	// stays consistent with LineCount.
+	for screenWidth > 0 && currentWidth >= screenWidth {
+		ret = append(ret, "")
+		currentWidth -= screenWidth
+	}
 	for _, r := range rs {
 		w := runes.Width(r)
 		currentWidth += w
