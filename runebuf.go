@@ -107,12 +107,40 @@ func (r *RuneBuffer) RuneSlice(i int) []rune {
 	defer r.Unlock()
 
 	if i > 0 {
-		rs := make([]rune, i)
-		copy(rs, r.buf[r.idx:r.idx+i])
+		// Clamp to available runes after the cursor so callers cannot panic
+		// when i exceeds the remaining buffer length.
+		if r.idx > len(r.buf) {
+			return []rune{}
+		}
+		end := r.idx + i
+		if end > len(r.buf) {
+			end = len(r.buf)
+		}
+		n := end - r.idx
+		if n <= 0 {
+			return []rune{}
+		}
+		rs := make([]rune, n)
+		copy(rs, r.buf[r.idx:end])
 		return rs
 	}
-	rs := make([]rune, -i)
-	copy(rs, r.buf[r.idx+i:r.idx])
+
+	// Negative i: take runes before the cursor, clamped to buffer start.
+	// This path is used by complete refresh (candidateOff) and used to panic
+	// with "slice bounds out of range" when candidateOff > idx (issue #241).
+	if r.idx < 0 {
+		return []rune{}
+	}
+	start := r.idx + i
+	if start < 0 {
+		start = 0
+	}
+	if start > r.idx {
+		return []rune{}
+	}
+	n := r.idx - start
+	rs := make([]rune, n)
+	copy(rs, r.buf[start:r.idx])
 	return rs
 }
 
