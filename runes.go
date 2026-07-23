@@ -188,6 +188,9 @@ func (Runes) HasPrefix(r, prefix []rune) bool {
 }
 
 func (Runes) Aggregate(candicate [][]rune) (same []rune, size int) {
+	if len(candicate) == 0 {
+		return nil, 0
+	}
 	for i := 0; i < len(candicate[0]); i++ {
 		for j := 0; j < len(candicate)-1; j++ {
 			if i >= len(candicate[j]) || i >= len(candicate[j+1]) {

@@ -232,6 +232,12 @@ func SplitByLine(start, screenWidth int, rs []rune) []string {
 
 // calculate how many lines for N character
 func LineCount(screenWidth, w int) int {
+	if screenWidth <= 0 {
+		if w <= 0 {
+			return 0
+		}
+		return 1
+	}
 	r := w / screenWidth
 	if w%screenWidth != 0 {
 		r++
