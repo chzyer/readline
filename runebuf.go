@@ -510,29 +510,24 @@ func (r *RuneBuffer) output() []byte {
 }
 
 func (r *RuneBuffer) getBackspaceSequence() []byte {
-	var sep = map[int]bool{}
-
-	var i int
-	for {
-		if i >= runes.WidthAll(r.buf) {
-			break
-		}
-
-		if i == 0 {
-			i -= r.promptLen()
-		}
-		i += r.width
-
-		sep[i] = true
-	}
 	var buf []byte
-	for i := len(r.buf); i > r.idx; i-- {
-		// move input to the left of one
-		buf = append(buf, '\b')
-		if sep[i] {
-			// up one line, go to the start of the line and move cursor right to the end (r.width)
-			buf = append(buf, "\033[A\r"+"\033["+strconv.Itoa(r.width)+"C"...)
+	bufw := runes.WidthAll(r.buf)
+
+	var cbuf int = len(r.buf)
+	var cidx int = r.idx
+	for sep := r.width - r.promptLen(); sep < bufw; sep += r.width {
+		cbuf -= r.width
+		if r.idx < sep {
+			buf = append(buf, "\033[A"...)
+		} else {
+			cidx -= r.width
 		}
+	}
+
+	if cidx > cbuf {
+		buf = append(buf, "\033["+strconv.Itoa(cidx-cbuf)+"C"...)
+	} else if cbuf > cidx {
+		buf = append(buf, "\033["+strconv.Itoa(cbuf-cidx)+"D"...)
 	}
 
 	return buf
