@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"os"
 
 	"github.com/chzyer/readline"
 )
