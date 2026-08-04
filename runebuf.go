@@ -595,16 +595,11 @@ func (r *RuneBuffer) cleanOutput(w io.Writer, idxLine int) {
 		buf.WriteString(strings.Repeat("\r\b", len(r.buf)+r.promptLen()))
 		buf.Write([]byte("\033[J"))
 	} else {
-		buf.Write([]byte("\033[J")) // just like ^k :)
-		if idxLine == 0 {
-			buf.WriteString("\033[2K")
-			buf.WriteString("\r")
-		} else {
-			for i := 0; i < idxLine; i++ {
-				io.WriteString(buf, "\033[2K\r\033[A")
-			}
-			io.WriteString(buf, "\033[2K\r")
+		buf.Write([]byte("\r"))
+		for i := 0; i < idxLine; i++ {
+			buf.Write([]byte("\033[A"))
 		}
+		buf.Write([]byte("\033[J")) // just like ^k :)
 	}
 	buf.Flush()
 	return
