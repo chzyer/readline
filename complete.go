@@ -189,6 +189,17 @@ func (o *opCompleter) CompleteRefresh() {
 	if !o.inCompleteMode {
 		return
 	}
+	// HandleCompleteSelect's CharBackspace case (and OnComplete's own
+	// fallback path) call ExitCompleteSelectMode, which resets candidate
+	// to nil and candidateOff to -1, but leaves inCompleteMode set. The
+	// next write to the wrapped stdout after that then reaches here with
+	// an empty candidate list, where colWidth below computes to exactly
+	// 0 + candidateOff(-1) + 1 = 0, and `width / colWidth` a few lines
+	// down panics with "integer divide by zero". A refresh with nothing
+	// to show is a no-op by definition, so bail out here too. See #111.
+	if len(o.candidate) == 0 {
+		return
+	}
 	lineCnt := o.op.buf.CursorLineCount()
 	colWidth := 0
 	for _, c := range o.candidate {
