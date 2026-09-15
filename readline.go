@@ -43,6 +43,7 @@ type Config struct {
 	AutoComplete AutoCompleter
 
 	// Any key press will pass to Listener
+	// For submitted lines and key-triggered errors, Listener finishes before Readline returns.
 	// NOTE: Listener will be triggered by (nil, 0, 0) immediately
 	Listener Listener
 

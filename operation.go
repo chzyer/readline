@@ -134,6 +134,9 @@ func (o *Operation) ioloop() {
 				r = CharEnter
 			}
 		}
+		var result []rune
+		var resultErr error
+		var hasResult bool
 		isUpdateHistory := true
 
 		if o.IsInCompleteSelectMode() {
@@ -253,7 +256,7 @@ func (o *Operation) ioloop() {
 				o.buf.Clean()
 				data = o.buf.Reset()
 			}
-			o.outchan <- data
+			result, hasResult = data, true
 			if !o.GetConfig().DisableAutoSaveHistory {
 				// ignore IO error
 				_ = o.history.New(data)
@@ -294,7 +297,7 @@ func (o *Operation) ioloop() {
 			o.buf.Reset()
 			isUpdateHistory = false
 			o.history.Revert()
-			o.errchan <- io.EOF
+			resultErr = io.EOF
 			if o.GetConfig().UniqueEditLine {
 				o.buf.Clean()
 			}
@@ -322,7 +325,7 @@ func (o *Operation) ioloop() {
 			}
 			isUpdateHistory = false
 			o.history.Revert()
-			o.errchan <- &InterruptError{remain}
+			resultErr = &InterruptError{remain}
 		default:
 			if o.IsSearchMode() {
 				o.SearchChar(r)
@@ -362,6 +365,13 @@ func (o *Operation) ioloop() {
 			o.history.Update(o.buf.Runes(), false)
 		}
 		o.m.Unlock()
+
+		// Finish listener and buffer updates before returning the result to the caller.
+		if hasResult {
+			o.outchan <- result
+		} else if resultErr != nil {
+			o.errchan <- resultErr
+		}
 	}
 }
 
