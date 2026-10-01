@@ -156,10 +156,10 @@ func (a *ANSIWriterCtx) ioloopEscSeq(w *bufio.Writer, r rune, argptr *[]string) 
 				w.WriteString("[" + strings.Join(arg, ";") + "m")
 				break
 			}
-			if c >= 30 && c < 40 {
+			if c >= 30 && c-30 < len(ColorTableFg) {
 				color ^= COLOR_FINTENSITY
 				color |= ColorTableFg[c-30]
-			} else if c >= 40 && c < 50 {
+			} else if c >= 40 && c-40 < len(ColorTableBg) {
 				color ^= COLOR_BINTENSITY
 				color |= ColorTableBg[c-40]
 			} else if c == 4 {
