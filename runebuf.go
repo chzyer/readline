@@ -418,11 +418,11 @@ func (r *RuneBuffer) MoveTo(ch rune, prevChar, reverse bool) (success bool) {
 }
 
 func (r *RuneBuffer) isInLineEdge() bool {
-	if isWindows {
+	if isWindows || len(r.buf) == 0 || r.width <= 0 {
 		return false
 	}
 	sp := r.getSplitByLine(r.buf)
-	return len(sp[len(sp)-1]) == 0
+	return len(sp) > 1 && len(sp[len(sp)-1]) == 0
 }
 
 func (r *RuneBuffer) getSplitByLine(rs []rune) []string {
