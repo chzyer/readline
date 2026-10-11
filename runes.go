@@ -136,11 +136,22 @@ var zeroWidth = []*unicode.RangeTable{
 	unicode.Cf,
 }
 
+var doubleWidthPunctuation = &unicode.RangeTable{
+	R16: []unicode.Range16{
+		{Lo: 0x3000, Hi: 0x303F, Stride: 1},
+		{Lo: 0xFF01, Hi: 0xFF0F, Stride: 1},
+		{Lo: 0xFF1A, Hi: 0xFF20, Stride: 1},
+		{Lo: 0xFF3B, Hi: 0xFF40, Stride: 1},
+		{Lo: 0xFF5B, Hi: 0xFF65, Stride: 1},
+	},
+}
+
 var doubleWidth = []*unicode.RangeTable{
 	unicode.Han,
 	unicode.Hangul,
 	unicode.Hiragana,
 	unicode.Katakana,
+	doubleWidthPunctuation,
 }
 
 func (Runes) Width(r rune) int {
