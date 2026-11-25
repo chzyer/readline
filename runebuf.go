@@ -107,12 +107,20 @@ func (r *RuneBuffer) RuneSlice(i int) []rune {
 	defer r.Unlock()
 
 	if i > 0 {
-		rs := make([]rune, i)
-		copy(rs, r.buf[r.idx:r.idx+i])
+		end := r.idx + i
+		if end > len(r.buf) {
+			end = len(r.buf)
+		}
+		rs := make([]rune, end-r.idx)
+		copy(rs, r.buf[r.idx:end])
 		return rs
 	}
-	rs := make([]rune, -i)
-	copy(rs, r.buf[r.idx+i:r.idx])
+	start := r.idx + i
+	if start < 0 {
+		start = 0
+	}
+	rs := make([]rune, r.idx-start)
+	copy(rs, r.buf[start:r.idx])
 	return rs
 }
 
